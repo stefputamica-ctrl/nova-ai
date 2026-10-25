@@ -242,6 +242,7 @@ a{color:inherit}
     <div class="card glass">
       <div class="stack"><div class="label">Answer length</div><div class="seg glass" data-key="length"><button data-v="short">Short</button><button data-v="normal">Normal</button><button data-v="detailed">Detailed</button></div></div>
       <div class="row"><div class="grow"><div class="label">Search the web</div><div class="note">Nova can look things up on Google and read links you paste. Sources show under the answer.</div></div><button class="switch" role="switch" id="sWeb" aria-label="Search the web"></button></div>
+      <div class="stack"><button class="btn" id="sWebTest">Test web search</button><div class="note" id="webTestOut"></div></div>
       <div class="stack"><div class="label">Custom instructions</div><div class="note">Tell Nova how to talk to you, for example “Keep it casual and use simple words.”</div><textarea class="field" id="sCustom" maxlength="600" placeholder="How should Nova respond?"></textarea></div>
     </div>
 
@@ -279,7 +280,7 @@ a{color:inherit}
     </div>
 
     <div class="sec">About</div>
-    <div class="card glass"><div class="stack"><div class="label">Nova</div><div class="note">Answers come from Google Gemini, so they can be wrong. Messages, photos, voice recordings and your memory notes are sent to Google to get an answer, and Google Search may be used when “Search the web” is on. Pictures are made by Pollinations.ai, which receives the picture description.</div></div></div>
+    <div class="card glass"><div class="stack"><div class="label">Nova</div><div class="note">Answers come from Google Gemini, so they can be wrong. Messages, photos, voice recordings and your memory notes are sent to Google to get an answer, and Google Search may be used when “Search the web” is on. Pictures are made by Pollinations.ai, which receives the picture description.</div><div class="note" id="sVersion"></div></div></div>
   </div></div>
 </section>
 
@@ -322,7 +323,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000;
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.25-e";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language the user writes in. Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -800,6 +801,29 @@ $("sVoice").addEventListener("change",function(){S.voice=this.value;save()});
 $("sSpeak").addEventListener("click",function(){S.speak=!S.speak;if(!S.speak)stopSpeaking();save();syncSettings()});
 $("sRemember").addEventListener("click",function(){S.remember=!S.remember;save();syncSettings();if(S.remember)persist()});
 $("sTest").addEventListener("click",function(){say(S.lang==="ro"?"Bună, sunt Nova. Așa sună vocea mea în română.":"Hi, I’m Nova. This is how I sound.")});
+$("sVersion").textContent="Version "+VERSION+(/Electron/i.test(navigator.userAgent)?" · Windows app":" · web app");
+// asks Google one search question directly and shows what really comes back
+$("sWebTest").addEventListener("click",function(){
+  var out=$("webTestOut"),b=this;if(!S.key){out.textContent="Paste your Gemini key first.";return}
+  b.disabled=true;out.textContent="Asking Google…";
+  function tryTools(tools,label){
+    return fetch("https://generativelanguage.googleapis.com/v1beta/models/"+MODEL+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":S.key},
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:"Use Google Search: what is one tech news headline from today? One sentence."}]}],tools:tools})})
+    .then(function(r){return r.json().catch(function(){return{}}).then(function(d){
+      if(!r.ok)return{ok:false,label:label,msg:"Google said ("+r.status+"): "+((d.error&&d.error.message)||"no details")};
+      var c=d.candidates&&d.candidates[0],gm=c&&c.groundingMetadata,n=(gm&&gm.groundingChunks&&gm.groundingChunks.length)||0;
+      var txt=((c&&c.content&&c.content.parts)||[]).map(function(p){return p.text||""}).join("").trim();
+      return{ok:n>0,label:label,msg:n?("Works ✓ found "+n+" source"+(n>1?"s":"")+": "+txt.slice(0,140)):("Google answered but didn’t search: “"+txt.slice(0,140)+"”")};
+    })});
+  }
+  tryTools([{google_search:{}},{url_context:{}}],"Search + links").then(function(a){
+    if(a.ok)return [a];
+    return tryTools([{google_search:{}}],"Search only").then(function(b2){return [a,b2]});
+  }).then(function(rs){
+    out.textContent=rs.map(function(r){return r.label+": "+r.msg}).join("  ·  ")+"  ·  Model: "+MODEL+" · Version "+VERSION;
+    if(rs.some(function(r){return r.ok})){webOk=true;webLevel=rs[0].ok?2:1}
+  },function(){out.textContent="Couldn’t reach Google. Check your internet connection."}).finally(function(){b.disabled=false});
+});
 $("sWeb").addEventListener("click",function(){S.web=!S.web;webOk=true;webLevel=2;save();syncSettings()});
 $("sMemory").addEventListener("click",function(){S.memory=!S.memory;save();syncSettings()});
 $("memList").addEventListener("click",function(e){var b=e.target.closest("[data-forget]");if(!b)return;mem.splice(+b.getAttribute("data-forget"),1);store("nova.memory",mem);renderMemory();toast("Forgotten")});
