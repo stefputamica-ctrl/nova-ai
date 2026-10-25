@@ -90,6 +90,13 @@ header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:1
 .gen .state{color:var(--dim);font-size:14px;text-align:center;padding:20px;display:grid;gap:10px;justify-items:center}
 .spin{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--sun);animation:sp .9s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+.srcs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.srcs a{font-size:12px;font-weight:600;padding:5px 10px;border-radius:12px;background:var(--glass);border:1px solid var(--edge);color:var(--dim);text-decoration:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.memo{font-size:12px;font-weight:600;color:var(--dim);margin-top:6px}
+.memo::before{content:"✦ ";color:var(--sun)}
+.mem{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--edge)}
+.mem:first-child{border-top:0}
+.mem span{flex:1;font-size:15px;line-height:1.4;overflow-wrap:anywhere}
 .err{color:var(--danger);font-size:14px;margin:4px 0 0}
 
 /* composer */
@@ -222,7 +229,8 @@ a{color:inherit}
     <div class="sec">Voice</div>
     <div class="card glass">
       <div class="row"><div class="grow"><div class="label">Read replies aloud</div><div class="note">Nova speaks every answer.</div></div><button class="switch" role="switch" id="sSpeak" aria-label="Read replies aloud"></button></div>
-      <div class="stack"><div class="label">Voice</div><select class="field" id="sVoice"></select><div class="note">Edge on PC and Chrome on Android usually have the most natural voices.</div></div>
+      <div class="stack"><div class="label">I speak</div><div class="note">Pick Română so Nova understands you when you talk in Romanian. Nova answers in the language you use.</div><div class="seg glass" data-key="lang"><button data-v="auto">Automatic</button><button data-v="en">English</button><button data-v="ro">Română</button></div></div>
+      <div class="stack"><div class="label">Voice</div><select class="field" id="sVoice"></select><div class="note">Automatic picks the most natural voice for each language. Edge on PC has the best Romanian voices.</div></div>
       <div class="stack"><div class="label">Speed</div><div class="seg glass" data-key="rate"><button data-v="0.85">Slow</button><button data-v="1">Normal</button><button data-v="1.2">Fast</button></div></div>
       <div class="stack"><div class="label">Pitch</div><div class="seg glass" data-key="pitch"><button data-v="0.85">Lower</button><button data-v="1">Normal</button><button data-v="1.15">Higher</button></div></div>
       <div class="stack"><button class="btn" id="sTest">Play sample</button></div>
@@ -231,6 +239,7 @@ a{color:inherit}
     <div class="sec">Answers</div>
     <div class="card glass">
       <div class="stack"><div class="label">Answer length</div><div class="seg glass" data-key="length"><button data-v="short">Short</button><button data-v="normal">Normal</button><button data-v="detailed">Detailed</button></div></div>
+      <div class="row"><div class="grow"><div class="label">Search the web</div><div class="note">Nova can look things up on Google and read links you paste. Sources show under the answer.</div></div><button class="switch" role="switch" id="sWeb" aria-label="Search the web"></button></div>
       <div class="stack"><div class="label">Custom instructions</div><div class="note">Tell Nova how to talk to you, for example “Keep it casual and use simple words.”</div><textarea class="field" id="sCustom" maxlength="600" placeholder="How should Nova respond?"></textarea></div>
     </div>
 
@@ -248,6 +257,13 @@ a{color:inherit}
       </div>
     </div>
 
+    <div class="sec">Memory</div>
+    <div class="card glass">
+      <div class="row"><div class="grow"><div class="label">Remember things about me</div><div class="note">Nova keeps short notes about you (like your name or what you like) and uses them in every chat. Stored only on this device.</div></div><button class="switch" role="switch" id="sMemory" aria-label="Remember things about me"></button></div>
+      <div class="stack"><div id="memList"></div></div>
+      <div class="row"><button class="danger" id="sForget">Forget everything</button></div>
+    </div>
+
     <div class="sec">Chat history</div>
     <div class="card glass">
       <div class="row"><div class="grow"><div class="label">Remember chats</div><div class="note">Keep your conversations (open them from Chats at the top). Stored only on this device.</div></div><button class="switch" role="switch" id="sRemember" aria-label="Remember chats"></button></div>
@@ -260,7 +276,7 @@ a{color:inherit}
     </div>
 
     <div class="sec">About</div>
-    <div class="card glass"><div class="stack"><div class="label">Nova</div><div class="note">Answers come from Google Gemini, so they can be wrong. Messages, photos and voice recordings are sent to Google to get an answer. Pictures are made by Pollinations.ai, which receives the picture description.</div></div></div>
+    <div class="card glass"><div class="stack"><div class="label">Nova</div><div class="note">Answers come from Google Gemini, so they can be wrong. Messages, photos, voice recordings and your memory notes are sent to Google to get an answer, and Google Search may be used when “Search the web” is on. Pictures are made by Pollinations.ai, which receives the picture description.</div></div></div>
   </div></div>
 </section>
 
@@ -314,12 +330,14 @@ var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directl
  "description of the picture to create, and nothing else. Describe it plainly, like a real photo or a real "+
  "artist's work: ordinary details, natural light, real textures. Avoid words like cute, adorable, epic, magical, "+
  "glowing, hyperrealistic, ultra detailed, 8k, 3D render or masterpiece.";
+var WEB_RULES=" You can look things up with Google Search and read web pages from links the user sends. Use them for news, prices, facts that change, or when the user shares a link, and answer from what you found.";
+var MEMORY_RULES=" Memory: you can remember lasting facts about the user between chats. When the user shares something lasting about themselves (their name, where they live, their job, hobbies or music, people in their life, projects, likes, how they want you to talk) or asks you to remember something, end your reply with an extra line that starts with REMEMBER: followed by one short fact about the user, like 'REMEMBER: Their name is Stef.' At most two REMEMBER lines, and only for facts you don't already know. Never remember passwords, keys, money details, health details or anything they ask you not to keep. If the user asks you to forget something, end with a line FORGET: followed by a few words naming it. Never talk about these lines in the rest of your reply.";
 var LENGTH={short:" Keep every answer to one to three sentences.",normal:" Keep answers to a few short paragraphs at most.",detailed:" Give thorough, detailed answers when the question deserves it."};
 var VOICE_RULES=" The user's last message is a voice recording. In 'heard', write only the words the user spoke, word for word, in the language they spoke, and nothing else. In 'answer', write your reply to what they said, in the same language as the words in 'heard'. A short greeting like 'hey' or 'hi' is English. If you are not sure which language it is, reply in English.";
 var PIC={photo:", candid photograph taken on a 35mm film camera, natural daylight, soft film grain, muted true-to-life colors, slightly imperfect framing, realistic proportions, no glow, no fantasy lighting",
  art:", hand-made illustration, gouache and colored pencil on textured paper, visible brush strokes, limited muted palette, flat light, imperfect lines",free:""};
-var STARTERS=["Explain why some chord progressions sound sad","Give me a fun fact about space","Help me plan a relaxed weekend","Write a Python script that renames my photos by date","Draw a cozy cabin in the snow at sunset"];
-var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true};
+var STARTERS=["Help me write a chorus for a sad song","Search the web: what happened in tech news today?","Give me a fun fact about space","Write a Python script that renames my photos by date","Draw a cozy cabin in the snow at sunset"];
+var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true,memory:true,web:true,lang:"auto"};
 
 var $=function(id){return document.getElementById(id)};
 function load(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
@@ -329,6 +347,7 @@ var chats=load("nova.chats",[]);
 var chatId=load("nova.current","")||newId();
 var msgs=[];
 if(S.remember){var cur=chats.filter(function(c){return c.id===chatId})[0];if(cur)msgs=cur.msgs}
+var mem=load("nova.memory",[]), webOk=true;
 var busy=false, abortCtl=null, photo=null, recog=null, recorder=null, recChunks=[], heardText="";
 
 function newId(){return Date.now()+"-"+Math.floor(Math.random()*1e6)}
@@ -380,6 +399,8 @@ function render(){
       }else{
         h+='<div class="msg n"><span class="dot"></span><div>'+formatAnswer(m.text)+
           (m.gen?'<div class="gen" data-gen="'+esc(m.gen)+'"><div class="state"><span class="spin"></span>Painting your picture…</div></div>':"")+
+          (m.sources?'<div class="srcs">'+m.sources.map(function(x){return'<a href="'+esc(x.u)+'" target="_blank" rel="noopener">'+esc(x.t)+'</a>'}).join("")+'</div>':"")+
+          (m.saved?m.saved.map(function(x){return'<div class="memo">'+esc(x)+'</div>'}).join(""):"")+
           '<div class="acts"><button data-act="listen" data-i="'+i+'">Listen</button><button data-act="copy" data-i="'+i+'">Copy</button><button data-act="share" data-i="'+i+'">Share</button>'+
           (i===msgs.length-1&&!busy?'<button data-act="retry">Retry</button>':"")+'</div></div></div>';
       }
@@ -445,34 +466,65 @@ function persist(){
 }
 
 /* ---------- Gemini ---------- */
-function system(voice){return SYSTEM+LENGTH[S.length]+(S.custom.trim()?" The user's own instructions for you: "+S.custom.trim():"")+(voice?VOICE_RULES:"")}
+function system(voice){
+  var t=SYSTEM+LENGTH[S.length]+(S.web&&webOk&&!voice?WEB_RULES:"");
+  if(S.memory){t+=MEMORY_RULES;if(mem.length)t+=" Things you remember about the user from earlier chats (use them naturally, only when they matter): "+mem.map(function(m){return m.t}).join(" | ")}
+  if(S.custom.trim())t+=" The user's own instructions for you: "+S.custom.trim();
+  if(voice)t+=VOICE_RULES+(S.lang==="ro"?" The user usually speaks Romanian.":"");
+  return t;
+}
 function contents(list){return list.slice(-30).map(function(m){return{role:m.role,parts:[{text:m.text}]}})}
-function ask(parts,json){
+function ask(parts,json,noTools){
+  ask.sources=[];
   abortCtl=new AbortController();
   var ctl=abortCtl, timedOut=false, t=setTimeout(function(){timedOut=true;ctl.abort()},TIMEOUT);
   var body={systemInstruction:{parts:[{text:system(json)}]},contents:parts};
   if(json)body.generationConfig={responseMimeType:"application/json",responseSchema:{type:"OBJECT",properties:{heard:{type:"STRING"},answer:{type:"STRING"}},required:["heard","answer"],propertyOrdering:["heard","answer"]}};
+  var tools=!json&&!noTools&&S.web&&webOk;
+  if(tools)body.tools=[{google_search:{}},{url_context:{}}];
   return fetch("https://generativelanguage.googleapis.com/v1beta/models/"+MODEL+":generateContent",{
     method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json","x-goog-api-key":S.key},body:JSON.stringify(body)
   }).then(function(r){return r.json().catch(function(){return null}).then(function(d){
     if(!r.ok){
+      // if this model or key can't use web search, quietly answer without it
+      if(tools&&(r.status===429||(r.status===400&&!/API key/i.test((d&&d.error&&d.error.message)||"")))){if(r.status===400)webOk=false;throw {retryPlain:true}}
       if(r.status===429)throw new Error("Nova has hit today’s free limit. Try again later.");
       if(r.status===400&&/API key/i.test((d&&d.error&&d.error.message)||""))throw new Error("Your Gemini key isn’t working. Check it in Settings.");
       throw new Error((d&&d.error&&d.error.message)||("Google answered with error "+r.status+"."));
     }
     var txt=((d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[]).map(function(p){return p.text||""}).join("").trim();
     if(!txt)throw new Error("Nova didn’t return an answer. Try asking again.");
+    var gm=d.candidates[0].groundingMetadata,seen={};
+    ask.sources=((gm&&gm.groundingChunks)||[]).map(function(c){return c.web}).filter(function(w){
+      if(!w||!w.uri||seen[w.uri])return false;seen[w.uri]=1;return true}).slice(0,4).map(function(w){return{u:w.uri,t:w.title||w.domain||"Source"}});
     return txt;
   })},function(e){
     if(ctl.signal.aborted&&!timedOut)throw new Error("__stopped__");
     if(timedOut)throw new Error("Google didn’t answer within 60 seconds. Try again in a moment.");
     throw new Error("Couldn’t reach Google. Check your internet connection and try again.");
-  }).finally(function(){clearTimeout(t)});
+  }).finally(function(){clearTimeout(t)}).catch(function(e){
+    if(e&&e.retryPlain)return ask(parts,json,true);
+    throw e;
+  });
 }
 function toReply(answer){
+  var saved=[];
+  answer=answer.replace(/^[ \t]*(REMEMBER|FORGET):[ \t]*(.+)$/gim,function(all,kind,what){
+    what=what.trim().replace(/^["'“]|["'”]$/g,"");
+    if(!S.memory||!what)return"";
+    if(/^forget$/i.test(kind)){var w=what.toLowerCase().split(/\W+/).filter(function(x){return x.length>2});
+      var before=mem.length;mem=mem.filter(function(m){var t=m.t.toLowerCase();return !w.length||!w.every(function(x){return t.indexOf(x)>=0})});
+      if(mem.length!==before){store("nova.memory",mem);saved.push("Forgot: "+what)}return""}
+    if(!mem.some(function(m){return m.t.toLowerCase()===what.toLowerCase()})){mem.push({t:what.slice(0,200),at:Date.now()});mem=mem.slice(-60);store("nova.memory",mem);saved.push("Remembered: "+what)}
+    return"";
+  }).trim();
+  var src=ask.sources||[],reply;
   var m=answer.match(/IMAGE:\s*([\s\S]+)/);
-  if(m&&m[1].trim())return{role:"model",text:"Here’s your picture.",gen:picUrl(m[1].trim().slice(0,500)+PIC[S.picStyle])};
-  return{role:"model",text:answer};
+  if(m&&m[1].trim())reply={role:"model",text:"Here’s your picture.",gen:picUrl(m[1].trim().slice(0,500)+PIC[S.picStyle])};
+  else reply={role:"model",text:answer||"Got it."};
+  if(src.length&&!reply.gen)reply.sources=src;
+  if(saved.length)reply.saved=saved;
+  return reply;
 }
 function run(promise,base){
   busy=true;render.error="";render();
@@ -511,7 +563,7 @@ function startTalking(){
   stopSpeaking();vibrate();render.error="";
   if(SR){
     try{
-      recog=new SR();recog.lang=navigator.language||"en-US";recog.interimResults=true;recog.continuous=true;heardText="";
+      recog=new SR();recog.lang=S.lang==="ro"?"ro-RO":S.lang==="en"?"en-US":(navigator.language||"en-US");recog.interimResults=true;recog.continuous=true;heardText="";
       recog.onresult=function(e){var t="";for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;heardText=t;$("listenText").textContent=(t||"Listening…")+"  · tap to send"};
       recog.onerror=function(e){
         if(e.error==="not-allowed"||e.error==="service-not-allowed"){render.error="Nova needs the microphone. Allow it in your browser’s settings for this site.";}
@@ -562,25 +614,32 @@ function blobToB64(blob){return new Promise(function(res,rej){var r=new FileRead
 var synth=window.speechSynthesis, voices=[];
 function loadVoices(){
   if(!synth)return;
-  voices=synth.getVoices().filter(function(v){return /^en/i.test(v.lang)});
+  voices=synth.getVoices().filter(function(v){return /^(en|ro)/i.test(v.lang)});
   var best=voices.slice().sort(function(a,b){return score(b)-score(a)});
+  function group(label,re){var g=best.filter(function(v){return re.test(v.lang)});return g.length?'<optgroup label="'+label+'">'+g.map(function(v){return'<option value="'+esc(v.voiceURI)+'">'+esc(v.name)+"</option>"}).join("")+"</optgroup>":""}
   var sel=$("sVoice");
-  sel.innerHTML='<option value="">Automatic (best available)</option>'+best.map(function(v){return'<option value="'+esc(v.voiceURI)+'">'+esc(v.name)+"</option>"}).join("");
+  sel.innerHTML='<option value="">Automatic (best for each language)</option>'+group("English",/^en/i)+group("Română",/^ro/i);
   sel.value=S.voice;if(sel.value!==S.voice)sel.value="";
 }
-function score(v){var n=v.name,x=0;if(/natural|neural|online/i.test(n))x+=5;if(/google/i.test(n))x+=3;if(/aria|jenny|guy|samantha|ava|zoe|siri/i.test(n))x+=2;if(/en-us/i.test(v.lang))x+=1;return x}
-function pickVoice(){
-  if(S.voice){var f=voices.filter(function(v){return v.voiceURI===S.voice})[0];if(f)return f}
-  return voices.slice().sort(function(a,b){return score(b)-score(a)})[0]||null;
+function score(v){var n=v.name,x=0;if(/natural|neural|online|enhanced|premium/i.test(n))x+=5;if(/google/i.test(n))x+=3;if(/aria|jenny|guy|samantha|ava|zoe|siri|alina|emil|ioana/i.test(n))x+=2;if(/en-us|ro-ro/i.test(v.lang))x+=1;return x}
+// which language a reply is in, so Nova reads it with a matching voice
+function langOf(t){
+  var marks=(t.match(/[ăâîșțşţ]/gi)||[]).length,words=(" "+t.toLowerCase().replace(/[.,!?;:()"“”]/g," ")+" ").match(/ (și|si|este|sunt|pentru|că|nu|cu|pe|în|eu|tu|ce|mai|foarte|bună|buna|salut|mulțumesc|poți|vreau|despre|acest|această) /g)||[];
+  return marks>=2||words.length>=3?"ro":"en";
+}
+function pickVoice(lang){
+  var re=lang==="ro"?/^ro/i:/^en/i;
+  if(S.voice){var f=voices.filter(function(v){return v.voiceURI===S.voice})[0];if(f&&re.test(f.lang))return f}
+  return voices.filter(function(v){return re.test(v.lang)}).sort(function(a,b){return score(b)-score(a)})[0]||null;
 }
 function forSpeech(t){return t.replace(/```[\s\S]*?```/g," ").replace(/[*_#`>|]/g,"").replace(/https?:\/\/\S+/g,"link").replace(/\s+/g," ").trim()}
 function say(text){
   if(!synth)return;stopSpeaking();
   var chunks=forSpeech(text).match(/[^.!?…]+[.!?…]*\s*/g)||[];
-  var v=pickVoice();
+  var lang=langOf(text),v=pickVoice(lang);
   $("stopTalk").hidden=false;
   chunks.forEach(function(c,i){
-    var u=new SpeechSynthesisUtterance(c);if(v){u.voice=v;u.lang=v.lang}else u.lang="en-US";
+    var u=new SpeechSynthesisUtterance(c);if(v){u.voice=v;u.lang=v.lang}else u.lang=lang==="ro"?"ro-RO":"en-US";
     u.rate=+S.rate;u.pitch=+S.pitch;
     if(i===chunks.length-1){u.onend=u.onerror=function(){$("stopTalk").hidden=true}}
     synth.speak(u);
@@ -631,9 +690,14 @@ function setCustomWall(data){S.customWall=data;S.wallpaper="custom";if(!save()){
 function syncSettings(){
   $("sKey").value=S.key;$("sPicKey").value=S.picKey;$("sCustom").value=S.custom;
   $("sSpeak").setAttribute("aria-checked",String(!!S.speak));$("sRemember").setAttribute("aria-checked",String(!!S.remember));
+  $("sWeb").setAttribute("aria-checked",String(!!S.web));$("sMemory").setAttribute("aria-checked",String(!!S.memory));renderMemory();
   var segs=document.querySelectorAll(".seg");
   for(var i=0;i<segs.length;i++){var k=segs[i].getAttribute("data-key"),bs=segs[i].querySelectorAll("button");
     for(var j=0;j<bs.length;j++)bs[j].setAttribute("aria-pressed",String(bs[j].getAttribute("data-v")===String(S[k])))}
+}
+function renderMemory(){
+  $("memList").innerHTML=mem.length?mem.map(function(m,i){return'<div class="mem"><span>'+esc(m.t)+'</span><button class="danger" data-forget="'+i+'">Forget</button></div>'}).join("")
+    :'<p class="note" style="margin:0">Nothing yet. Tell Nova about yourself, or say “remember that…”.</p>';
 }
 function renderChats(){
   var list=chats.slice().sort(function(a,b){return b.updated-a.updated});
@@ -700,7 +764,13 @@ $("sCustom").addEventListener("input",function(){S.custom=this.value;save()});
 $("sVoice").addEventListener("change",function(){S.voice=this.value;save()});
 $("sSpeak").addEventListener("click",function(){S.speak=!S.speak;if(!S.speak)stopSpeaking();save();syncSettings()});
 $("sRemember").addEventListener("click",function(){S.remember=!S.remember;save();syncSettings();if(S.remember)persist()});
-$("sTest").addEventListener("click",function(){say("Hi, I’m Nova. This is how I sound.")});
+$("sTest").addEventListener("click",function(){say(S.lang==="ro"?"Bună, sunt Nova. Așa sună vocea mea în română.":"Hi, I’m Nova. This is how I sound.")});
+$("sWeb").addEventListener("click",function(){S.web=!S.web;webOk=true;save();syncSettings()});
+$("sMemory").addEventListener("click",function(){S.memory=!S.memory;save();syncSettings()});
+$("memList").addEventListener("click",function(e){var b=e.target.closest("[data-forget]");if(!b)return;mem.splice(+b.getAttribute("data-forget"),1);store("nova.memory",mem);renderMemory();toast("Forgotten")});
+$("sForget").addEventListener("click",function(){var b=this;
+  if(b.getAttribute("data-sure")!=="1"){b.setAttribute("data-sure","1");b.textContent="Tap again to forget everything";setTimeout(function(){b.removeAttribute("data-sure");b.textContent="Forget everything"},3000);return}
+  mem=[];store("nova.memory",mem);renderMemory();b.removeAttribute("data-sure");b.textContent="Forget everything";toast("Nova forgot everything about you")});
 document.querySelectorAll(".seg").forEach(function(seg){seg.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;
   S[seg.getAttribute("data-key")]=b.getAttribute("data-v");save();syncSettings();applyLook();vibrate()})});
 $("chooseWall").addEventListener("click",function(){$("wallFile").click()});
