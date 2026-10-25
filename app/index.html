@@ -323,7 +323,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.25-e";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.25-f";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language the user writes in. Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -484,39 +484,76 @@ function system(voice){
 function contents(list){return list.slice(-30).map(function(m){return{role:m.role,parts:[{text:m.text}]}})}
 var BADKEY=/API key not valid|API_KEY_INVALID|API key expired|API_KEY_EXPIRED|invalid api key|key was reported as leaked|PERMISSION_DENIED.*key/i;
 var REFUSED=/(real[- ]time|browse the (web|internet)|browsing|internet access|access to (the )?(internet|current)|can(no|')t (search|access|look up)|unable to (search|browse|access)|not able to (search|browse)|n-am acces|nu am acces|nu pot (căuta|accesa|naviga))/i;
-function ask(parts,json,noTools,force){
+// Free web search: when Google Search isn't included with the key, Nova reads a DuckDuckGo results page
+// (and Wikipedia's daily news page for news questions) through Gemini's free link reader, and answers from that.
+var FREE_RULES=" The user's message lists web pages (search results and news pages) that were fetched for this question. Answer from those pages with real, current facts, using only what they say. Be specific: names, numbers, dates. If the pages don't contain the answer, say you couldn't find it and suggest where to look; never make anything up and never write code to search. After the answer, add up to 3 lines like SOURCE: <link> | <site name> for the results you used, using each result's own link, not the search page.";
+var NEEDS_WEB=/\b(search|look ?up|google|news|headlines?|today|tonight|yesterday|tomorrow|latest|newest|current(ly)?|right now|this (week|month|year)|prices?|cost|weather|forecast|score|who won|winner|results?|released?|launch(ed)?|update|stock|bitcoin)\b|https?:\/\/|caut|știri|stiri|\bazi\b|astăzi|astazi|\bieri\b|ultim|\bacum\b|preț|pret|vreme|meteo|câștigat|castigat|rezultat|lansat/i;
+function today(){return new Date().toISOString().slice(0,10)}
+function googleSearchOff(){var m=load("nova.searchOff","");return m===today()}
+function lastUserText(parts){for(var i=parts.length-1;i>=0;i--){if(parts[i].role==="user"){var t=(parts[i].parts||[]).map(function(p){return p.text||""}).join(" ").trim();if(t)return t}}return""}
+function freePages(q){
+  q=q.replace(/^(please\s+)?(search( the web| online| on google)?|look ?up|google|caută( pe (net|internet|google))?|cauta( pe (net|internet|google))?)\s*[:,-]?\s*/i,"").replace(/https?:\/\/\S+/g," ").trim().slice(0,160)||q.slice(0,160);
+  var df=/\b(today|tonight|right now)\b|\bazi\b|astăzi|astazi|\bacum\b/i.test(q)?"d":/\b(news|latest|newest|recent|this week|yesterday|headlines?)\b|știri|stiri|ultim|\bieri\b/i.test(q)?"w":"";
+  var pages=["https://html.duckduckgo.com/html/?q="+encodeURIComponent(q)+(df?"&df="+df:"")];
+  if(/\b(news|headlines?|happen(ed|ing)|world)\b|știri|stiri|întâmplat|intamplat|lume/i.test(q))pages.push("https://en.wikipedia.org/wiki/Portal:Current_events");
+  return pages;
+}
+function ask(parts,json,noTools,force,free){
   ask.sources=[];ask.suggest="";
   abortCtl=new AbortController();
   var ctl=abortCtl, timedOut=false, t=setTimeout(function(){timedOut=true;ctl.abort()},TIMEOUT);
-  var body={systemInstruction:{parts:[{text:system(json)+(force?" Use the Google Search tool now to answer the user's last message.":"")}]},contents:parts};
+  var webOn=!json&&!noTools&&S.web;
+  var userText=lastUserText(parts);
+  // free search when Google Search is off for today and this question needs the web (or the model refused)
+  if(webOn&&!free&&(!webOk||webLevel===0||googleSearchOff())&&(force||NEEDS_WEB.test(userText)))free=true;
+  var google=webOn&&!free&&webOk&&webLevel>0&&!googleSearchOff();
+  var sys=system(json)+(google&&force?" Use the Google Search tool now to answer the user's last message.":"")+(free?FREE_RULES:"");
+  var sendParts=parts;
+  if(free){
+    sendParts=parts.slice();var last=Object.assign({},sendParts[sendParts.length-1]);
+    last.parts=(last.parts||[]).concat([{text:"\n\n[Web pages fetched for this question, today is "+new Date().toDateString()+": "+freePages(userText).join(" ")+" ]"}]);
+    sendParts[sendParts.length-1]=last;
+  }
+  var body={systemInstruction:{parts:[{text:sys}]},contents:sendParts};
   if(json)body.generationConfig={responseMimeType:"application/json",responseSchema:{type:"OBJECT",properties:{heard:{type:"STRING"},answer:{type:"STRING"}},required:["heard","answer"],propertyOrdering:["heard","answer"]}};
-  var tools=!json&&!noTools&&S.web&&webOk&&webLevel>0;
-  if(tools)body.tools=webLevel===2?[{google_search:{}},{url_context:{}}]:[{google_search:{}}];
+  if(google)body.tools=webLevel===2?[{google_search:{}},{url_context:{}}]:[{google_search:{}}];
+  else if(webOn)body.tools=[{url_context:{}}]; // reading links is free
   return fetch("https://generativelanguage.googleapis.com/v1beta/models/"+MODEL+":generateContent",{
     method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json","x-goog-api-key":S.key},body:JSON.stringify(body)
   }).then(function(r){return r.json().catch(function(){return null}).then(function(d){
     if(!r.ok){
-      // if this model or key can't use web search, quietly answer without it
-      var gerr=(d&&d.error&&d.error.message)||"";
-      if(tools&&r.status===429){if(!ask.warned429){ask.warned429=true;toast("Web search hit today’s limit. Answering without it.")}throw {retryPlain:true}}
-      if(tools&&r.status===400&&!BADKEY.test(gerr+JSON.stringify((d&&d.error&&d.error.details)||""))){
-        // try Google Search on its own before giving up on the web
+      var gerr=(d&&d.error&&d.error.message)||"",detail=gerr+JSON.stringify((d&&d.error&&d.error.details)||"");
+      // Google Search isn't included (or today's searches are used up): switch to free search for today
+      if(google&&r.status===429){store("nova.searchOff",today());console.log("[Nova] Google Search quota:",gerr);throw {retryFree:true,force:force}}
+      if(google&&r.status===400&&!BADKEY.test(detail)){
         webLevel--;console.log("[Nova] web search refused:",gerr);
-        if(webLevel===0){webOk=false;toast("Web search isn’t available with this key: "+gerr.slice(0,120))}
+        if(webLevel===0){webOk=false}
         throw {retryTools:true};
       }
+      // the free link reader failed: answer without the web rather than not at all
+      if(!google&&webOn&&body.tools&&r.status===400&&!BADKEY.test(detail)){console.log("[Nova] link reader refused:",gerr);throw {retryPlain:true}}
       if(r.status===429)throw new Error("Nova has hit today’s free limit. Try again later.");
-      if((r.status===400||r.status===403)&&BADKEY.test(gerr+JSON.stringify((d&&d.error&&d.error.details)||"")))throw new Error("Your Gemini key isn’t working. Check it in Settings.");
-      throw new Error((d&&d.error&&d.error.message)||("Google answered with error "+r.status+"."));
+      if((r.status===400||r.status===403)&&BADKEY.test(detail))throw new Error("Your Gemini key isn’t working. Check it in Settings.");
+      throw new Error(gerr||("Google answered with error "+r.status+"."));
     }
     var txt=((d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[]).map(function(p){return p.text||""}).join("").trim();
     if(!txt)throw new Error("Nova didn’t return an answer. Try asking again.");
     var gm=d.candidates[0].groundingMetadata,seen={};
-    // the model skipped the search and claimed it can't browse: ask once more, telling it to search
-    if(tools&&!force&&!(gm&&gm.groundingChunks&&gm.groundingChunks.length)&&REFUSED.test(txt))throw {retryForce:true};
+    // the model skipped searching and claimed it can't browse: try once more (Google Search, or free search)
+    if(webOn&&!free&&!(gm&&gm.groundingChunks&&gm.groundingChunks.length)&&REFUSED.test(txt)){
+      if(google&&!force)throw {retryForce:true};
+      throw {retryFree:true,force:true,free:true}; // still refusing: fetch the pages ourselves
+    }
     ask.suggest=(gm&&gm.searchEntryPoint&&gm.searchEntryPoint.renderedContent)||"";
     ask.sources=((gm&&gm.groundingChunks)||[]).map(function(c){return c.web}).filter(function(w){
       if(!w||!w.uri||seen[w.uri])return false;seen[w.uri]=1;return true}).slice(0,4).map(function(w){return{u:w.uri,t:w.title||w.domain||"Source"}});
+    // sources written by Nova during free search
+    txt=txt.replace(/^[ \t>*-]*SOURCE:[ \t]*(\S+)[ \t]*(?:\|[ \t]*(.+))?$/gim,function(all,u,name){
+      u=u.replace(/^<|>$/g,"").replace(/[).,]+$/,"");if(/^\/\//.test(u))u="https:"+u;
+      var m=u.match(/[?&]uddg=([^&]+)/);if(m){try{u=decodeURIComponent(m[1])}catch(e){}}
+      if(/^https?:\/\//i.test(u)&&!/duckduckgo\.com\/html/i.test(u)&&!seen[u]&&ask.sources.length<4){seen[u]=1;var h="";try{h=new URL(u).hostname.replace(/^www\./,"")}catch(e){}ask.sources.push({u:u,t:(name||h||"Source").trim().slice(0,60)})}
+      return"";
+    }).trim();
     return txt;
   })},function(e){
     if(ctl.signal.aborted&&!timedOut)throw new Error("__stopped__");
@@ -526,6 +563,7 @@ function ask(parts,json,noTools,force){
     if(e&&e.retryPlain)return ask(parts,json,true);
     if(e&&e.retryTools)return ask(parts,json,false,force);
     if(e&&e.retryForce)return ask(parts,json,false,true);
+    if(e&&e.retryFree)return ask(parts,json,false,!!e.force,!!e.free); // Google Search is off for today, so this picks free search when needed
     throw e;
   });
 }
@@ -824,7 +862,7 @@ $("sWebTest").addEventListener("click",function(){
     if(rs.some(function(r){return r.ok})){webOk=true;webLevel=rs[0].ok?2:1}
   },function(){out.textContent="Couldn’t reach Google. Check your internet connection."}).finally(function(){b.disabled=false});
 });
-$("sWeb").addEventListener("click",function(){S.web=!S.web;webOk=true;webLevel=2;save();syncSettings()});
+$("sWeb").addEventListener("click",function(){S.web=!S.web;webOk=true;webLevel=2;try{localStorage.removeItem("nova.searchOff")}catch(e){}save();syncSettings()});
 $("sMemory").addEventListener("click",function(){S.memory=!S.memory;save();syncSettings()});
 $("memList").addEventListener("click",function(e){var b=e.target.closest("[data-forget]");if(!b)return;mem.splice(+b.getAttribute("data-forget"),1);store("nova.memory",mem);renderMemory();toast("Forgotten")});
 $("sForget").addEventListener("click",function(){var b=this;
