@@ -327,7 +327,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.26-b";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.26-c";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -564,7 +564,7 @@ function ask(parts,json,noTools,force,free,english){
     }
     ask.suggest=(gm&&gm.searchEntryPoint&&gm.searchEntryPoint.renderedContent)||"";
     ask.sources=((gm&&gm.groundingChunks)||[]).map(function(c){return c.web}).filter(function(w){
-      if(!w||!w.uri||seen[w.uri])return false;seen[w.uri]=1;return true}).slice(0,4).map(function(w){return{u:w.uri,t:w.title||w.domain||"Source"}});
+      if(!w||!w.uri||seen[w.uri]||/duckduckgo\.com\/html/i.test(w.uri))return false;seen[w.uri]=1;return true}).slice(0,4).map(function(w){return{u:w.uri,t:w.title||w.domain||"Source"}});
     // sources written by Nova during free search
     txt=txt.replace(/^[ \t>*-]*SOURCE:[ \t]*(\S+)[ \t]*(?:\|[ \t]*(.+))?$/gim,function(all,u,name){
       u=u.replace(/^<|>$/g,"").replace(/[).,]+$/,"");if(/^\/\//.test(u))u="https:"+u;
