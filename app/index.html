@@ -323,7 +323,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.25-f";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.25-g";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language the user writes in. Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -491,27 +491,41 @@ var NEEDS_WEB=/\b(search|look ?up|google|news|headlines?|today|tonight|yesterday
 function today(){return new Date().toISOString().slice(0,10)}
 function googleSearchOff(){var m=load("nova.searchOff","");return m===today()}
 function lastUserText(parts){for(var i=parts.length-1;i>=0;i--){if(parts[i].role==="user"){var t=(parts[i].parts||[]).map(function(p){return p.text||""}).join(" ").trim();if(t)return t}}return""}
-function freePages(q){
-  q=q.replace(/^(please\s+)?(search( the web| online| on google)?|look ?up|google|caută( pe (net|internet|google))?|cauta( pe (net|internet|google))?)\s*[:,-]?\s*/i,"").replace(/https?:\/\/\S+/g," ").trim().slice(0,160)||q.slice(0,160);
-  var df=/\b(today|tonight|right now)\b|\bazi\b|astăzi|astazi|\bacum\b/i.test(q)?"d":/\b(news|latest|newest|recent|this week|yesterday|headlines?)\b|știri|stiri|ultim|\bieri\b/i.test(q)?"w":"";
+// turns the question (any language) into a short English search query; falls back to the question itself
+function searchQuery(text,stop){
+  var c=new AbortController(),t=setTimeout(function(){c.abort()},10000);
+  if(stop)stop.signal.addEventListener("abort",function(){c.abort()});
+  return fetch("https://generativelanguage.googleapis.com/v1beta/models/"+MODEL+":generateContent",{method:"POST",signal:c.signal,headers:{"Content-Type":"application/json","x-goog-api-key":S.key},
+    body:JSON.stringify({systemInstruction:{parts:[{text:"Today is "+new Date().toDateString()+". Turn the user's message into the best short English web search query (2 to 8 words) to answer it. Reply with only the query, nothing else."}]},contents:[{role:"user",parts:[{text:text.slice(0,500)}]}]})})
+  .then(function(r){return r.ok?r.json():null}).then(function(d){
+    var q=d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&(d.candidates[0].content.parts||[]).map(function(p){return p.text||""}).join("").trim().replace(/^["'“]|["'”]$/g,"").split("\n")[0];
+    return q&&q.length<120?q:"";
+  }).catch(function(){return""}).finally(function(){clearTimeout(t)});
+}
+function freePages(q,english){
+  var when=q;
+  q=english||q.replace(/^(please\s+)?(search( the web| online| on google)?|look ?up|google|caută( pe (net|internet|google))?|cauta( pe (net|internet|google))?)\s*[:,-]?\s*/i,"").replace(/https?:\/\/\S+/g," ").trim().slice(0,160)||q.slice(0,160);
+  var df=/\b(today|tonight|right now|now|current)\b|\bazi\b|astăzi|astazi|\bacum\b/i.test(when)?"d":/\b(news|latest|newest|recent|this week|yesterday|headlines?)\b|știri|stiri|ultim|\bieri\b/i.test(when)?"w":"";
   var pages=["https://html.duckduckgo.com/html/?q="+encodeURIComponent(q)+(df?"&df="+df:"")];
-  if(/\b(news|headlines?|happen(ed|ing)|world)\b|știri|stiri|întâmplat|intamplat|lume/i.test(q))pages.push("https://en.wikipedia.org/wiki/Portal:Current_events");
+  if(/\b(news|headlines?|happen(ed|ing)|world)\b|știri|stiri|întâmplat|intamplat|lume/i.test(when+" "+q))pages.push("https://en.wikipedia.org/wiki/Portal:Current_events");
   return pages;
 }
-function ask(parts,json,noTools,force,free){
+function ask(parts,json,noTools,force,free,english){
+  // free search: first work out what to search for
+  if(free&&english==null&&!json&&!noTools&&S.web){var stop=abortCtl=new AbortController();return searchQuery(lastUserText(parts),stop).then(function(q){if(stop.signal.aborted)throw new Error("__stopped__");return ask(parts,json,noTools,force,free,q)})}
   ask.sources=[];ask.suggest="";
   abortCtl=new AbortController();
   var ctl=abortCtl, timedOut=false, t=setTimeout(function(){timedOut=true;ctl.abort()},TIMEOUT);
   var webOn=!json&&!noTools&&S.web;
   var userText=lastUserText(parts);
   // free search when Google Search is off for today and this question needs the web (or the model refused)
-  if(webOn&&!free&&(!webOk||webLevel===0||googleSearchOff())&&(force||NEEDS_WEB.test(userText)))free=true;
+  if(webOn&&!free&&(!webOk||webLevel===0||googleSearchOff())&&(force||NEEDS_WEB.test(userText))){free=true;if(english==null)return ask(parts,json,noTools,force,true)}
   var google=webOn&&!free&&webOk&&webLevel>0&&!googleSearchOff();
   var sys=system(json)+(google&&force?" Use the Google Search tool now to answer the user's last message.":"")+(free?FREE_RULES:"");
   var sendParts=parts;
   if(free){
     sendParts=parts.slice();var last=Object.assign({},sendParts[sendParts.length-1]);
-    last.parts=(last.parts||[]).concat([{text:"\n\n[Web pages fetched for this question, today is "+new Date().toDateString()+": "+freePages(userText).join(" ")+" ]"}]);
+    last.parts=(last.parts||[]).concat([{text:"\n\n[Web pages fetched for this question, today is "+new Date().toDateString()+": "+freePages(userText,english).join(" ")+" ]"}]);
     sendParts[sendParts.length-1]=last;
   }
   var body={systemInstruction:{parts:[{text:sys}]},contents:sendParts};
