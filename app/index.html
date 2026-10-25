@@ -323,7 +323,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.25-h";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.25-i";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -335,7 +335,7 @@ var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directl
  "artist's work: ordinary details, natural light, real textures. Avoid words like cute, adorable, epic, magical, "+
  "glowing, hyperrealistic, ultra detailed, 8k, 3D render or masterpiece.";
 var OPEN_RULES=" You can open websites for the user. When they ask you to open, go to, play, watch, listen to or search something on a website or app (YouTube, Google, Maps, Spotify, Netflix, Instagram, TikTok, Wikipedia, Gmail and so on), reply with one short sentence like 'Opening YouTube.' and then a new line that starts with OPEN: followed by the full https link. To search or play something, use the site's search link, for example OPEN: https://www.youtube.com/results?search_query=lofi+music or OPEN: https://open.spotify.com/search/lofi or OPEN: https://www.google.com/maps/search/pizza+near+me. Only use OPEN: when they ask you to open or play something. You can open websites, not programs installed on the computer.";
-var WEB_RULES=" You have a Google Search tool and can read web pages from links the user sends. Always use Google Search for news, today's events, prices, weather, scores, people in the news, anything recent, or when the user asks you to search or look something up, then answer from what you found. Never say that you can't browse the internet, don't have real-time information or can't search: search instead.";
+var WEB_RULES=" You can search the web and read links the user sends. For news, prices, scores, weather, people in the news or anything recent, answer from search results when you have them (use the Google Search tool if it is available). If you have no results for a current fact, say you couldn't check it right now instead of guessing. Never say that you can't browse the internet.";
 var MEMORY_RULES=" Memory: you can remember lasting facts about the user between chats. When the user shares something lasting about themselves (their name, where they live, their job, hobbies or music, people in their life, projects, likes, how they want you to talk) or asks you to remember something, end your reply with an extra line that starts with REMEMBER: followed by one short fact about the user, like 'REMEMBER: Their name is Stef.' At most two REMEMBER lines, and only for facts you don't already know. Never remember passwords, keys, money details, health details or anything they ask you not to keep. If the user asks you to forget something, end with a line FORGET: followed by a few words naming it. Never talk about these lines in the rest of your reply.";
 var TRANSCRIBE_RULES=" The user's last message is a voice recording. In 'heard', write only the words the user spoke, word for word, in the language they spoke, and nothing else. Leave 'answer' empty.";
 var LENGTH={short:" Keep every answer to one to three sentences.",normal:" Keep answers to a few short paragraphs at most.",detailed:" Give thorough, detailed answers when the question deserves it."};
@@ -483,11 +483,11 @@ function system(voice){
 }
 function contents(list){return list.slice(-30).map(function(m){return{role:m.role,parts:[{text:m.text}]}})}
 var BADKEY=/API key not valid|API_KEY_INVALID|API key expired|API_KEY_EXPIRED|invalid api key|key was reported as leaked|PERMISSION_DENIED.*key/i;
-var REFUSED=/(real[- ]time|browse the (web|internet)|browsing|internet access|access to (the )?(internet|current)|can(no|')t (search|access|look up)|unable to (search|browse|access)|not able to (search|browse)|n-am acces|nu am acces|nu pot (căuta|accesa|naviga))/i;
+var REFUSED=/\b(i|i'm|i am|sorry,? (but )?i)\b[^.!?\n]{0,60}\b(don'?t|do not|can'?t|cannot|am unable|am not able|have no|lack|unable)\b[^.!?\n]{0,80}\b(real[- ]?time|internet|brows\w*|search\w*|web|online|current (information|events|data|news)|live data|up[- ]to[- ]date)|\b(nu pot|nu am acces|n-am acces|nu am posibilitatea|nu dispun)\b[^.!?\n]{0,80}\b(internet|timp real|căuta|cauta|naviga|web|online|actual|în acest moment|acum)|\b(restricții|restrictii|restrictions?|limitations?)\b[^.!?\n]{0,60}\b(timp real|real[- ]?time|internet|online)/i;
 // Free web search: when Google Search isn't included with the key, Nova reads a DuckDuckGo results page
 // (and Wikipedia's daily news page for news questions) through Gemini's free link reader, and answers from that.
-var FREE_RULES=" The user's message lists web pages (search results and news pages) that were fetched for this question. Answer from those pages with real, current facts, using only what they say. Be specific: names, numbers, dates. If the pages don't contain the answer, say you couldn't find it and suggest where to look; never make anything up and never write code to search. After the answer, add up to 3 lines like SOURCE: <link> | <site name> for the results you used, using each result's own link, not the search page.";
-var NEEDS_WEB=/\b(search|look ?up|google|news|headlines?|today|tonight|yesterday|tomorrow|latest|newest|current(ly)?|right now|this (week|month|year)|prices?|cost|weather|forecast|score|who won|winner|results?|released?|launch(ed)?|update|stock|bitcoin)\b|https?:\/\/|caut|știri|stiri|\bazi\b|astăzi|astazi|\bieri\b|ultim|\bacum\b|preț|pret|vreme|meteo|câștigat|castigat|rezultat|lansat/i;
+var FREE_RULES=" The user's message lists web pages (search results and news pages) that were fetched for this question. Take every current fact (news, prices, scores, dates, who did what) only from those pages, and be specific: names, numbers, dates. For general knowledge that doesn't change you may use what you know. If the pages don't contain the current fact asked for, say you couldn't find it and suggest where to look; never make anything up and never write code to search. After the answer, add up to 3 lines like SOURCE: <link> | <site name> for the results you used, using each result's own link, not the search page.";
+var NEEDS_WEB=/\b(search( the web| online| for)?|look ?up|google it|news|headlines?|today|tonight|yesterday|tomorrow|latest|newest|right now|this (week|month)|prices?|weather|forecast|score|scores|who won|winner|stock|bitcoin|crypto|exchange rate|election)\b|https?:\/\/|caută|cauta|știri|stiri|\bazi\b|astăzi|astazi|\bieri\b|\bmâine\b|ultimele|preț|pret|vremea|meteo|câștigat|castigat|curs valutar/i;
 function today(){return new Date().toISOString().slice(0,10)}
 function googleSearchOff(){var m=load("nova.searchOff","");return m===today()}
 function lastUserText(parts){for(var i=parts.length-1;i>=0;i--){if(parts[i].role==="user"){var t=(parts[i].parts||[]).map(function(p){return p.text||""}).join(" ").trim();if(t)return t}}return""}
@@ -685,7 +685,7 @@ function sendAudio(blob){
     var base=msgs.slice();
     var parts=contents(base).concat([{role:"user",parts:[{inlineData:{mimeType:mime,data:b64}}]}]);
     busy=true;render.error="";render();
-    var twoStep=S.web&&webOk; // write the words down first, then answer them with web search available
+    var twoStep=S.web; // write the words down first, then answer them with web search (Google or free) available
     transcribing=twoStep;
     ask(parts,true).then(function(raw){
       var heard="",answer=raw;try{var o=JSON.parse(raw);heard=String(o.heard||"").trim();answer=String(o.answer||"").trim()}catch(e){}
@@ -872,7 +872,9 @@ $("sWebTest").addEventListener("click",function(){
     if(a.ok)return [a];
     return tryTools([{google_search:{}}],"Search only").then(function(b2){return [a,b2]});
   }).then(function(rs){
-    out.textContent=rs.map(function(r){return r.label+": "+r.msg}).join("  ·  ")+"  ·  Model: "+MODEL+" · Version "+VERSION;
+    var quota=rs.every(function(r){return !r.ok&&/\(429\)/.test(r.msg)});
+    out.textContent=(quota?"Google Search isn’t included with your free key, so Nova uses free web search instead (DuckDuckGo and Wikipedia). That’s fine — searching still works.  ·  ":"")+rs.map(function(r){return r.label+": "+r.msg}).join("  ·  ")+"  ·  Model: "+MODEL+" · Version "+VERSION;
+    if(quota)store("nova.searchOff",today());
     if(rs.some(function(r){return r.ok})){webOk=true;webLevel=rs[0].ok?2:1}
   },function(){out.textContent="Couldn’t reach Google. Check your internet connection."}).finally(function(){b.disabled=false});
 });
@@ -1037,7 +1039,16 @@ function syncNow(){
     var R=(rows[0]&&rows[0].data)||{},now=Date.now();
     // a different account logged in on this device: start from that account's data, don't mix the two
     var prevUser=load("nova.syncUser","");
-    if(prevUser&&prevUser!==uid){applying=true;chats=[];mem=[];msgs=[];chatId=newId();store("nova.synced",{chats:[],mem:[]});store("nova.prefsAt",0);applying=false;render()}
+    if(prevUser&&prevUser!==uid){
+      applying=true;
+      // put the previous person's chats and notes aside on this device, and give them back when they log in again
+      store("nova.stash."+prevUser,{chats:chats,mem:mem,snap:load("nova.synced",{chats:[],mem:[]})});
+      var back=load("nova.stash."+uid,null);
+      chats=back?back.chats:[];mem=back?back.mem:[];msgs=[];chatId=newId();
+      store("nova.synced",back?back.snap:{chats:[],mem:[]});store("nova.prefsAt",0);
+      try{localStorage.removeItem("nova.stash."+uid)}catch(e){}
+      store("nova.chats",chats);store("nova.memory",mem);store("nova.current",chatId);
+      applying=false;render()}
     store("nova.syncUser",uid);
     var gone=R.gone||{chats:{},mem:{}};gone.chats=gone.chats||{};gone.mem=gone.mem||{};
     var snap=load("nova.synced",{chats:[],mem:[]});
