@@ -323,9 +323,9 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.25-g";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.25-h";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
- "Reply in the language the user writes in. Use plain text: no markdown symbols like ** or #. "+
+ "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
  "like ```python, give complete working code, and explain it briefly in plain text outside the block. "+
  "Be honest when you are not sure about something. "+
