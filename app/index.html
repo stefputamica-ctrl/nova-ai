@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Nova</title>
+<meta name="description" content="Nova, an AI you can talk to.">
+<meta name="theme-color" content="#070a14">
+<link rel="manifest" href="manifest.webmanifest">
+<script src="config.js"></script>
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nova">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root{
+  --bg:#070a14; --ink:#eef1f8; --dim:#9aa3bd; --line:rgba(255,255,255,.12);
+  --glass:rgba(28,32,46,.42); --edge:rgba(255,255,255,.16); --pill:rgba(255,255,255,.18);
+  --bubble:#eef1f8; --bubbleText:#0d111c; --sun:#ffb627; --danger:#ff7a6b;
+  --veil:rgba(0,0,0,.12); --talkveil:rgba(5,7,14,.62); --code:#0c0f17;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --top:env(safe-area-inset-top,0px); --bot:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#e9eaee; --ink:#15181f; --dim:#5b6070; --line:rgba(20,24,32,.12);
+  --glass:rgba(255,255,255,.42); --edge:rgba(255,255,255,.75); --pill:rgba(255,255,255,.85);
+  --bubble:#15181f; --bubbleText:#fff; --veil:rgba(255,255,255,.08); --talkveil:rgba(236,237,242,.7); --code:#11141c;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* wallpaper */
+#wall{position:fixed;inset:0;background:var(--bg) center/cover no-repeat;transition:background-image .3s}
+#wall::after{content:"";position:absolute;inset:0;background:var(--veil);transition:background .4s}
+/* once a conversation starts, the wallpaper steps back so the text is easy to read */
+#wall.talking::after{background:var(--talkveil)}
+#wall.colours{background-image:none!important}
+#wall.colours::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(circle at 92% 6%,#ffb627 0 120px,transparent 121px),
+  radial-gradient(circle at 0% 45%,rgba(142,197,255,.6) 0 130px,transparent 131px),
+  radial-gradient(circle at 100% 85%,rgba(255,179,217,.55) 0 110px,transparent 111px)}
+
+/* glass */
+.glass{background:var(--glass);border:1px solid var(--edge);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%)}
+
+/* layout */
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:12px;max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:54px;padding:0 8px 0 16px;border-radius:27px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;letter-spacing:.02em}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--sun);flex:none}
+.tools{display:flex;gap:6px}
+.chip{font-size:13px;font-weight:600;padding:7px 11px;border-radius:16px;background:var(--glass);border:1px solid var(--edge)}
+.chip.sun{background:var(--sun);border-color:var(--sun);color:#15181f}
+#log{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(var(--top) + 82px) 18px calc(var(--bot) + 120px);position:relative}
+.inner{max-width:720px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+.hero{flex:1;display:flex;flex-direction:column;justify-content:center;padding-bottom:12px}
+.hero.low{justify-content:flex-end;padding-bottom:4px}
+.hero h1{font-size:clamp(34px,8vw,46px);line-height:1.05;letter-spacing:-.02em;margin:0 0 6px;font-weight:800}
+.hero .sub{font-size:19px;color:var(--dim);margin:0 0 22px}
+.starter{display:block;text-align:left;padding:8px 0;font-size:17px;font-weight:600;text-decoration:underline;text-decoration-color:var(--sun);text-underline-offset:5px;text-decoration-thickness:1.5px}
+.hint{color:var(--dim);font-size:14px;margin-top:20px}
+.msg{margin:0 0 20px}
+.msg.u{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.ub{max-width:84%;background:var(--bubble);color:var(--bubbleText);padding:10px 15px;border-radius:20px 20px 6px 20px;white-space:pre-wrap;overflow-wrap:anywhere;user-select:none;-webkit-user-select:none}
+.uimg{width:180px;height:180px;object-fit:cover;border-radius:18px}
+.msg.n{display:grid;grid-template-columns:12px minmax(0,1fr);gap:12px}
+.msg.n .dot{margin-top:8px}
+.txt{font-size:16.5px;line-height:1.6;overflow-wrap:anywhere}
+.txt p{margin:0 0 .8em;white-space:pre-wrap}.txt p:last-child{margin-bottom:0}
+.code{background:var(--code);color:#e6e9f0;border-radius:14px;margin:8px 0;overflow:hidden}
+.code .bar{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.08);font-size:12px;color:#98a0b3}
+.code .bar button{color:var(--sun);font-weight:700;font-size:12px}
+.code pre{margin:0;padding:12px;overflow-x:auto;font:13px/1.55 var(--mono)}
+.acts{display:flex;gap:18px;margin-top:8px}
+.acts button{font-size:13px;font-weight:600;color:var(--dim)}
+.gen{margin-top:10px;position:relative;width:100%;max-width:420px;aspect-ratio:1;border-radius:20px;overflow:hidden;background:var(--glass);border:1px solid var(--edge);display:grid;place-items:center}
+.gen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.gen .state{color:var(--dim);font-size:14px;text-align:center;padding:20px;display:grid;gap:10px;justify-items:center}
+.spin{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--sun);animation:sp .9s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.err{color:var(--danger);font-size:14px;margin:4px 0 0}
+
+/* composer */
+#bottom{position:absolute;z-index:5;left:10px;right:10px;bottom:calc(var(--bot) + 12px);max-width:760px;margin:0 auto;display:grid;gap:8px}
+#photoChip{justify-self:start;display:flex;align-items:center;gap:10px;padding:7px 14px 7px 7px;border-radius:18px;font-size:13px;font-weight:600}
+#photoChip img{width:36px;height:36px;border-radius:10px;object-fit:cover}
+#photoChip button{color:var(--dim)}
+.composer{display:flex;align-items:flex-end;gap:8px;padding:7px;border-radius:28px}
+.round{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none}
+#plus{background:var(--glass);border:1px solid var(--edge);font-size:24px;line-height:1}
+#input{flex:1;min-width:0;background:none;border:0;outline:0;resize:none;max-height:140px;padding:10px 4px;font-size:16.5px;line-height:1.4}
+#input::placeholder{color:var(--dim)}
+#act{background:var(--ink);color:var(--bg)}
+#act.send{background:var(--sun);color:#15181f;font-weight:800;font-size:20px}
+#act svg{width:20px;height:20px}
+.listen{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 18px;border-radius:28px;width:100%;text-align:left}
+.listen .rec{width:10px;height:10px;border-radius:50%;background:#e5484d;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.listen span{flex:1;font-weight:600}
+
+/* sheets */
+.sheet{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;background:var(--bg)}
+.sheet .bg{position:absolute;inset:0;background:inherit}
+.sheet-head{position:relative;display:flex;align-items:center;justify-content:space-between;padding:calc(var(--top) + 18px) 20px 10px;max-width:720px;width:100%;margin:0 auto}
+.sheet-head h2{margin:0;font-size:30px;letter-spacing:-.02em}
+.done{background:var(--sun);color:#15181f;font-weight:700;padding:8px 16px;border-radius:16px}
+.sheet-body{position:relative;flex:1;overflow-y:auto;padding:4px 20px calc(var(--bot) + 40px)}
+.sheet-body>div{max-width:720px;margin:0 auto}
+.sec{font-size:14px;font-weight:700;color:var(--dim);margin:22px 4px 8px}
+.card{border-radius:24px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.row+.row,.stack+.row,.row+.stack,.stack+.stack{border-top:1px solid var(--line)}
+.stack{padding:12px 16px;display:grid;gap:8px}
+.label{font-weight:600}
+.note{font-size:13px;color:var(--dim);line-height:1.45}
+.grow{flex:1;min-width:0}
+.seg{display:flex;padding:4px;border-radius:999px}
+.seg button{flex:1;padding:9px 6px;border-radius:999px;font-size:14px;font-weight:600;color:var(--dim);border:1px solid transparent}
+.seg button[aria-pressed="true"]{background:var(--pill);color:var(--ink);border-color:var(--edge);font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.switch{width:50px;height:30px;border-radius:999px;background:var(--line);position:relative;flex:none;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.switch[aria-checked="true"]{background:var(--sun)}
+.switch[aria-checked="true"]::after{transform:translateX(20px)}
+.field{width:100%;background:var(--glass);border:1px solid var(--edge);border-radius:14px;padding:12px 14px;font-size:15px;outline:0}
+textarea.field{min-height:84px;resize:vertical}
+select.field{appearance:auto}
+.btn{display:block;width:100%;text-align:center;background:var(--sun);color:#15181f;font-weight:700;border-radius:14px;padding:12px}
+.btn.ghost{background:var(--glass);border:1px solid var(--edge);color:var(--ink)}
+.danger{color:var(--danger);font-weight:700}
+a{color:inherit}
+.chat{border-radius:20px;display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:10px}
+.chat .grow{cursor:pointer}
+.chat .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* viewer */
+#viewer{position:fixed;inset:0;z-index:30;background:#000;display:flex;align-items:center;justify-content:center}
+#viewer img{max-width:100%;max-height:100%;object-fit:contain}
+#viewer .vtop{position:absolute;top:calc(var(--top) + 14px);left:16px;right:16px;display:flex;justify-content:space-between}
+#viewer .vbot{position:absolute;bottom:calc(var(--bot) + 24px);left:0;right:0;display:flex;justify-content:center}
+.vbtn{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:18px;padding:9px 16px;font-weight:700}
+.vbtn.sun{background:var(--sun);color:#15181f;border-color:var(--sun)}
+
+/* key welcome */
+.welcome{border-radius:24px;padding:20px;display:grid;gap:12px;margin-bottom:16px}
+.welcome h3{margin:0;font-size:20px}
+.welcome p{margin:0;color:var(--dim);font-size:15px}
+.toast{position:fixed;z-index:40;left:50%;bottom:calc(var(--bot) + 96px);transform:translateX(-50%);padding:10px 16px;border-radius:16px;font-weight:600;font-size:14px}
+/* login */
+#auth{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:calc(var(--top) + 20px) 18px calc(var(--bot) + 20px);background:var(--bg) center/cover no-repeat;overflow-y:auto}
+#auth::before{content:"";position:fixed;inset:0;background:var(--veil)}
+.authcard{position:relative;width:100%;max-width:400px;border-radius:30px;padding:28px 22px 24px;display:grid;gap:14px}
+.word{font-weight:200;letter-spacing:.55em;font-size:30px;text-align:center;margin:0 0 4px;padding-left:.55em}
+.authcard .lead{text-align:center;color:var(--dim);margin:0 0 6px;font-size:15px}
+.tabs{display:flex;padding:4px;border-radius:999px}
+.tabs button{flex:1;padding:10px;border-radius:999px;font-weight:600;color:var(--dim);border:1px solid transparent}
+.tabs button[aria-selected="true"]{background:var(--pill);color:var(--ink);border-color:var(--edge);font-weight:700}
+.authcard label{display:grid;gap:6px;font-size:14px;font-weight:600}
+.authcard .msg{margin:0;font-size:14px;line-height:1.45;color:var(--dim)}
+.authcard .msg.bad{color:var(--danger)}
+.authcard .msg.good{color:var(--ink)}
+.linkbtn{justify-self:center;color:var(--dim);font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.btn[disabled]{opacity:.55}
+@media (prefers-reduced-motion:reduce){.spin,.listen .rec{animation:none}}
+</style>
+</head>
+<body>
+<div id="wall"></div>
+<div id="app">
+  <header class="glass">
+    <div class="brand"><span class="dot"></span>Nova</div>
+    <div class="tools">
+      <button class="chip sun" id="stopTalk" hidden>Stop</button>
+      <button class="chip" id="openChats">Chats</button>
+      <button class="chip" id="newChat">New chat</button>
+      <button class="chip" id="openSettings">Settings</button>
+    </div>
+  </header>
+  <main id="log"><div class="inner" id="inner"></div></main>
+  <div id="bottom">
+    <div id="photoChip" class="glass" hidden><img alt=""><span>Photo attached</span><button id="rmPhoto">Remove</button></div>
+    <div id="composer" class="composer glass">
+      <button class="round" id="plus" aria-label="Attach a photo">+</button>
+      <textarea id="input" rows="1" placeholder="Message Nova" aria-label="Message Nova"></textarea>
+      <button class="round" id="act" aria-label="Talk to Nova"></button>
+    </div>
+    <button id="listening" class="listen glass" hidden><i class="rec"></i><span id="listenText">Listening… tap to send</span></button>
+  </div>
+  <input type="file" id="file" accept="image/*" hidden>
+  <input type="file" id="wallFile" accept="image/*" hidden>
+</div>
+
+<!-- settings -->
+<section class="sheet" id="settings" hidden aria-label="Settings">
+  <div class="bg wallbg"></div>
+  <div class="sheet-head"><h2>Settings</h2><button class="done" data-close="settings">Done</button></div>
+  <div class="sheet-body"><div>
+    <div class="sec">Your Gemini key</div>
+    <div class="card glass">
+      <div class="stack">
+        <div class="note">Nova uses Google Gemini to answer. Get a free key at <b>aistudio.google.com</b> → Get API key, and paste it here. It stays only on this device.</div>
+        <input class="field" id="sKey" type="password" placeholder="Paste your Gemini key" autocomplete="off">
+      </div>
+      <div class="stack">
+        <div class="label">Pollinations key (optional)</div>
+        <div class="note">Removes the watermark from pictures and makes them faster.</div>
+        <input class="field" id="sPicKey" type="password" placeholder="sk_… or pk_…" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="sec">Voice</div>
+    <div class="card glass">
+      <div class="row"><div class="grow"><div class="label">Read replies aloud</div><div class="note">Nova speaks every answer.</div></div><button class="switch" role="switch" id="sSpeak" aria-label="Read replies aloud"></button></div>
+      <div class="stack"><div class="label">Voice</div><select class="field" id="sVoice"></select><div class="note">Edge on PC and Chrome on Android usually have the most natural voices.</div></div>
+      <div class="stack"><div class="label">Speed</div><div class="seg glass" data-key="rate"><button data-v="0.85">Slow</button><button data-v="1">Normal</button><button data-v="1.2">Fast</button></div></div>
+      <div class="stack"><div class="label">Pitch</div><div class="seg glass" data-key="pitch"><button data-v="0.85">Lower</button><button data-v="1">Normal</button><button data-v="1.15">Higher</button></div></div>
+      <div class="stack"><button class="btn" id="sTest">Play sample</button></div>
+    </div>
+
+    <div class="sec">Answers</div>
+    <div class="card glass">
+      <div class="stack"><div class="label">Answer length</div><div class="seg glass" data-key="length"><button data-v="short">Short</button><button data-v="normal">Normal</button><button data-v="detailed">Detailed</button></div></div>
+      <div class="stack"><div class="label">Custom instructions</div><div class="note">Tell Nova how to talk to you, for example “Keep it casual and use simple words.”</div><textarea class="field" id="sCustom" maxlength="600" placeholder="How should Nova respond?"></textarea></div>
+    </div>
+
+    <div class="sec">Pictures</div>
+    <div class="card glass">
+      <div class="stack"><div class="label">Picture style</div><div class="note">Photo and Hand-drawn look more natural. Free lets the picture service decide.</div><div class="seg glass" data-key="picStyle"><button data-v="photo">Photo</button><button data-v="art">Hand-drawn</button><button data-v="free">Free</button></div></div>
+    </div>
+
+    <div class="sec">Appearance</div>
+    <div class="card glass">
+      <div class="stack"><div class="label">Theme</div><div class="seg glass" data-key="theme"><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+      <div class="stack"><div class="label">Wallpaper</div><div class="note">Pick a background, use your own photo, or open a picture Nova made and tap “Set as wallpaper”.</div>
+        <div class="seg glass" data-key="wallpaper"><button data-v="space">Space</button><button data-v="sky">Sky</button><button data-v="colours">Colours</button><button data-v="custom" id="segCustom" hidden>Photo</button></div>
+        <button class="btn" id="chooseWall">Choose your own photo</button>
+      </div>
+    </div>
+
+    <div class="sec">Chat history</div>
+    <div class="card glass">
+      <div class="row"><div class="grow"><div class="label">Remember chats</div><div class="note">Keep your conversations (open them from Chats at the top). Stored only on this device.</div></div><button class="switch" role="switch" id="sRemember" aria-label="Remember chats"></button></div>
+      <div class="row"><button class="danger" id="sClear">Delete all chats</button></div>
+    </div>
+
+    <div class="sec">Account</div>
+    <div class="card glass">
+      <div class="row"><div class="grow"><div class="label">Logged in as</div><div class="note" id="sEmail">Not logged in</div></div><button class="danger" id="sLogout">Log out</button></div>
+    </div>
+
+    <div class="sec">About</div>
+    <div class="card glass"><div class="stack"><div class="label">Nova</div><div class="note">Answers come from Google Gemini, so they can be wrong. Messages, photos and voice recordings are sent to Google to get an answer. Pictures are made by Pollinations.ai, which receives the picture description.</div></div></div>
+  </div></div>
+</section>
+
+<!-- chats -->
+<section class="sheet" id="chats" hidden aria-label="Chats">
+  <div class="bg wallbg"></div>
+  <div class="sheet-head"><h2>Chats</h2><button class="done" data-close="chats">Done</button></div>
+  <div class="sheet-body"><div>
+    <button class="btn" id="chatsNew" style="margin-bottom:12px">Start a new chat</button>
+    <div id="chatList"></div>
+  </div></div>
+</section>
+
+<!-- picture viewer -->
+<div id="viewer" hidden>
+  <img alt="Picture">
+  <div class="vtop"><button class="vbtn" id="vClose">Close</button><button class="vbtn sun" id="vSave">Save to device</button></div>
+  <div class="vbot"><button class="vbtn" id="vWall">Set as wallpaper</button></div>
+</div>
+<div id="toast" class="toast glass" hidden></div>
+
+<!-- log in / sign up -->
+<section id="auth" hidden aria-label="Log in to Nova">
+  <form class="authcard glass" id="authForm" novalidate>
+    <h1 class="word">NOVA</h1>
+    <p class="lead" id="authLead">Log in to talk to Nova.</p>
+    <div class="tabs glass" role="tablist" id="authTabs">
+      <button type="button" role="tab" data-mode="login" aria-selected="true">Log in</button>
+      <button type="button" role="tab" data-mode="signup" aria-selected="false">Sign up</button>
+    </div>
+    <label id="emailRow">Email<input class="field" id="aEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com"></label>
+    <label id="passRow">Password<input class="field" id="aPass" type="password" autocomplete="current-password" placeholder="At least 8 characters"></label>
+    <label id="pass2Row" hidden>Repeat password<input class="field" id="aPass2" type="password" autocomplete="new-password"></label>
+    <p class="msg" id="aMsg" role="status"></p>
+    <button class="btn" id="aGo" type="submit">Log in</button>
+    <button class="linkbtn" type="button" id="aForgot">Forgot password?</button>
+  </form>
+</section>
+
+<script>
+(function(){
+"use strict";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000;
+var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
+ "Reply in the language the user writes in. Use plain text: no markdown symbols like ** or #. "+
+ "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
+ "like ```python, give complete working code, and explain it briefly in plain text outside the block. "+
+ "Be honest when you are not sure about something. "+
+ "You can create pictures: if the user asks you to draw, create, generate or make an image, picture, photo, "+
+ "drawing or wallpaper, reply with exactly one line that starts with IMAGE: followed by a detailed English "+
+ "description of the picture to create, and nothing else. Describe it plainly, like a real photo or a real "+
+ "artist's work: ordinary details, natural light, real textures. Avoid words like cute, adorable, epic, magical, "+
+ "glowing, hyperrealistic, ultra detailed, 8k, 3D render or masterpiece.";
+var LENGTH={short:" Keep every answer to one to three sentences.",normal:" Keep answers to a few short paragraphs at most.",detailed:" Give thorough, detailed answers when the question deserves it."};
+var VOICE_RULES=" The user's last message is a voice recording. In 'heard', write only the words the user spoke, word for word, in the language they spoke, and nothing else. In 'answer', write your reply to what they said, in the same language as the words in 'heard'. A short greeting like 'hey' or 'hi' is English. If you are not sure which language it is, reply in English.";
+var PIC={photo:", candid photograph taken on a 35mm film camera, natural daylight, soft film grain, muted true-to-life colors, slightly imperfect framing, realistic proportions, no glow, no fantasy lighting",
+ art:", hand-made illustration, gouache and colored pencil on textured paper, visible brush strokes, limited muted palette, flat light, imperfect lines",free:""};
+var STARTERS=["Explain why some chord progressions sound sad","Give me a fun fact about space","Help me plan a relaxed weekend","Write a Python script that renames my photos by date","Draw a cozy cabin in the snow at sunset"];
+var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true};
+
+var $=function(id){return document.getElementById(id)};
+function load(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){toast("Your device is out of space for Nova’s data.");return false}}
+var S=Object.assign({},DEFAULTS,load("nova.settings",{}));
+var chats=load("nova.chats",[]);
+var chatId=load("nova.current","")||newId();
+var msgs=[];
+if(S.remember){var cur=chats.filter(function(c){return c.id===chatId})[0];if(cur)msgs=cur.msgs}
+var busy=false, abortCtl=null, photo=null, recog=null, recorder=null, recChunks=[], heardText="";
+
+function newId(){return Date.now()+"-"+Math.floor(Math.random()*1e6)}
+function save(){return store("nova.settings",S)!==false}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function toast(t){var el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){el.hidden=true},2600)}
+function vibrate(){try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}}
+
+/* ---------- appearance ---------- */
+function wallUrl(){
+  // wide screens (PC) get a landscape cut of the same picture so the name and the planet both show
+  var wide=window.innerWidth>window.innerHeight*1.1?"-wide":"";
+  if(S.wallpaper==="space")return (S.theme==="light"?"wp-space-light":"wp-space")+wide+".jpg";
+  if(S.wallpaper==="sky")return "wp-sky"+wide+".jpg";
+  if(S.wallpaper==="custom"&&S.customWall)return S.customWall;
+  return "";
+}
+function applyLook(){
+  document.documentElement.setAttribute("data-theme",S.theme);
+  var u=wallUrl(), w=$("wall");
+  w.className=(S.wallpaper==="colours"?"colours":"")+(msgs.length||busy?" talking":"");
+  w.style.backgroundImage=u?"url(\""+u+"\")":"none";
+  document.documentElement.style.setProperty("--veil",S.wallpaper==="space"?(S.theme==="light"?"rgba(255,255,255,.06)":"rgba(0,0,0,.1)"):(S.theme==="light"?"rgba(255,255,255,.4)":"rgba(0,0,0,.35)"));
+  var bgs=document.querySelectorAll(".wallbg");
+  for(var i=0;i<bgs.length;i++){bgs[i].style.background=(u?"url(\""+u+"\") center/cover, ":"")+"var(--bg)"}
+  document.querySelector('meta[name="theme-color"]').setAttribute("content",S.theme==="light"?"#e9eaee":"#070a14");
+  $("segCustom").hidden=!S.customWall;
+}
+
+/* ---------- rendering ---------- */
+function lowLayout(){return S.wallpaper==="space"||S.wallpaper==="custom"}
+function render(){
+  var h="";
+  if(!S.key){
+    h+='<div class="welcome glass"><h3>Welcome to Nova</h3><p>To start, paste your free Google Gemini key. Get one at aistudio.google.com → Get API key. It stays only on this device.</p>'+
+       '<input class="field" id="wKey" type="password" placeholder="Paste your Gemini key" autocomplete="off"><button class="btn" id="wSave">Start chatting</button></div>';
+  }
+  if(!msgs.length&&S.key){
+    var low=lowLayout();
+    h+='<div class="hero'+(low?" low":"")+'">';
+    if(!low)h+='<h1>'+greeting()+'</h1><p class="sub">What’s on your mind?</p>';
+    (low?STARTERS.slice(0,3):STARTERS).forEach(function(q){h+='<button class="starter" data-q="'+esc(q)+'">'+esc(q)+'</button>'});
+    if(!low)h+='<div class="hint">Tap the microphone to talk, or + to ask about a photo.</div>';
+    h+='</div>';
+  }else{
+    msgs.forEach(function(m,i){
+      if(m.role==="user"){
+        h+='<div class="msg u" data-i="'+i+'">'+(m.image?'<img class="uimg" src="'+esc(m.image)+'" alt="Your photo" data-view="'+esc(m.image)+'">':"")+'<div class="ub" data-edit="'+i+'">'+esc(m.text)+'</div></div>';
+      }else{
+        h+='<div class="msg n"><span class="dot"></span><div>'+formatAnswer(m.text)+
+          (m.gen?'<div class="gen" data-gen="'+esc(m.gen)+'"><div class="state"><span class="spin"></span>Painting your picture…</div></div>':"")+
+          '<div class="acts"><button data-act="listen" data-i="'+i+'">Listen</button><button data-act="copy" data-i="'+i+'">Copy</button><button data-act="share" data-i="'+i+'">Share</button>'+
+          (i===msgs.length-1&&!busy?'<button data-act="retry">Retry</button>':"")+'</div></div></div>';
+      }
+    });
+  }
+  if(busy)h+='<div class="msg n"><span class="dot"></span><div><span class="spin" style="display:inline-block"></span></div></div>';
+  if(render.error)h+='<p class="err">'+esc(render.error)+'</p>';
+  $("inner").innerHTML=h;
+  $("wall").classList.toggle("talking",msgs.length>0||busy);
+  // load generated pictures
+  var gens=$("inner").querySelectorAll(".gen");
+  for(var g=0;g<gens.length;g++)loadGen(gens[g]);
+  updateAct();
+  var log=$("log");log.scrollTop=log.scrollHeight;
+}
+function greeting(){var h=new Date().getHours();return h<5?"Still up?":h<12?"Good morning.":h<18?"Good afternoon.":"Good evening."}
+function formatAnswer(t){
+  var out="",re=/```([\w+#.-]*)[^\n]*\n?([\s\S]*?)(```|$)/g,last=0,m;
+  function para(s){s=s.trim();if(!s)return"";return s.split(/\n{2,}/).map(function(p){return"<p>"+esc(p)+"</p>"}).join("")}
+  while((m=re.exec(t))){
+    out+=para(t.slice(last,m.index));
+    out+='<div class="code"><div class="bar"><span>'+esc(m[1]||"code")+'</span><button data-act="copycode">Copy code</button></div><pre><code>'+esc(m[2].replace(/\n$/,""))+'</code></pre></div>';
+    last=re.lastIndex;if(!m[0].length)break;
+  }
+  out+=para(t.slice(last));
+  return '<div class="txt">'+out+'</div>';
+}
+function picUrl(prompt){
+  var seed=Math.floor(Math.random()*1e6);
+  if(S.picKey)return "https://gen.pollinations.ai/image/"+encodeURIComponent(prompt)+"?width=1024&height=1024&seed="+seed+"&nologo=true";
+  return "https://image.pollinations.ai/prompt/"+encodeURIComponent(prompt)+"?width=1024&height=1024&model=flux&seed="+seed;
+}
+function withKey(u){return (u.indexOf("gen.pollinations.ai")>=0&&S.picKey)?u+"&key="+encodeURIComponent(S.picKey):u}
+function loadGen(box){
+  var u=box.getAttribute("data-gen"),img=new Image(),done=false;
+  var t=setTimeout(function(){if(!done)fail()},60000);
+  function fail(){done=true;box.innerHTML='<button class="state" data-act="regen">The picture service is busy. Tap to try again in a few seconds.</button>'}
+  img.alt="Picture made by Nova";
+  img.onload=function(){done=true;clearTimeout(t);box.innerHTML="";box.appendChild(img);img.setAttribute("data-view",u)};
+  img.onerror=function(){clearTimeout(t);fail()};
+  img.src=withKey(u);
+}
+
+/* ---------- composer button ---------- */
+var MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>';
+var STOP='<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor"/></svg>';
+function updateAct(){
+  var a=$("act");
+  if(busy){a.className="round";a.innerHTML=STOP;a.setAttribute("aria-label","Stop");return}
+  if($("input").value.trim()||photo){a.className="round send";a.textContent="↑";a.setAttribute("aria-label","Send");return}
+  a.className="round";a.innerHTML=MIC;a.setAttribute("aria-label","Talk to Nova");
+}
+
+/* ---------- saving chats ---------- */
+function title(ms){var f=(ms.filter(function(m){return m.role==="user"})[0]||{}).text||"New chat";return f.length>48?f.slice(0,47)+"…":f}
+function persist(){
+  store("nova.current",chatId);
+  if(!S.remember||!msgs.length)return;
+  // photos you attach are kept small so chats fit on the device
+  var clean=msgs.map(function(m){var c=Object.assign({},m);if(c.image&&c.image.length>400000)delete c.image;return c});
+  chats=[{id:chatId,title:title(msgs),updated:Date.now(),msgs:clean}].concat(chats.filter(function(c){return c.id!==chatId})).slice(0,50);
+  store("nova.chats",chats);
+}
+
+/* ---------- Gemini ---------- */
+function system(voice){return SYSTEM+LENGTH[S.length]+(S.custom.trim()?" The user's own instructions for you: "+S.custom.trim():"")+(voice?VOICE_RULES:"")}
+function contents(list){return list.slice(-30).map(function(m){return{role:m.role,parts:[{text:m.text}]}})}
+function ask(parts,json){
+  abortCtl=new AbortController();
+  var ctl=abortCtl, timedOut=false, t=setTimeout(function(){timedOut=true;ctl.abort()},TIMEOUT);
+  var body={systemInstruction:{parts:[{text:system(json)}]},contents:parts};
+  if(json)body.generationConfig={responseMimeType:"application/json",responseSchema:{type:"OBJECT",properties:{heard:{type:"STRING"},answer:{type:"STRING"}},required:["heard","answer"],propertyOrdering:["heard","answer"]}};
+  return fetch("https://generativelanguage.googleapis.com/v1beta/models/"+MODEL+":generateContent",{
+    method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json","x-goog-api-key":S.key},body:JSON.stringify(body)
+  }).then(function(r){return r.json().catch(function(){return null}).then(function(d){
+    if(!r.ok){
+      if(r.status===429)throw new Error("Nova has hit today’s free limit. Try again later.");
+      if(r.status===400&&/API key/i.test((d&&d.error&&d.error.message)||""))throw new Error("Your Gemini key isn’t working. Check it in Settings.");
+      throw new Error((d&&d.error&&d.error.message)||("Google answered with error "+r.status+"."));
+    }
+    var txt=((d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[]).map(function(p){return p.text||""}).join("").trim();
+    if(!txt)throw new Error("Nova didn’t return an answer. Try asking again.");
+    return txt;
+  })},function(e){
+    if(ctl.signal.aborted&&!timedOut)throw new Error("__stopped__");
+    if(timedOut)throw new Error("Google didn’t answer within 60 seconds. Try again in a moment.");
+    throw new Error("Couldn’t reach Google. Check your internet connection and try again.");
+  }).finally(function(){clearTimeout(t)});
+}
+function toReply(answer){
+  var m=answer.match(/IMAGE:\s*([\s\S]+)/);
+  if(m&&m[1].trim())return{role:"model",text:"Here’s your picture.",gen:picUrl(m[1].trim().slice(0,500)+PIC[S.picStyle])};
+  return{role:"model",text:answer};
+}
+function run(promise,base){
+  busy=true;render.error="";render();
+  promise.then(function(reply){msgs=base.concat(reply);persist();if(S.speak)say(reply.text)})
+  .catch(function(e){if(e.message!=="__stopped__")render.error=e.message;msgs=base.slice()})
+  .finally(function(){busy=false;render()});
+}
+function needKey(){if(S.key)return false;render.error="Paste your Gemini key first (at the top, or in Settings).";render();return true}
+
+function send(text){
+  text=(text==null?$("input").value:text).trim();
+  var pic=arguments.length&&arguments[0]!=null?null:photo;
+  if((!text&&!pic)||busy||needKey())return;
+  if(!text)text="What’s in this picture?";
+  vibrate();stopSpeaking();
+  $("input").value="";autoGrow();setPhoto(null);
+  var userMsg={role:"user",text:text};if(pic)userMsg.image=pic.url;
+  var base=msgs.concat(userMsg);msgs=base;
+  var parts=contents(base);
+  if(pic)parts[parts.length-1].parts=[{inlineData:{mimeType:pic.mime,data:pic.b64}},{text:text}];
+  run(ask(parts,false).then(toReply),base);
+}
+function retry(){
+  if(busy||needKey())return;
+  var li=-1;for(var i=msgs.length-1;i>=0;i--){if(msgs[i].role==="user"){li=i;break}}
+  if(li<0)return;
+  var base=msgs.slice(0,li+1);msgs=base;stopSpeaking();
+  run(ask(contents(base),false).then(toReply),base);
+}
+
+/* ---------- voice in ---------- */
+// The desktop app (Electron) has no working speech recognizer, so there Nova records audio and Gemini listens.
+var SR=/Electron/i.test(navigator.userAgent)?null:(window.SpeechRecognition||window.webkitSpeechRecognition);
+function startTalking(){
+  if(busy||needKey())return;
+  stopSpeaking();vibrate();render.error="";
+  if(SR){
+    try{
+      recog=new SR();recog.lang=navigator.language||"en-US";recog.interimResults=true;recog.continuous=true;heardText="";
+      recog.onresult=function(e){var t="";for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;heardText=t;$("listenText").textContent=(t||"Listening…")+"  · tap to send"};
+      recog.onerror=function(e){
+        if(e.error==="not-allowed"||e.error==="service-not-allowed"){render.error="Nova needs the microphone. Allow it in your browser’s settings for this site.";}
+        else if(e.error!=="aborted"&&e.error!=="no-speech"){render.error="Voice input stopped ("+e.error+"). Try again.";}
+        showListening(false);render();
+      };
+      recog.onend=function(){if(!$("listening").hidden){finishSpeech()}};
+      recog.start();showListening(true);return;
+    }catch(e){recog=null}
+  }
+  // no speech recognition in this browser: record audio and let Gemini listen
+  if(!navigator.mediaDevices||!window.MediaRecorder){render.error="This browser can’t use the microphone. Try Chrome, Edge or Safari.";render();return}
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    var type=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg"].filter(function(t){return MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t)})[0]||"";
+    recorder=new MediaRecorder(stream,type?{mimeType:type}:undefined);recChunks=[];
+    recorder.ondataavailable=function(e){if(e.data&&e.data.size)recChunks.push(e.data)};
+    recorder.onstop=function(){stream.getTracks().forEach(function(t){t.stop()});sendAudio(new Blob(recChunks,{type:recorder.mimeType||type||"audio/webm"}))};
+    recorder.start();$("listenText").textContent="Listening… tap to send";showListening(true);
+  },function(){render.error="Nova needs the microphone. Allow it in your browser’s settings for this site.";render()});
+}
+function showListening(on){$("listening").hidden=!on;$("composer").hidden=on}
+function stopTalking(){
+  if(recog){var r=recog;recog=null;showListening(false);try{r.stop()}catch(e){}finishSpeech(true);return}
+  if(recorder&&recorder.state!=="inactive"){showListening(false);recorder.stop()}
+}
+function finishSpeech(manual){
+  showListening(false);
+  var t=heardText.trim();heardText="";
+  if(t)send(t);
+}
+function sendAudio(blob){
+  recorder=null;
+  if(!blob.size){render.error="Nothing was recorded. Try again.";render();return}
+  var mime=(blob.type||"audio/webm").split(";")[0];
+  blobToB64(blob).then(function(b64){
+    var base=msgs.slice();
+    var parts=contents(base).concat([{role:"user",parts:[{inlineData:{mimeType:mime,data:b64}}]}]);
+    busy=true;render.error="";render();
+    ask(parts,true).then(function(raw){
+      var heard="",answer=raw;try{var o=JSON.parse(raw);heard=String(o.heard||"").trim();answer=String(o.answer||"").trim()}catch(e){}
+      var reply=toReply(answer);msgs=base.concat({role:"user",text:heard||"(voice message)"},reply);persist();if(S.speak)say(reply.text);
+    }).catch(function(e){if(e.message!=="__stopped__")render.error=e.message}).finally(function(){busy=false;render()});
+  });
+}
+function blobToB64(blob){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){var s=String(r.result);res(s.slice(s.indexOf(",")+1))};r.onerror=rej;r.readAsDataURL(blob)})}
+
+/* ---------- voice out ---------- */
+var synth=window.speechSynthesis, voices=[];
+function loadVoices(){
+  if(!synth)return;
+  voices=synth.getVoices().filter(function(v){return /^en/i.test(v.lang)});
+  var best=voices.slice().sort(function(a,b){return score(b)-score(a)});
+  var sel=$("sVoice");
+  sel.innerHTML='<option value="">Automatic (best available)</option>'+best.map(function(v){return'<option value="'+esc(v.voiceURI)+'">'+esc(v.name)+"</option>"}).join("");
+  sel.value=S.voice;if(sel.value!==S.voice)sel.value="";
+}
+function score(v){var n=v.name,x=0;if(/natural|neural|online/i.test(n))x+=5;if(/google/i.test(n))x+=3;if(/aria|jenny|guy|samantha|ava|zoe|siri/i.test(n))x+=2;if(/en-us/i.test(v.lang))x+=1;return x}
+function pickVoice(){
+  if(S.voice){var f=voices.filter(function(v){return v.voiceURI===S.voice})[0];if(f)return f}
+  return voices.slice().sort(function(a,b){return score(b)-score(a)})[0]||null;
+}
+function forSpeech(t){return t.replace(/```[\s\S]*?```/g," ").replace(/[*_#`>|]/g,"").replace(/https?:\/\/\S+/g,"link").replace(/\s+/g," ").trim()}
+function say(text){
+  if(!synth)return;stopSpeaking();
+  var chunks=forSpeech(text).match(/[^.!?…]+[.!?…]*\s*/g)||[];
+  var v=pickVoice();
+  $("stopTalk").hidden=false;
+  chunks.forEach(function(c,i){
+    var u=new SpeechSynthesisUtterance(c);if(v){u.voice=v;u.lang=v.lang}else u.lang="en-US";
+    u.rate=+S.rate;u.pitch=+S.pitch;
+    if(i===chunks.length-1){u.onend=u.onerror=function(){$("stopTalk").hidden=true}}
+    synth.speak(u);
+  });
+  if(!chunks.length)$("stopTalk").hidden=true;
+}
+function stopSpeaking(){try{synth&&synth.cancel()}catch(e){}$("stopTalk").hidden=true}
+
+/* ---------- photos ---------- */
+function shrink(file,max,quality){
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(file),img=new Image();
+    img.onload=function(){
+      var s=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");
+      c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+      res(c.toDataURL("image/jpeg",quality));
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);rej(new Error("That file isn’t a picture Nova can open."))};
+    img.src=url;
+  });
+}
+function setPhoto(p){photo=p;$("photoChip").hidden=!p;if(p)$("photoChip").querySelector("img").src=p.url;updateAct()}
+
+/* ---------- viewer ---------- */
+var viewing="";
+function openViewer(u){viewing=u;var v=$("viewer");v.querySelector("img").src=withKey(u);v.hidden=false}
+function savePicture(u){
+  var src=withKey(u);
+  fetch(src).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(b){
+    var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="nova-"+Date.now()+".jpg";document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},4000);toast("Saved to your downloads");
+  }).catch(function(){window.open(src,"_blank");toast("Opened the picture. Long-press it to save.")});
+}
+function setWallFromUrl(u){
+  var img=new Image();img.crossOrigin="anonymous";
+  img.onload=function(){
+    try{var s=Math.min(1,1440/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=img.width*s;c.height=img.height*s;
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);setCustomWall(c.toDataURL("image/jpeg",.85))}
+    catch(e){toast("Couldn’t use that picture as wallpaper.")}
+  };
+  img.onerror=function(){toast("Couldn’t use that picture as wallpaper.")};
+  img.src=withKey(u);
+}
+function setCustomWall(data){S.customWall=data;S.wallpaper="custom";if(!save()){S.customWall="";S.wallpaper="space"}applyLook();syncSettings();render();toast("Wallpaper set")}
+
+/* ---------- settings ---------- */
+function syncSettings(){
+  $("sKey").value=S.key;$("sPicKey").value=S.picKey;$("sCustom").value=S.custom;
+  $("sSpeak").setAttribute("aria-checked",String(!!S.speak));$("sRemember").setAttribute("aria-checked",String(!!S.remember));
+  var segs=document.querySelectorAll(".seg");
+  for(var i=0;i<segs.length;i++){var k=segs[i].getAttribute("data-key"),bs=segs[i].querySelectorAll("button");
+    for(var j=0;j<bs.length;j++)bs[j].setAttribute("aria-pressed",String(bs[j].getAttribute("data-v")===String(S[k])))}
+}
+function renderChats(){
+  var list=chats.slice().sort(function(a,b){return b.updated-a.updated});
+  if(!list.length){$("chatList").innerHTML='<p class="note" style="text-align:center;margin-top:20px">Your conversations will appear here.</p>';return}
+  $("chatList").innerHTML=list.map(function(c){
+    var d=new Date(c.updated),today=new Date().toDateString()===d.toDateString();
+    var when=today?d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):d.toLocaleDateString([],{day:"numeric",month:"short"});
+    return '<div class="chat glass"><div class="grow" data-open="'+c.id+'"><div class="t">'+esc(c.title)+'</div><div class="note">'+(c.id===chatId?"Open now · ":"")+when+" · "+c.msgs.length+' messages</div></div><button class="danger" data-del="'+c.id+'">Delete</button></div>';
+  }).join("");
+}
+
+/* ---------- events ---------- */
+function autoGrow(){var t=$("input");t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px"}
+$("input").addEventListener("input",function(){autoGrow();updateAct()});
+$("input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing&&matchMedia("(pointer:fine)").matches){e.preventDefault();send()}});
+$("act").addEventListener("click",function(){if(busy){abortCtl&&abortCtl.abort();return}if($("input").value.trim()||photo)send();else startTalking()});
+$("listening").addEventListener("click",stopTalking);
+$("plus").addEventListener("click",function(){if(!busy)$("file").click()});
+$("file").addEventListener("change",function(){var f=this.files[0];this.value="";if(!f)return;
+  shrink(f,1280,.82).then(function(url){setPhoto({url:url,mime:"image/jpeg",b64:url.slice(url.indexOf(",")+1)})}).catch(function(e){toast(e.message)})});
+$("rmPhoto").addEventListener("click",function(){setPhoto(null)});
+$("stopTalk").addEventListener("click",stopSpeaking);
+$("newChat").addEventListener("click",function(){if(busy)return;stopSpeaking();setPhoto(null);msgs=[];chatId=newId();render.error="";store("nova.current",chatId);render()});
+$("openSettings").addEventListener("click",function(){syncSettings();loadVoices();$("settings").hidden=false});
+$("openChats").addEventListener("click",function(){renderChats();$("chats").hidden=false});
+document.addEventListener("click",function(e){var c=e.target.closest("[data-close]");if(c){$(c.getAttribute("data-close")).hidden=true;render()}});
+$("chatsNew").addEventListener("click",function(){$("newChat").click();$("chats").hidden=true});
+$("chatList").addEventListener("click",function(e){
+  var o=e.target.closest("[data-open]"),d=e.target.closest("[data-del]");
+  if(o&&!busy){var c=chats.filter(function(x){return x.id===o.getAttribute("data-open")})[0];if(c){stopSpeaking();chatId=c.id;msgs=c.msgs.slice();store("nova.current",chatId);$("chats").hidden=true;render.error="";render()}}
+  if(d){var id=d.getAttribute("data-del");
+    if(d.getAttribute("data-sure")!=="1"){d.setAttribute("data-sure","1");d.textContent="Tap to delete";setTimeout(function(){if(d.isConnected){d.removeAttribute("data-sure");d.textContent="Delete"}},3000);return}
+    chats=chats.filter(function(x){return x.id!==id});store("nova.chats",chats);if(id===chatId){msgs=[];chatId=newId()}renderChats();render()}
+});
+$("inner").addEventListener("click",function(e){
+  var s=e.target.closest(".starter");if(s){send(s.getAttribute("data-q"));return}
+  var v=e.target.closest("[data-view]");if(v){openViewer(v.getAttribute("data-view"));return}
+  if(e.target.id==="wSave"){var k=$("wKey").value.trim();if(k){S.key=k;save();render.error="";render();toast("Key saved on this device")}return}
+  var a=e.target.closest("[data-act]");if(!a)return;var act=a.getAttribute("data-act"),i=+a.getAttribute("data-i");
+  if(act==="listen")say(msgs[i].text);
+  if(act==="copy"||act==="copycode"){var text=act==="copy"?msgs[i].text:a.closest(".code").querySelector("code").textContent;
+    (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){a.textContent="Copied";setTimeout(function(){a.textContent=act==="copy"?"Copy":"Copy code"},1500)},function(){toast("Couldn’t copy. Long-press the text to copy it.")})}
+  if(act==="share"){if(navigator.share)navigator.share({text:msgs[i].text}).catch(function(){});else{navigator.clipboard&&navigator.clipboard.writeText(msgs[i].text);toast("Copied, ready to paste")}}
+  if(act==="retry")retry();
+  if(act==="regen"){var box=a.closest(".gen");box.innerHTML='<div class="state"><span class="spin"></span>Painting your picture…</div>';loadGen(box)}
+});
+// press and hold your message to edit it
+(function(){var timer=null;
+  $("inner").addEventListener("pointerdown",function(e){var b=e.target.closest("[data-edit]");if(!b||busy)return;
+    timer=setTimeout(function(){var i=+b.getAttribute("data-edit");vibrate();stopSpeaking();$("input").value=msgs[i].text;autoGrow();msgs=msgs.slice(0,i);persist();render();$("input").focus()},450)});
+  ["pointerup","pointerleave","pointercancel","pointermove"].forEach(function(ev){$("inner").addEventListener(ev,function(e){if(ev==="pointermove"&&Math.abs(e.movementY)<4)return;clearTimeout(timer)})});
+  $("inner").addEventListener("contextmenu",function(e){if(e.target.closest("[data-edit]"))e.preventDefault()});
+})();
+$("vClose").addEventListener("click",function(){$("viewer").hidden=true});
+$("viewer").addEventListener("click",function(e){if(e.target.tagName==="IMG")$("viewer").hidden=true});
+$("vSave").addEventListener("click",function(){savePicture(viewing)});
+$("vWall").addEventListener("click",function(){
+  if(viewing.indexOf("data:")===0){setCustomWall(viewing)}else setWallFromUrl(viewing);
+});
+// settings inputs
+$("sKey").addEventListener("change",function(){S.key=this.value.trim();save();render()});
+$("sPicKey").addEventListener("change",function(){S.picKey=this.value.trim();save()});
+$("sCustom").addEventListener("input",function(){S.custom=this.value;save()});
+$("sVoice").addEventListener("change",function(){S.voice=this.value;save()});
+$("sSpeak").addEventListener("click",function(){S.speak=!S.speak;if(!S.speak)stopSpeaking();save();syncSettings()});
+$("sRemember").addEventListener("click",function(){S.remember=!S.remember;save();syncSettings();if(S.remember)persist()});
+$("sTest").addEventListener("click",function(){say("Hi, I’m Nova. This is how I sound.")});
+document.querySelectorAll(".seg").forEach(function(seg){seg.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;
+  S[seg.getAttribute("data-key")]=b.getAttribute("data-v");save();syncSettings();applyLook();vibrate()})});
+$("chooseWall").addEventListener("click",function(){$("wallFile").click()});
+$("wallFile").addEventListener("change",function(){var f=this.files[0];this.value="";if(!f)return;shrink(f,1440,.85).then(setCustomWall).catch(function(e){toast(e.message)})});
+$("sClear").addEventListener("click",function(){var b=this;
+  if(b.getAttribute("data-sure")!=="1"){b.setAttribute("data-sure","1");b.textContent="Tap again to delete all chats";setTimeout(function(){b.removeAttribute("data-sure");b.textContent="Delete all chats"},3000);return}
+  chats=[];store("nova.chats",chats);msgs=[];chatId=newId();b.textContent="Delete all chats";b.removeAttribute("data-sure");toast("All chats deleted");render()});
+if(synth){loadVoices();synth.onvoiceschanged=loadVoices}
+
+// works offline and can be installed to the home screen
+if("serviceWorker" in navigator&&location.protocol!=="file:"){navigator.serviceWorker.register("sw.js").catch(function(){})}
+
+applyLook();render();
+var lastWide=null;window.addEventListener("resize",function(){var w=window.innerWidth>window.innerHeight*1.1;if(w!==lastWide){lastWide=w;applyLook()}});
+
+/* ---------- accounts (Supabase) ---------- */
+var CFG=window.NOVA_CONFIG||{}, AUTH_URL=(CFG.supabaseUrl||"").replace(/\/$/,"")+"/auth/v1", AKEY=CFG.supabaseKey||"";
+var mode="login", session=load("nova.session",null);
+function authHeaders(token){var h={"Content-Type":"application/json","apikey":AKEY};if(token)h.Authorization="Bearer "+token;return h}
+function authCall(path,body,method,token){
+  return fetch(AUTH_URL+path,{method:method||"POST",headers:authHeaders(token),body:body?JSON.stringify(body):undefined})
+  .then(function(r){return r.json().catch(function(){return{}}).then(function(d){
+    if(!r.ok)throw new Error(friendly(d.error_code||d.code||"",d.msg||d.error_description||d.message||d.error||""));
+    return d;
+  })},function(){throw new Error("Couldn’t reach the login service. Check your internet connection.")});
+}
+function friendly(code,msg){
+  var m=(code+" "+msg).toLowerCase();
+  if(/invalid_credentials|invalid login/.test(m))return "That email and password don’t match. Try again or reset your password.";
+  if(/email_not_confirmed|not confirmed/.test(m))return "Confirm your email first: open the link we sent you.";
+  if(/user_already_exists|already registered/.test(m))return "There’s already an account with this email. Log in instead.";
+  if(/weak_password|password should/.test(m))return "Pick a longer password: at least 8 characters.";
+  if(/rate|too many|over_email_send_rate/.test(m))return "Too many tries. Wait a minute and try again.";
+  if(/invalid.*email|email_address_invalid/.test(m))return "That email address doesn’t look right.";
+  return msg||"Something went wrong. Try again.";
+}
+function keep(d){
+  session={access_token:d.access_token,refresh_token:d.refresh_token,expires_at:d.expires_at||Math.floor(Date.now()/1000)+(+d.expires_in||3600),email:(d.user&&d.user.email)||(session&&session.email)||""};
+  store("nova.session",session);
+}
+function showAuth(on){$("auth").hidden=!on;if(on){var u=wallUrl();$("auth").style.backgroundImage=u?"url(\""+u+"\")":"none"}$("sEmail").textContent=session?session.email:"Not logged in"}
+function setMode(m){
+  mode=m;var tabs=$("authTabs").querySelectorAll("button");
+  for(var i=0;i<tabs.length;i++)tabs[i].setAttribute("aria-selected",String(tabs[i].getAttribute("data-mode")===m));
+  $("authTabs").hidden=(m==="forgot"||m==="newpass");
+  $("emailRow").hidden=(m==="newpass");
+  $("passRow").hidden=(m==="forgot");
+  $("pass2Row").hidden=!(m==="signup"||m==="newpass");
+  $("aForgot").hidden=(m!=="login");
+  $("aPass").setAttribute("autocomplete",m==="login"?"current-password":"new-password");
+  $("aGo").textContent={login:"Log in",signup:"Create account",forgot:"Send reset link",newpass:"Save new password"}[m];
+  $("authLead").textContent={login:"Log in to talk to Nova.",signup:"Make your Nova account.",forgot:"We’ll email you a link to choose a new password.",newpass:"Choose a new password."}[m];
+  msg("");
+}
+function msg(t,kind){var el=$("aMsg");el.textContent=t;el.className="msg"+(kind?" "+kind:"")}
+function redirectTo(){return location.protocol==="file:"?"https://talk-to-nova.netlify.app/app/":location.origin+location.pathname}
+$("authTabs").addEventListener("click",function(e){var b=e.target.closest("button");if(b)setMode(b.getAttribute("data-mode"))});
+$("aForgot").addEventListener("click",function(){setMode("forgot")});
+$("authForm").addEventListener("submit",function(e){
+  e.preventDefault();
+  var email=$("aEmail").value.trim(),pass=$("aPass").value,pass2=$("aPass2").value;
+  if(mode!=="newpass"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return msg("Enter your email address, like name@example.com.","bad");
+  if((mode==="login"||mode==="signup"||mode==="newpass")&&pass.length<8)return msg("Your password needs at least 8 characters.","bad");
+  if((mode==="signup"||mode==="newpass")&&pass!==pass2)return msg("The two passwords don’t match.","bad");
+  if(!CFG.supabaseUrl)return msg("Accounts aren’t set up yet: the project address is missing from config.js.","bad");
+  var go=$("aGo");go.disabled=true;msg("One moment…");
+  var p;
+  if(mode==="login")p=authCall("/token?grant_type=password",{email:email,password:pass}).then(function(d){keep(d);showAuth(false);toast("Welcome back")});
+  if(mode==="signup")p=authCall("/signup?redirect_to="+encodeURIComponent(redirectTo()),{email:email,password:pass}).then(function(d){
+    if(d.access_token){keep(d);showAuth(false);toast("Account created")}
+    else{setMode("login");$("aEmail").value=email;msg("Almost done: open the email we sent to "+email+" and tap the link to confirm your account.","good")}
+  });
+  if(mode==="forgot")p=authCall("/recover?redirect_to="+encodeURIComponent(redirectTo()),{email:email}).then(function(){msg("If there’s an account for "+email+", a reset link is on its way. Check your email.","good")});
+  if(mode==="newpass")p=authCall("/user",{password:pass},"PUT",session&&session.access_token).then(function(){showAuth(false);toast("New password saved")});
+  p.catch(function(err){msg(err.message,"bad")}).finally(function(){go.disabled=false});
+});
+$("sLogout").addEventListener("click",function(){
+  var t=session&&session.access_token;
+  if(t&&CFG.supabaseUrl)authCall("/logout",null,"POST",t).catch(function(){});
+  session=null;try{localStorage.removeItem("nova.session")}catch(e){}
+  $("settings").hidden=true;setMode("login");showAuth(true);
+});
+function startAuth(){
+  // coming back from a confirmation or password-reset email
+  var h=new URLSearchParams(location.hash.slice(1));
+  if(h.get("access_token")){
+    keep({access_token:h.get("access_token"),refresh_token:h.get("refresh_token"),expires_in:h.get("expires_in"),expires_at:+h.get("expires_at")||0});
+    var type=h.get("type");history.replaceState(null,"",location.pathname);
+    authCall("/user",null,"GET",session.access_token).then(function(u){session.email=u.email||"";store("nova.session",session);$("sEmail").textContent=session.email}).catch(function(){});
+    if(type==="recovery"){showAuth(true);setMode("newpass");return}
+    showAuth(false);toast(type==="signup"?"Email confirmed. Welcome to Nova!":"You’re logged in");return;
+  }
+  if(h.get("error_description")){history.replaceState(null,"",location.pathname);showAuth(true);setMode("login");msg(h.get("error_description").replace(/\+/g," ")+". Try again.","bad");return}
+  if(!session){showAuth(true);setMode("login");return}
+  showAuth(false);
+  // refresh the login quietly when it is about to run out
+  if(session.expires_at-60<Date.now()/1000&&CFG.supabaseUrl){
+    authCall("/token?grant_type=refresh_token",{refresh_token:session.refresh_token}).then(keep).catch(function(e){
+      if(/match|invalid|expired|not found/i.test(e.message)||navigator.onLine){session=null;try{localStorage.removeItem("nova.session")}catch(x){}showAuth(true);setMode("login");msg("Please log in again.")}
+    });
+  }
+}
+startAuth();
+})();
+</script>
+</body>
+</html>
