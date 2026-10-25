@@ -91,6 +91,7 @@ header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:1
 .spin{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--sun);animation:sp .9s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .openbtn{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:11px 18px;border-radius:999px;background:var(--sun);color:#1b1f2a;font-weight:700;font-size:15px;text-decoration:none}
+.gsugg{display:block;width:100%;max-width:520px;height:46px;border:0;margin-top:8px;border-radius:12px;background:transparent;color-scheme:normal}
 .srcs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .srcs a{font-size:12px;font-weight:600;padding:5px 10px;border-radius:12px;background:var(--glass);border:1px solid var(--edge);color:var(--dim);text-decoration:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .memo{font-size:12px;font-weight:600;color:var(--dim);margin-top:6px}
@@ -333,7 +334,7 @@ var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directl
  "artist's work: ordinary details, natural light, real textures. Avoid words like cute, adorable, epic, magical, "+
  "glowing, hyperrealistic, ultra detailed, 8k, 3D render or masterpiece.";
 var OPEN_RULES=" You can open websites for the user. When they ask you to open, go to, play, watch, listen to or search something on a website or app (YouTube, Google, Maps, Spotify, Netflix, Instagram, TikTok, Wikipedia, Gmail and so on), reply with one short sentence like 'Opening YouTube.' and then a new line that starts with OPEN: followed by the full https link. To search or play something, use the site's search link, for example OPEN: https://www.youtube.com/results?search_query=lofi+music or OPEN: https://open.spotify.com/search/lofi or OPEN: https://www.google.com/maps/search/pizza+near+me. Only use OPEN: when they ask you to open or play something. You can open websites, not programs installed on the computer.";
-var WEB_RULES=" You can look things up with Google Search and read web pages from links the user sends. Use them for news, prices, facts that change, or when the user shares a link, and answer from what you found.";
+var WEB_RULES=" You have a Google Search tool and can read web pages from links the user sends. Always use Google Search for news, today's events, prices, weather, scores, people in the news, anything recent, or when the user asks you to search or look something up, then answer from what you found. Never say that you can't browse the internet, don't have real-time information or can't search: search instead.";
 var MEMORY_RULES=" Memory: you can remember lasting facts about the user between chats. When the user shares something lasting about themselves (their name, where they live, their job, hobbies or music, people in their life, projects, likes, how they want you to talk) or asks you to remember something, end your reply with an extra line that starts with REMEMBER: followed by one short fact about the user, like 'REMEMBER: Their name is Stef.' At most two REMEMBER lines, and only for facts you don't already know. Never remember passwords, keys, money details, health details or anything they ask you not to keep. If the user asks you to forget something, end with a line FORGET: followed by a few words naming it. Never talk about these lines in the rest of your reply.";
 var TRANSCRIBE_RULES=" The user's last message is a voice recording. In 'heard', write only the words the user spoke, word for word, in the language they spoke, and nothing else. Leave 'answer' empty.";
 var LENGTH={short:" Keep every answer to one to three sentences.",normal:" Keep answers to a few short paragraphs at most.",detailed:" Give thorough, detailed answers when the question deserves it."};
@@ -351,7 +352,7 @@ var chats=load("nova.chats",[]);
 var chatId=load("nova.current","")||newId();
 var msgs=[];
 if(S.remember){var cur=chats.filter(function(c){return c.id===chatId})[0];if(cur)msgs=cur.msgs}
-var mem=load("nova.memory",[]), webOk=true, transcribing=false;
+var mem=load("nova.memory",[]), webOk=true, webLevel=2, transcribing=false; // webLevel: 2 search+links, 1 search only, 0 none
 var busy=false, abortCtl=null, photo=null, recog=null, recorder=null, recChunks=[], heardText="";
 
 function newId(){return Date.now()+"-"+Math.floor(Math.random()*1e6)}
@@ -404,6 +405,7 @@ function render(){
         h+='<div class="msg n"><span class="dot"></span><div>'+formatAnswer(m.text)+
           (m.gen?'<div class="gen" data-gen="'+esc(m.gen)+'"><div class="state"><span class="spin"></span>Painting your picture…</div></div>':"")+
           (m.open?'<a class="openbtn" href="'+esc(m.open.u)+'" target="_blank" rel="noopener">Open '+esc(m.open.h)+' <span aria-hidden="true">↗</span></a>':"")+
+          (m.suggest?'<iframe class="gsugg" sandbox="allow-popups allow-popups-to-escape-sandbox" title="Google Search suggestions" srcdoc="'+esc(m.suggest).replace(/'/g,"&#39;")+'"></iframe>':"")+
           (m.sources?'<div class="srcs">'+m.sources.map(function(x){return'<a href="'+esc(x.u)+'" target="_blank" rel="noopener">'+esc(x.t)+'</a>'}).join("")+'</div>':"")+
           (m.saved?m.saved.map(function(x){return'<div class="memo">'+esc(x)+'</div>'}).join(""):"")+
           '<div class="acts"><button data-act="listen" data-i="'+i+'">Listen</button><button data-act="copy" data-i="'+i+'">Copy</button><button data-act="share" data-i="'+i+'">Share</button>'+
@@ -479,27 +481,39 @@ function system(voice){
   return t;
 }
 function contents(list){return list.slice(-30).map(function(m){return{role:m.role,parts:[{text:m.text}]}})}
-function ask(parts,json,noTools){
-  ask.sources=[];
+var BADKEY=/API key not valid|API_KEY_INVALID|API key expired|API_KEY_EXPIRED|invalid api key|key was reported as leaked|PERMISSION_DENIED.*key/i;
+var REFUSED=/(real[- ]time|browse the (web|internet)|browsing|internet access|access to (the )?(internet|current)|can(no|')t (search|access|look up)|unable to (search|browse|access)|not able to (search|browse)|n-am acces|nu am acces|nu pot (căuta|accesa|naviga))/i;
+function ask(parts,json,noTools,force){
+  ask.sources=[];ask.suggest="";
   abortCtl=new AbortController();
   var ctl=abortCtl, timedOut=false, t=setTimeout(function(){timedOut=true;ctl.abort()},TIMEOUT);
-  var body={systemInstruction:{parts:[{text:system(json)}]},contents:parts};
+  var body={systemInstruction:{parts:[{text:system(json)+(force?" Use the Google Search tool now to answer the user's last message.":"")}]},contents:parts};
   if(json)body.generationConfig={responseMimeType:"application/json",responseSchema:{type:"OBJECT",properties:{heard:{type:"STRING"},answer:{type:"STRING"}},required:["heard","answer"],propertyOrdering:["heard","answer"]}};
-  var tools=!json&&!noTools&&S.web&&webOk;
-  if(tools)body.tools=[{google_search:{}},{url_context:{}}];
+  var tools=!json&&!noTools&&S.web&&webOk&&webLevel>0;
+  if(tools)body.tools=webLevel===2?[{google_search:{}},{url_context:{}}]:[{google_search:{}}];
   return fetch("https://generativelanguage.googleapis.com/v1beta/models/"+MODEL+":generateContent",{
     method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json","x-goog-api-key":S.key},body:JSON.stringify(body)
   }).then(function(r){return r.json().catch(function(){return null}).then(function(d){
     if(!r.ok){
       // if this model or key can't use web search, quietly answer without it
-      if(tools&&(r.status===429||(r.status===400&&!/API key/i.test((d&&d.error&&d.error.message)||"")))){if(r.status===400)webOk=false;throw {retryPlain:true}}
+      var gerr=(d&&d.error&&d.error.message)||"";
+      if(tools&&r.status===429){if(!ask.warned429){ask.warned429=true;toast("Web search hit today’s limit. Answering without it.")}throw {retryPlain:true}}
+      if(tools&&r.status===400&&!BADKEY.test(gerr+JSON.stringify((d&&d.error&&d.error.details)||""))){
+        // try Google Search on its own before giving up on the web
+        webLevel--;console.log("[Nova] web search refused:",gerr);
+        if(webLevel===0){webOk=false;toast("Web search isn’t available with this key: "+gerr.slice(0,120))}
+        throw {retryTools:true};
+      }
       if(r.status===429)throw new Error("Nova has hit today’s free limit. Try again later.");
-      if(r.status===400&&/API key/i.test((d&&d.error&&d.error.message)||""))throw new Error("Your Gemini key isn’t working. Check it in Settings.");
+      if((r.status===400||r.status===403)&&BADKEY.test(gerr+JSON.stringify((d&&d.error&&d.error.details)||"")))throw new Error("Your Gemini key isn’t working. Check it in Settings.");
       throw new Error((d&&d.error&&d.error.message)||("Google answered with error "+r.status+"."));
     }
     var txt=((d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[]).map(function(p){return p.text||""}).join("").trim();
     if(!txt)throw new Error("Nova didn’t return an answer. Try asking again.");
     var gm=d.candidates[0].groundingMetadata,seen={};
+    // the model skipped the search and claimed it can't browse: ask once more, telling it to search
+    if(tools&&!force&&!(gm&&gm.groundingChunks&&gm.groundingChunks.length)&&REFUSED.test(txt))throw {retryForce:true};
+    ask.suggest=(gm&&gm.searchEntryPoint&&gm.searchEntryPoint.renderedContent)||"";
     ask.sources=((gm&&gm.groundingChunks)||[]).map(function(c){return c.web}).filter(function(w){
       if(!w||!w.uri||seen[w.uri])return false;seen[w.uri]=1;return true}).slice(0,4).map(function(w){return{u:w.uri,t:w.title||w.domain||"Source"}});
     return txt;
@@ -509,6 +523,8 @@ function ask(parts,json,noTools){
     throw new Error("Couldn’t reach Google. Check your internet connection and try again.");
   }).finally(function(){clearTimeout(t)}).catch(function(e){
     if(e&&e.retryPlain)return ask(parts,json,true);
+    if(e&&e.retryTools)return ask(parts,json,false,force);
+    if(e&&e.retryForce)return ask(parts,json,false,true);
     throw e;
   });
 }
@@ -533,6 +549,7 @@ function toReply(answer){
   if(m&&m[1].trim())reply={role:"model",text:"Here’s your picture.",gen:picUrl(m[1].trim().slice(0,500)+PIC[S.picStyle])};
   else reply={role:"model",text:answer||"Got it."};
   if(src.length&&!reply.gen)reply.sources=src;
+  if(ask.suggest&&!reply.gen)reply.suggest=ask.suggest;
   if(saved.length)reply.saved=saved;
   if(open){reply.open=open;if(!reply.text||reply.text==="Got it.")reply.text="Opening "+open.h+".";
     // the PC app opens it right away in your browser; phones and browsers need a tap (they block pop-ups)
@@ -783,7 +800,7 @@ $("sVoice").addEventListener("change",function(){S.voice=this.value;save()});
 $("sSpeak").addEventListener("click",function(){S.speak=!S.speak;if(!S.speak)stopSpeaking();save();syncSettings()});
 $("sRemember").addEventListener("click",function(){S.remember=!S.remember;save();syncSettings();if(S.remember)persist()});
 $("sTest").addEventListener("click",function(){say(S.lang==="ro"?"Bună, sunt Nova. Așa sună vocea mea în română.":"Hi, I’m Nova. This is how I sound.")});
-$("sWeb").addEventListener("click",function(){S.web=!S.web;webOk=true;save();syncSettings()});
+$("sWeb").addEventListener("click",function(){S.web=!S.web;webOk=true;webLevel=2;save();syncSettings()});
 $("sMemory").addEventListener("click",function(){S.memory=!S.memory;save();syncSettings()});
 $("memList").addEventListener("click",function(e){var b=e.target.closest("[data-forget]");if(!b)return;mem.splice(+b.getAttribute("data-forget"),1);store("nova.memory",mem);renderMemory();toast("Forgotten")});
 $("sForget").addEventListener("click",function(){var b=this;
