@@ -260,20 +260,21 @@ a{color:inherit}
 
     <div class="sec">Memory</div>
     <div class="card glass">
-      <div class="row"><div class="grow"><div class="label">Remember things about me</div><div class="note">Nova keeps short notes about you (like your name or what you like) and uses them in every chat. Stored only on this device.</div></div><button class="switch" role="switch" id="sMemory" aria-label="Remember things about me"></button></div>
+      <div class="row"><div class="grow"><div class="label">Remember things about me</div><div class="note">Nova keeps short notes about you (like your name or what you like) and uses them in every chat. Saved on this device, and in your account when sync is on.</div></div><button class="switch" role="switch" id="sMemory" aria-label="Remember things about me"></button></div>
       <div class="stack"><div id="memList"></div></div>
       <div class="row"><button class="danger" id="sForget">Forget everything</button></div>
     </div>
 
     <div class="sec">Chat history</div>
     <div class="card glass">
-      <div class="row"><div class="grow"><div class="label">Remember chats</div><div class="note">Keep your conversations (open them from Chats at the top). Stored only on this device.</div></div><button class="switch" role="switch" id="sRemember" aria-label="Remember chats"></button></div>
+      <div class="row"><div class="grow"><div class="label">Remember chats</div><div class="note">Keep your conversations (open them from Chats at the top). Saved on this device, and in your account when sync is on.</div></div><button class="switch" role="switch" id="sRemember" aria-label="Remember chats"></button></div>
       <div class="row"><button class="danger" id="sClear">Delete all chats</button></div>
     </div>
 
     <div class="sec">Account</div>
     <div class="card glass">
       <div class="row"><div class="grow"><div class="label">Logged in as</div><div class="note" id="sEmail">Not logged in</div></div><button class="danger" id="sLogout">Log out</button></div>
+      <div class="row"><div class="grow"><div class="label">Sync with my account</div><div class="note">Your chats, memory and answer settings follow you on every device you log in to. Your keys, voice and wallpaper stay on each device.</div><div class="note" id="syncState"></div></div><button class="switch" role="switch" id="sSync" aria-label="Sync with my account"></button></div>
     </div>
 
     <div class="sec">About</div>
@@ -340,11 +341,11 @@ var VOICE_RULES=" The user's last message is a voice recording. In 'heard', writ
 var PIC={photo:", candid photograph taken on a 35mm film camera, natural daylight, soft film grain, muted true-to-life colors, slightly imperfect framing, realistic proportions, no glow, no fantasy lighting",
  art:", hand-made illustration, gouache and colored pencil on textured paper, visible brush strokes, limited muted palette, flat light, imperfect lines",free:""};
 var STARTERS=["Help me write a chorus for a sad song","Search the web: what happened in tech news today?","Give me a fun fact about space","Write a Python script that renames my photos by date","Draw a cozy cabin in the snow at sunset"];
-var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true,memory:true,web:true,lang:"auto"};
+var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true,memory:true,web:true,lang:"auto",sync:true};
 
 var $=function(id){return document.getElementById(id)};
 function load(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
-function store(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){toast("Your device is out of space for Nova’s data.");return false}}
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v));if(window.__novaSyncHook)window.__novaSyncHook(k);return true}catch(e){toast("Your device is out of space for Nova’s data.");return false}}
 var S=Object.assign({},DEFAULTS,load("nova.settings",{}));
 var chats=load("nova.chats",[]);
 var chatId=load("nova.current","")||newId();
@@ -707,7 +708,7 @@ function setCustomWall(data){S.customWall=data;S.wallpaper="custom";if(!save()){
 function syncSettings(){
   $("sKey").value=S.key;$("sPicKey").value=S.picKey;$("sCustom").value=S.custom;
   $("sSpeak").setAttribute("aria-checked",String(!!S.speak));$("sRemember").setAttribute("aria-checked",String(!!S.remember));
-  $("sWeb").setAttribute("aria-checked",String(!!S.web));$("sMemory").setAttribute("aria-checked",String(!!S.memory));renderMemory();
+  $("sWeb").setAttribute("aria-checked",String(!!S.web));$("sSync").setAttribute("aria-checked",String(!!S.sync));showSyncState();$("sMemory").setAttribute("aria-checked",String(!!S.memory));renderMemory();
   var segs=document.querySelectorAll(".seg");
   for(var i=0;i<segs.length;i++){var k=segs[i].getAttribute("data-key"),bs=segs[i].querySelectorAll("button");
     for(var j=0;j<bs.length;j++)bs[j].setAttribute("aria-pressed",String(bs[j].getAttribute("data-v")===String(S[k])))}
@@ -909,7 +910,101 @@ function startAuth(){
     });
   }
 }
+
+/* ---------- sync with your account ---------- */
+// Chats, memory and answer settings are kept in your Nova account (a private row only you can read),
+// merged with what's on this device. Keys, voice and wallpaper never leave the device.
+var SYNC_URL=(CFG.supabaseUrl||"").replace(/\/$/,"")+"/rest/v1/nova_sync";
+var PREF_KEYS=["custom","length","lang","picStyle","memory","web","theme","remember"];
+var syncTimer=null, syncing=false, applying=false, syncAgain=false, lastSync=load("nova.lastSync",0), syncErr="";
+function prefsOf(o){var p={};PREF_KEYS.forEach(function(k){p[k]=o[k]});return p}
+var prefsJson=JSON.stringify(prefsOf(S));
+window.__novaSyncHook=function(k){
+  if(applying)return; // the sync's own saves; anything you change meanwhile is still picked up
+  if(k==="nova.settings"){var j=JSON.stringify(prefsOf(S));if(j===prefsJson)return;prefsJson=j;try{localStorage.setItem("nova.prefsAt",JSON.stringify(Date.now()))}catch(e){}}
+  if(k==="nova.chats"||k==="nova.memory"||k==="nova.settings")scheduleSync(2500);
+};
+function scheduleSync(ms){if(!S.sync||!session||!CFG.supabaseUrl)return;clearTimeout(syncTimer);syncTimer=setTimeout(syncNow,ms||0)}
+function userId(){try{return JSON.parse(atob(session.access_token.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"))).sub}catch(e){return""}}
+function freshToken(){
+  if(session.expires_at-60>Date.now()/1000)return Promise.resolve(session.access_token);
+  return authCall("/token?grant_type=refresh_token",{refresh_token:session.refresh_token}).then(function(d){keep(d);return session.access_token});
+}
+function showSyncState(){var el=$("syncState");if(!el)return;
+  el.textContent=!S.sync?"Sync is off.":syncErr?syncErr:lastSync?"Last synced "+new Date(lastSync).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+".":"Not synced yet."}
+function syncNow(){
+  if(!S.sync||!session||!CFG.supabaseUrl)return Promise.resolve();
+  if(syncing){syncAgain=true;return Promise.resolve()}
+  syncing=true;syncErr="";
+  var token,uid;
+  return freshToken().then(function(t){token=t;uid=userId();
+    return fetch(SYNC_URL+"?select=data&user_id=eq."+encodeURIComponent(uid),{headers:authHeaders(token)})
+  }).then(function(r){if(!r.ok)throw new Error("get "+r.status);return r.json()}).then(function(rows){
+    if(!S.sync||!session)throw new Error("stopped");
+    var R=(rows[0]&&rows[0].data)||{},now=Date.now();
+    // a different account logged in on this device: start from that account's data, don't mix the two
+    var prevUser=load("nova.syncUser","");
+    if(prevUser&&prevUser!==uid){applying=true;chats=[];mem=[];msgs=[];chatId=newId();store("nova.synced",{chats:[],mem:[]});store("nova.prefsAt",0);applying=false;render()}
+    store("nova.syncUser",uid);
+    var gone=R.gone||{chats:{},mem:{}};gone.chats=gone.chats||{};gone.mem=gone.mem||{};
+    var snap=load("nova.synced",{chats:[],mem:[]});
+    // things deleted on this device since the last sync
+    var localIds={};chats.forEach(function(c){localIds[c.id]=1});
+    if(S.remember)snap.chats.forEach(function(id){if(!localIds[id])gone.chats[id]=Math.max(gone.chats[id]||0,now)});
+    var localMem={};mem.forEach(function(m){localMem[m.t.toLowerCase()]=1});
+    snap.mem.forEach(function(t){if(!localMem[t])gone.mem[t]=Math.max(gone.mem[t]||0,now)});
+    // chats: newest version of each wins, deleted ones stay deleted
+    var out=chats;
+    if(S.remember){
+      var byId={};
+      chats.forEach(function(c){byId[c.id]=c});
+      (R.chats||[]).forEach(function(rc){var lc=byId[rc.id];
+        if(!lc||rc.updated>lc.updated){
+          // photos aren't uploaded; keep this device's copy of them
+          if(lc)rc.msgs.forEach(function(m,i){var o=lc.msgs[i];if(o&&o.image&&!m.image&&o.text===m.text)m.image=o.image});
+          byId[rc.id]=rc}});
+      out=Object.keys(byId).map(function(id){return byId[id]}).filter(function(c){return !(gone.chats[c.id]>=c.updated)})
+        .sort(function(a,b){return b.updated-a.updated}).slice(0,50);
+    }
+    // memory: everything from both sides, minus forgotten notes
+    var mm={};mem.concat(R.mem||[]).forEach(function(m){var k=m.t.toLowerCase();if(!mm[k]||m.at<mm[k].at)mm[k]=m});
+    var outMem=Object.keys(mm).map(function(k){return mm[k]}).filter(function(m){return !(gone.mem[m.t.toLowerCase()]>=m.at)})
+      .sort(function(a,b){return a.at-b.at}).slice(-60);
+    // answer settings: the most recent change wins
+    var lpAt=load("nova.prefsAt",0),outPrefs=prefsOf(S),outPrefsAt=lpAt;
+    applying=true;
+    if(R.prefs&&(R.prefsAt||0)>lpAt){outPrefs=R.prefs;outPrefsAt=R.prefsAt;PREF_KEYS.forEach(function(k){if(k in R.prefs)S[k]=R.prefs[k]});store("nova.settings",S);store("nova.prefsAt",outPrefsAt);prefsJson=JSON.stringify(prefsOf(S));applyLook()}
+    // forget very old deletion notes
+    var cut=now-90*864e5;["chats","mem"].forEach(function(k){Object.keys(gone[k]).forEach(function(x){if(gone[k][x]<cut)delete gone[k][x]})});
+    // save the merged result here
+    var curBefore=JSON.stringify((chats.filter(function(c){return c.id===chatId})[0]||{}).msgs||null);
+    chats=out;mem=outMem;store("nova.chats",chats);store("nova.memory",mem);
+    store("nova.synced",{chats:chats.map(function(c){return c.id}),mem:mem.map(function(m){return m.t.toLowerCase()})});
+    applying=false;
+    // the open chat was deleted on another device: start a fresh one
+    if(S.remember&&gone.chats[chatId]&&!chats.some(function(c){return c.id===chatId})&&!busy&&!$("input").value){msgs=[];chatId=newId();store("nova.current",chatId);render()}
+    var cur=chats.filter(function(c){return c.id===chatId})[0];
+    if(!busy&&cur&&JSON.stringify(cur.msgs)!==curBefore&&!$("input").value){msgs=cur.msgs.slice();render()}
+    if(!$("settings").hidden&&!document.querySelector("#settings [data-sure]")&&document.activeElement.tagName!=="TEXTAREA"&&document.activeElement.tagName!=="INPUT"){syncSettings()}
+    if(!$("chats").hidden&&!$("chatList").querySelector("[data-sure]"))renderChats(); // never undo a half-done delete tap
+    // upload: no photos, no keys
+    var up={v:1,chats:S.remember?chats.map(function(c){return{id:c.id,title:c.title,updated:c.updated,msgs:c.msgs.map(function(m){var x=Object.assign({},m);delete x.image;return x})}}):(R.chats||[]),
+      mem:mem,prefs:outPrefs,prefsAt:outPrefsAt,gone:gone};
+    return fetch(SYNC_URL+"?on_conflict=user_id",{method:"POST",headers:Object.assign(authHeaders(token),{"Prefer":"resolution=merge-duplicates,return=minimal"}),
+      body:JSON.stringify({user_id:uid,data:up,updated_at:new Date().toISOString()})})
+    .then(function(r){if(!r.ok)throw new Error("save "+r.status)});
+  }).then(function(){lastSync=Date.now();store("nova.lastSync",lastSync)})
+  .catch(function(e){if(e&&e.message==="stopped")return;syncErr=navigator.onLine?"Couldn’t sync right now. Nova will try again.":"Offline. Nova will sync when you’re back online.";console.log("[Nova] sync:",e&&e.message)})
+  .finally(function(){syncing=false;applying=false;showSyncState();if(syncAgain){syncAgain=false;scheduleSync(500)}});
+}
+$("sSync").addEventListener("click",function(){S.sync=!S.sync;if(!S.sync)clearTimeout(syncTimer);save();syncSettings();if(S.sync)syncNow()});
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")scheduleSync(300)});
+window.addEventListener("online",function(){scheduleSync(300)});
+setInterval(function(){if(document.visibilityState==="visible")scheduleSync(0)},120000);
 startAuth();
+// sync after logging in, opening a confirmation link, or opening the app while logged in
+var _keep=keep;keep=function(d){var had=session&&session.access_token;_keep(d);if(!had)scheduleSync(300)};
+if(session)scheduleSync(600);
 })();
 </script>
 </body>

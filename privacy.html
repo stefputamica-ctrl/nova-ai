@@ -23,23 +23,23 @@ a{color:var(--sun)}
 <main>
 <a class="top" href="./"><span class="dot"></span>NOVA</a>
 <h1>Privacy Policy</h1>
-<p>Last updated: 25 October 2026</p>
+<p>Last updated: 25 October 2026 (account sync added)</p>
 
 <p>Nova is an AI assistant app for Android, Windows, iPhone (home-screen web app) and the web. This page explains what information Nova uses and where it goes.</p>
 
 <h2>What stays on your device</h2>
 <ul>
-<li><b>Your chats and settings</b> (theme, wallpaper, voice, custom instructions) are stored only on your device. You can delete them any time in Settings → Delete all chats.</li>
+<li><b>Your chats and settings</b> (theme, wallpaper, voice, custom instructions) are stored on your device. If you are logged in and “Sync with my account” is on, your chats (without photos), memory notes and answer settings are also saved in your Nova account so they appear on your other devices. You can delete chats any time in Settings → Delete all chats, or turn sync off.</li>
 <li><b>Your Google Gemini key and Pollinations key</b> are stored only on your device. Nova never sends them to us.</li>
 <li><b>Photos you pick as a wallpaper</b> stay on your device.</li>
-<li><b>Memory:</b> the short notes Nova keeps about you (for example your name or what you like) are stored only on your device. You can see and delete them in Settings → Memory, or turn memory off.</li>
+<li><b>Memory:</b> the short notes Nova keeps about you (for example your name or what you like) are stored on your device, and in your Nova account when sync is on. You can see and delete them in Settings → Memory, or turn memory off.</li>
 </ul>
 
 <h2>What is sent to other services to answer you</h2>
 <ul>
 <li><b>Google Gemini</b> receives your messages, the photos you attach, and your voice recordings when you tap the microphone, so it can write Nova’s answers, together with your memory notes when memory is on. When “Search the web” is on, Google may also run Google Search for your question or open links you paste, to answer with current information. This is sent using your own Gemini key, and Google handles it under <a href="https://policies.google.com/privacy">Google’s Privacy Policy</a> and the Gemini API terms. On Google’s free tier, Google may use this content to improve its products.</li>
 <li><b>Pollinations.ai</b> receives a short description of a picture when you ask Nova to draw something, so it can create the picture.</li>
-<li><b>Supabase</b> stores your email address and an encrypted password if you create a Nova account (in the Windows app and the web app), so you can log in. It is used only to let you log in and reset your password.</li>
+<li><b>Supabase</b> stores your email address and an encrypted password if you create a Nova account (in the Windows app and the web app), so you can log in. When sync is on, it also keeps your synced chats, memory notes and answer settings in a private record that only your account can read. Your Gemini and Pollinations keys, photos, voice and wallpaper are never uploaded.</li>
 </ul>
 
 <h2>What Nova does not do</h2>
