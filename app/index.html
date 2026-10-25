@@ -332,6 +332,7 @@ var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directl
  "glowing, hyperrealistic, ultra detailed, 8k, 3D render or masterpiece.";
 var WEB_RULES=" You can look things up with Google Search and read web pages from links the user sends. Use them for news, prices, facts that change, or when the user shares a link, and answer from what you found.";
 var MEMORY_RULES=" Memory: you can remember lasting facts about the user between chats. When the user shares something lasting about themselves (their name, where they live, their job, hobbies or music, people in their life, projects, likes, how they want you to talk) or asks you to remember something, end your reply with an extra line that starts with REMEMBER: followed by one short fact about the user, like 'REMEMBER: Their name is Stef.' At most two REMEMBER lines, and only for facts you don't already know. Never remember passwords, keys, money details, health details or anything they ask you not to keep. If the user asks you to forget something, end with a line FORGET: followed by a few words naming it. Never talk about these lines in the rest of your reply.";
+var TRANSCRIBE_RULES=" The user's last message is a voice recording. In 'heard', write only the words the user spoke, word for word, in the language they spoke, and nothing else. Leave 'answer' empty.";
 var LENGTH={short:" Keep every answer to one to three sentences.",normal:" Keep answers to a few short paragraphs at most.",detailed:" Give thorough, detailed answers when the question deserves it."};
 var VOICE_RULES=" The user's last message is a voice recording. In 'heard', write only the words the user spoke, word for word, in the language they spoke, and nothing else. In 'answer', write your reply to what they said, in the same language as the words in 'heard'. A short greeting like 'hey' or 'hi' is English. If you are not sure which language it is, reply in English.";
 var PIC={photo:", candid photograph taken on a 35mm film camera, natural daylight, soft film grain, muted true-to-life colors, slightly imperfect framing, realistic proportions, no glow, no fantasy lighting",
@@ -347,7 +348,7 @@ var chats=load("nova.chats",[]);
 var chatId=load("nova.current","")||newId();
 var msgs=[];
 if(S.remember){var cur=chats.filter(function(c){return c.id===chatId})[0];if(cur)msgs=cur.msgs}
-var mem=load("nova.memory",[]), webOk=true;
+var mem=load("nova.memory",[]), webOk=true, transcribing=false;
 var busy=false, abortCtl=null, photo=null, recog=null, recorder=null, recChunks=[], heardText="";
 
 function newId(){return Date.now()+"-"+Math.floor(Math.random()*1e6)}
@@ -470,7 +471,7 @@ function system(voice){
   var t=SYSTEM+LENGTH[S.length]+(S.web&&webOk&&!voice?WEB_RULES:"");
   if(S.memory){t+=MEMORY_RULES;if(mem.length)t+=" Things you remember about the user from earlier chats (use them naturally, only when they matter): "+mem.map(function(m){return m.t}).join(" | ")}
   if(S.custom.trim())t+=" The user's own instructions for you: "+S.custom.trim();
-  if(voice)t+=VOICE_RULES+(S.lang==="ro"?" The user usually speaks Romanian.":"");
+  if(voice)t+=(transcribing?TRANSCRIBE_RULES:VOICE_RULES)+(S.lang==="ro"?" The user usually speaks Romanian.":"");
   return t;
 }
 function contents(list){return list.slice(-30).map(function(m){return{role:m.role,parts:[{text:m.text}]}})}
@@ -602,10 +603,15 @@ function sendAudio(blob){
     var base=msgs.slice();
     var parts=contents(base).concat([{role:"user",parts:[{inlineData:{mimeType:mime,data:b64}}]}]);
     busy=true;render.error="";render();
+    var twoStep=S.web&&webOk; // write the words down first, then answer them with web search available
+    transcribing=twoStep;
     ask(parts,true).then(function(raw){
       var heard="",answer=raw;try{var o=JSON.parse(raw);heard=String(o.heard||"").trim();answer=String(o.answer||"").trim()}catch(e){}
-      var reply=toReply(answer);msgs=base.concat({role:"user",text:heard||"(voice message)"},reply);persist();if(S.speak)say(reply.text);
-    }).catch(function(e){if(e.message!=="__stopped__")render.error=e.message}).finally(function(){busy=false;render()});
+      var said=base.concat({role:"user",text:heard||"(voice message)"});
+      if(twoStep){if(!heard)throw new Error("Nova couldn’t make out what you said. Try again.");msgs=said;render();
+        return ask(contents(said),false).then(function(a){return toReply(a)}).then(function(reply){msgs=said.concat(reply);persist();if(S.speak)say(reply.text)})}
+      var reply=toReply(answer);msgs=said.concat(reply);persist();if(S.speak)say(reply.text);
+    }).catch(function(e){if(e.message!=="__stopped__")render.error=e.message;msgs=base.slice()}).finally(function(){busy=false;transcribing=false;render()});
   });
 }
 function blobToB64(blob){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){var s=String(r.result);res(s.slice(s.indexOf(",")+1))};r.onerror=rej;r.readAsDataURL(blob)})}
