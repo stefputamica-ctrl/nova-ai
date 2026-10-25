@@ -236,7 +236,7 @@ footer .mark{font-family:var(--display);font-weight:300;letter-spacing:.5em;colo
             <li>Open the downloaded <b>Nova.apk</b>.</li>
             <li>If your phone asks, allow installing apps from your browser, then tap <b>Install</b>.</li>
           </ol>
-          <a class="btn primary" href="https://github.com/stefputamica-ctrl/nova-ai/releases/latest/download/Nova.apk">Download for Android</a>
+          <a class="btn primary" href="https://stefputamica-ctrl.github.io/nova-ai/downloads/Nova.apk.part0" data-file="Nova.apk" data-parts="3" data-size="106241125" data-type="application/vnd.android.package-archive">Download for Android</a>
         </div>
         <div class="card" id="pc">
           <div class="os">
@@ -248,7 +248,7 @@ footer .mark{font-family:var(--display);font-weight:300;letter-spacing:.5em;colo
             <li>Open <b>Nova-Setup.exe</b>.</li>
             <li>If Windows warns you, click <b>More info</b>, then <b>Run anyway</b>.</li>
           </ol>
-          <a class="btn primary" href="https://github.com/stefputamica-ctrl/nova-ai/releases/latest/download/Nova-Setup.exe">Download for Windows</a>
+          <a class="btn primary" href="https://stefputamica-ctrl.github.io/nova-ai/downloads/Nova-Setup.exe.part0" data-file="Nova-Setup.exe" data-parts="2" data-size="83060509" data-type="application/octet-stream">Download for Windows</a>
         </div>
       </div>
       <p class="intro small">The first time you open Nova it asks you to log in and to paste a free Google Gemini key (from aistudio.google.com). The key is saved only on your device.</p>
@@ -262,5 +262,29 @@ footer .mark{font-family:var(--display);font-weight:300;letter-spacing:.5em;colo
     <span>Answers come from Google Gemini and can be wrong. Pictures are made by Pollinations.ai. <a href="privacy.html">Privacy policy</a></span>
   </div>
 </footer>
+<script>
+/* The apps are stored in parts (hosts limit file size). This joins them into one file in the browser. */
+(function(){
+  var BASE="https://stefputamica-ctrl.github.io/nova-ai/downloads/";
+  var links=document.querySelectorAll("a[data-parts]");
+  for(var i=0;i<links.length;i++)links[i].addEventListener("click",function(e){
+    e.preventDefault();var a=this;if(a.dataset.busy)return;a.dataset.busy="1";
+    var label=a.textContent,name=a.dataset.file,n=+a.dataset.parts,total=+a.dataset.size,got=0,chunks=[];
+    function show(){a.textContent="Downloading… "+Math.floor(got*100/total)+"%"}
+    function part(k){
+      if(k===n){var blob=new Blob(chunks,{type:a.dataset.type});
+        if(blob.size!==total)throw new Error("size");
+        var u=URL.createObjectURL(blob),d=document.createElement("a");d.href=u;d.download=name;document.body.appendChild(d);d.click();d.remove();
+        setTimeout(function(){URL.revokeObjectURL(u)},60000);a.textContent="Downloaded ✓";
+        setTimeout(function(){a.textContent=label;delete a.dataset.busy},4000);return}
+      return fetch(BASE+name+".part"+k).then(function(r){if(!r.ok)throw new Error(r.status);
+        var rd=r.body&&r.body.getReader?r.body.getReader():null;
+        if(!rd)return r.arrayBuffer().then(function(b){chunks.push(b);got+=b.byteLength;show()});
+        function pump(){return rd.read().then(function(x){if(x.done)return;chunks.push(x.value);got+=x.value.byteLength;show();return pump()})}
+        return pump()}).then(function(){return part(k+1)})}
+    show();Promise.resolve().then(function(){return part(0)}).catch(function(){a.textContent="Download failed – tap to try again";delete a.dataset.busy});
+  });
+})();
+</script>
 </body>
 </html>
