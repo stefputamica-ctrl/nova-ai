@@ -165,6 +165,9 @@ a{color:inherit}
 .welcome{border-radius:24px;padding:20px;display:grid;gap:12px;margin-bottom:16px}
 .welcome h3{margin:0;font-size:20px}
 .welcome p{margin:0;color:var(--dim);font-size:15px}
+.updbar{position:fixed;z-index:45;left:50%;top:calc(var(--top) + 76px);transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:8px 8px 8px 16px;border-radius:999px;font-weight:600;font-size:14px;white-space:nowrap;max-width:calc(100% - 24px)}
+.updbar span{overflow:hidden;text-overflow:ellipsis}
+.updbar .btn{padding:8px 16px;border-radius:999px;background:var(--sun);color:#1b1f2a;font-weight:700;border:0}
 .toast{position:fixed;z-index:40;left:50%;bottom:calc(var(--bot) + 96px);transform:translateX(-50%);padding:10px 16px;border-radius:16px;font-weight:600;font-size:14px}
 /* login */
 #auth{position:fixed;inset:0;z-index:50;overscroll-behavior:contain;display:flex;align-items:center;justify-content:center;padding:calc(var(--top) + 20px) 18px calc(var(--bot) + 20px);background:var(--bg) center/cover no-repeat;overflow-y:auto}
@@ -280,7 +283,7 @@ a{color:inherit}
     </div>
 
     <div class="sec">About</div>
-    <div class="card glass"><div class="stack"><div class="label">Nova</div><div class="note">Answers come from Google Gemini, so they can be wrong. Messages, photos, voice recordings and your memory notes are sent to Google to get an answer, and Google Search may be used when “Search the web” is on. Pictures are made by Pollinations.ai, which receives the picture description.</div><div class="note" id="sVersion"></div></div></div>
+    <div class="card glass"><div class="stack"><div class="label">Nova</div><div class="note">Answers come from Google Gemini, so they can be wrong. Messages, photos, voice recordings and your memory notes are sent to Google to get an answer, and Google Search may be used when “Search the web” is on. Pictures are made by Pollinations.ai, which receives the picture description.</div><div class="note" id="sVersion"></div><button class="btn" id="sUpdate" style="margin-top:8px">Check for updates</button></div></div>
   </div></div>
 </section>
 
@@ -301,6 +304,7 @@ a{color:inherit}
   <div class="vbot"><button class="vbtn" id="vWall">Set as wallpaper</button></div>
 </div>
 <div id="toast" class="toast glass" hidden></div>
+<div id="updBar" class="updbar glass" hidden role="status"><span>A new version of Nova is ready.</span><button class="btn" id="updGo">Update</button></div>
 
 <!-- log in / sign up -->
 <section id="auth" hidden aria-label="Log in to Nova">
@@ -323,7 +327,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.25-i";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.26-a";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -853,6 +857,27 @@ $("sVoice").addEventListener("change",function(){S.voice=this.value;save()});
 $("sSpeak").addEventListener("click",function(){S.speak=!S.speak;if(!S.speak)stopSpeaking();save();syncSettings()});
 $("sRemember").addEventListener("click",function(){S.remember=!S.remember;save();syncSettings();if(S.remember)persist()});
 $("sTest").addEventListener("click",function(){say(S.lang==="ro"?"Bună, sunt Nova. Așa sună vocea mea în română.":"Hi, I’m Nova. This is how I sound.")});
+/* ---------- updates ---------- */
+// The newest version number lives in version.json next to the app. When it's newer than this copy,
+// an Update button appears; tapping it loads the new version (chats, keys and settings stay).
+function checkUpdate(manual){
+  return fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(v){
+    var newer=v&&v.version&&v.version!==VERSION;
+    $("updBar").hidden=!newer;
+    if(manual)toast(newer?"A new version is ready. Tap Update.":"You have the newest version.");
+    return newer;
+  }).catch(function(){if(manual)toast("Couldn’t check for updates. Check your internet connection.")});
+}
+function doUpdate(){
+  $("updGo").disabled=true;$("updGo").textContent="Updating…";
+  var sw=navigator.serviceWorker&&navigator.serviceWorker.getRegistration?navigator.serviceWorker.getRegistration():Promise.resolve(null);
+  sw.then(function(r){return r&&r.update()}).catch(function(){}).then(function(){
+    if(window.caches)return caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))});
+  }).catch(function(){}).then(function(){location.reload()});
+}
+$("updGo").addEventListener("click",doUpdate);
+$("sUpdate").addEventListener("click",function(){checkUpdate(true)});
+if(location.protocol!=="file:"){setTimeout(checkUpdate,3000);setInterval(checkUpdate,30*60000);document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")checkUpdate()})}
 $("sVersion").textContent="Version "+VERSION+(/Electron/i.test(navigator.userAgent)?" · Windows app":" · web app");
 // asks Google one search question directly and shows what really comes back
 $("sWebTest").addEventListener("click",function(){
