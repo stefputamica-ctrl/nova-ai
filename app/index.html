@@ -128,6 +128,15 @@ header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:1
 .remind{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:9px 14px;border-radius:14px;background:var(--glass);border:1px solid var(--edge);font-size:14px;font-weight:600}
 .remind.off{opacity:.6;text-decoration:line-through}
 .remind button{color:var(--sun);font-weight:700;font-size:13px}
+.doccard{display:flex;align-items:center;gap:12px;margin-top:10px;padding:10px 12px 10px 10px;border-radius:16px;background:var(--glass);border:1px solid var(--edge);max-width:440px}
+.doccard .ficon{flex:none}
+.doccard .grow{min-width:0}
+.doccard b{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doccard span{font-size:12.5px;color:var(--dim)}
+.doccard button{flex:none;padding:8px 14px;border-radius:999px;background:var(--sun);color:#15181f;font-weight:700;font-size:13.5px}
+.folders{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.folders button{padding:6px 12px;border-radius:999px;border:1px solid var(--edge);background:var(--glass);font-size:13.5px;font-weight:600}
+.folders button.on{background:var(--sun);color:#15181f;border-color:transparent}
 .askshare{margin:14px 0 4px 18px;padding:14px 16px;border-radius:18px;font-size:15px;line-height:1.45}
 .askshare b{display:block;margin-bottom:4px}
 .askshare .row2{display:flex;gap:10px;margin-top:10px}
@@ -303,6 +312,12 @@ a{color:inherit}
       <div class="row" id="remPermRow" hidden><button class="btn" id="remPerm">Turn on notifications</button></div>
     </div>
 
+    <div class="sec">Morning brief</div>
+    <div class="card glass">
+      <div class="row"><div class="grow"><div class="label">Morning brief</div><div class="note">Every morning Nova sums up the weather, top news and your reminders for the day. You can also tap “☀️ Morning brief” on the start screen anytime.</div></div><button class="switch" role="switch" id="sBrief" aria-label="Morning brief"></button></div>
+      <div class="row" id="briefTimeRow"><div class="grow"><div class="label">Time</div></div><input class="field" id="sBriefAt" type="time" style="width:156px" aria-label="Morning brief time"></div>
+    </div>
+
     <div class="sec">Memory</div>
     <div class="card glass">
       <div class="row"><div class="grow"><div class="label">Remember things about me</div><div class="note">Nova keeps short notes about you (like your name or what you like) and uses them in every chat. Saved on this device, and in your account when sync is on.</div></div><button class="switch" role="switch" id="sMemory" aria-label="Remember things about me"></button></div>
@@ -369,7 +384,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.26-g";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.27-a";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -385,6 +400,9 @@ var WEB_RULES=" You can search the web and read links the user sends. For news, 
 var MEMORY_RULES=" Memory: you can remember lasting facts about the user between chats. When the user shares something lasting about themselves (their name, where they live, their job, hobbies or music, people in their life, projects, likes, how they want you to talk) or asks you to remember something, end your reply with an extra line that starts with REMEMBER: followed by one short fact about the user, like 'REMEMBER: Their name is Stef.' At most two REMEMBER lines, and only for facts you don't already know. Never remember passwords, keys, money details, health details or anything they ask you not to keep. If the user asks you to forget something, end with a line FORGET: followed by a few words naming it. Never talk about these lines in the rest of your reply.";
 var NEXT_RULES=" At the very end of your answer, add one line that starts with NEXT: followed by 2 or 3 short follow-up questions or requests the user might want to send you next, separated by |, written the way the user would type them, in the user's language, each under 8 words. Leave out the NEXT line for pictures, opened websites, or when a follow-up makes no sense (like after a simple thanks).";
 var REMIND_RULES=" Reminders: you can set reminders for the user, and Nova will notify them at that time. When they ask you to remind them about something (or to set an alarm or a timer), reply with one short sentence that confirms what and when, and then a new line that starts with REMIND: followed by the date and time as YYYY-MM-DD HH:MM (24-hour clock, the user's local time), then | and what to remind them about, short, in the user's language. Example: 'REMIND: 2026-10-26 18:00 | Practise guitar'. Work out times like 'in 20 minutes', 'at 6' (the next 6 o'clock that hasn't passed, usually 18:00 unless they mean morning) or 'tomorrow morning' (09:00) from the current time below. If they don't say when, ask them instead of guessing. To cancel a reminder, write a line CANCEL: followed by the words of that reminder. Never say you can't set reminders.";
+var FILE_RULES=" Files: you can make files the user can download: Word documents (docx), Excel spreadsheets (xlsx), PDFs (pdf), text files (txt) and CSV files (csv). When the user asks you to make, create, write, turn, convert or export something into a document, file, Word, Excel, spreadsheet, PDF or text file, reply with one short sentence about the file, then a line FILE: <type> | <file name without extension>, then the whole content of the file written in Markdown (# headings, **bold**, - lists, | tables |), then a line ENDFILE. For Excel and CSV put the data in Markdown tables, first row = column names; you may use Excel formulas like =SUM(B2:B5) in cells. Inside the file you may use Markdown. Write the file in the user's language. One file per reply. Only use FILE when they ask for a file or document. Never say you can't make files.";
+var BRIEF_RULES=" The user asked for their morning brief. Reply in their language with: a one-line greeting with today's day and date; the weather today where they live (use what you remember about where they live; if you don't know their city, say so in one line and ask them which city); 3 short top news headlines from today, one line each; their reminders for today (from the reminders listed here, or say there are none); and one short encouraging line to start the day. Plain short lines, no markdown.";
+var BRIEF_RE=/^\u2600\ufe0f?\s*(morning brief|rezumatul de diminea[\u021b\u0163]\u0103)/i;
 var FILE_GONE=" (This file was attached earlier and isn't available any more. If you need it, ask the user to attach it again.)";
 var TRANSCRIBE_RULES=" The user's last message is a voice recording. In 'heard', write only the words the user spoke, word for word, in the language they spoke, and nothing else. Leave 'answer' empty.";
 var LENGTH={short:" Keep every answer to one to three sentences.",normal:" Keep answers to a few short paragraphs at most.",detailed:" Give thorough, detailed answers when the question deserves it."};
@@ -392,7 +410,7 @@ var VOICE_RULES=" The user's last message is a voice recording. In 'heard', writ
 var PIC={photo:", candid photograph taken on a 35mm film camera, natural daylight, soft film grain, muted true-to-life colors, slightly imperfect framing, realistic proportions, no glow, no fantasy lighting",
  art:", hand-made illustration, gouache and colored pencil on textured paper, visible brush strokes, limited muted palette, flat light, imperfect lines",free:""};
 var STARTERS=["Help me write a chorus for a sad song","Search the web: what happened in tech news today?","Give me a fun fact about space","Write a Python script that renames my photos by date","Draw a cozy cabin in the snow at sunset"];
-var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true,memory:true,web:true,lang:"auto",sync:true,next:true};
+var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true,memory:true,web:true,lang:"auto",sync:true,next:true,brief:false,briefAt:"08:00"};
 
 var $=function(id){return document.getElementById(id)};
 function load(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
@@ -404,7 +422,7 @@ var msgs=[];
 if(S.remember){var cur=chats.filter(function(c){return c.id===chatId})[0];if(cur)msgs=cur.msgs}
 var mem=load("nova.memory",[]), webOk=true, webLevel=2, transcribing=false; // webLevel: 2 search+links, 1 search only, 0 none
 var ATT={}; // files you attached in this session (PDFs and text files are kept here, not saved on the device)
-var reminders=load("nova.reminders",[]), convo=false, convoMisses=0;
+var reminders=load("nova.reminders",[]), convo=false, convoMisses=0, briefMode=false, folderView="", renameMode="name";
 var busy=false, abortCtl=null, photo=null, recog=null, recorder=null, recChunks=[], heardText="";
 
 function newId(){return Date.now()+"-"+Math.floor(Math.random()*1e6)}
@@ -446,7 +464,8 @@ function render(){
     var low=lowLayout();
     h+='<div class="hero'+(low?" low":"")+'">';
     if(!low)h+='<h1>'+greeting()+'</h1><p class="sub">What’s on your mind?</p>';
-    (low?STARTERS.slice(0,3):STARTERS).forEach(function(q){h+='<button class="starter" data-q="'+esc(q)+'">'+esc(q)+'</button>'});
+    var st=(low?STARTERS.slice(0,3):STARTERS).slice(),hr=new Date().getHours();if(hr>=4&&hr<12)st=[briefText()].concat(st.slice(0,low?2:4));
+    st.forEach(function(q){h+='<button class="starter" data-q="'+esc(q)+'">'+esc(q)+'</button>'});
     if(!low)h+='<div class="hint">Tap the microphone to talk, or + to ask about a photo or a PDF.</div>';
     h+='</div>';
   }else{
@@ -460,6 +479,7 @@ function render(){
           (m.open?'<a class="openbtn" href="'+esc(m.open.u)+'" target="_blank" rel="noopener">Open '+esc(m.open.h)+' <span aria-hidden="true">↗</span></a>':"")+
           (m.suggest?'<iframe class="gsugg" sandbox="allow-popups allow-popups-to-escape-sandbox" title="Google Search suggestions" srcdoc="'+esc(m.suggest).replace(/'/g,"&#39;")+'"></iframe>':"")+
           (m.sources?'<div class="srcs">'+m.sources.map(function(x){return'<a href="'+esc(x.u)+'" target="_blank" rel="noopener">'+esc(x.t)+'</a>'}).join("")+'</div>':"")+
+          (m.doc?'<div class="doccard"><i class="ficon">'+esc(m.doc.type.toUpperCase())+'</i><div class="grow"><b>'+esc(m.doc.name)+"."+esc(m.doc.type)+'</b><span>'+esc(FILE_TYPES[m.doc.type]||"File")+'</span></div><button data-act="dl" data-i="'+i+'">'+(m.doc.type==="pdf"?(isRo()?"Salvează PDF":"Save PDF"):(isRo()?"Descarcă":"Download"))+'</button></div>':"")+
           (m.reminders?m.reminders.map(function(r){var on=reminders.some(function(x){return x.id===r.id});return'<div class="remind'+(on||r.at>Date.now()?"":" off")+'">⏰ '+esc(r.text)+' · '+esc(fmtWhen(r.at))+(on?' <button data-unremind="'+esc(r.id)+'">Cancel</button>':"")+'</div>'}).join(""):"")+
           (m.saved?m.saved.map(function(x){return'<div class="memo">'+esc(x)+'</div>'}).join(""):"")+
           '<div class="acts"><button data-act="listen" data-i="'+i+'">Listen</button><button data-act="copy" data-i="'+i+'">Copy</button><button data-act="share" data-i="'+i+'">Share</button>'+
@@ -522,7 +542,7 @@ function updateAct(){
 
 /* ---------- saving chats ---------- */
 // a chat's own name and pin travel together; metaAt says when they last changed
-function copyMeta(to,from){["name","pinned","metaAt"].forEach(function(k){if(from[k])to[k]=from[k];else delete to[k]})}
+function copyMeta(to,from){["name","pinned","folder","metaAt"].forEach(function(k){if(from[k])to[k]=from[k];else delete to[k]})}
 // keep at most 50 chats, never dropping pinned ones
 function cap(list){var pins=list.filter(function(c){return c.pinned}).length;var room=Math.max(0,50-pins);
   return list.filter(function(c){if(c.pinned)return true;if(room>0){room--;return true}return false})}
@@ -544,6 +564,8 @@ function system(voice){
   var t=SYSTEM+OPEN_RULES+LENGTH[S.length]+(S.web&&webOk&&!voice?WEB_RULES:"");
   if(S.memory){t+=MEMORY_RULES;if(mem.length)t+=" Things you remember about the user from earlier chats (use them naturally, only when they matter): "+mem.map(function(m){return m.t}).join(" | ")}
   t+=REMIND_RULES+" The user's local date and time right now: "+nowText()+".";
+  if(!convo&&!voice)t+=FILE_RULES;
+  if(briefMode)t+=BRIEF_RULES;
   var up=reminders.filter(function(r){return r.at>Date.now()});
   if(up.length)t+=" Reminders already set: "+up.map(function(r){return fmtWhen(r.at)+" – "+r.text}).join(" | ")+".";
   if(convo)t+=" You are in a spoken conversation: answer in one to three short spoken sentences, no lists, no code, no links, and end naturally so the user can reply.";
@@ -563,7 +585,7 @@ function contents(list){
     if(m.role==="user"&&m.file){var a=ATT[m.file.id];
       if(a&&files.indexOf(m.file.id)>=0)parts.push(a.text!=null?{text:"[File: "+m.file.name+"]\n"+a.text+"\n[End of file]"}:{inlineData:{mimeType:a.mime,data:a.b64}});
       else parts.push({text:"[File: "+m.file.name+"]"+(a?"":FILE_GONE)})}
-    parts.push({text:m.text||" "});
+    parts.push({text:(m.text||" ")+(m.doc?"\n\n[The file you made: "+m.doc.name+"."+m.doc.type+"]\nFILE: "+m.doc.type+" | "+m.doc.name+"\n"+m.doc.content.slice(0,12000)+"\nENDFILE":"")});
     return{role:m.role,parts:parts};
   });
 }
@@ -687,6 +709,13 @@ function toReply(answer){
     try{var x=new URL(u.replace(/[).,]+$/,""));if(/^https?:$/.test(x.protocol)&&!open)open={u:x.href,h:x.hostname.replace(/^www\./,"")}}catch(e){}
     return"";
   }).trim();
+  var doc=null,fm=answer.match(/^[ \t>*]*FILE:[ \t]*\.?(docx|xlsx|pdf|txt|md|csv|word|excel)[ \t]*\|[ \t]*(.+?)[ \t]*$/im);
+  if(fm){
+    var rest=answer.slice(fm.index+fm[0].length),end=rest.search(/^[ \t]*ENDFILE[ \t]*$/im),body=(end>=0?rest.slice(0,end):rest).replace(/^\s*```(?:markdown|md)?[ \t]*\n([\s\S]*?)\n```\s*$/,"$1").trim();
+    var ty={word:"docx",excel:"xlsx"}[fm[1].toLowerCase()]||fm[1].toLowerCase();
+    doc={type:ty,name:safeName(fm[2].replace(/\.(docx|xlsx|pdf|txt|md|csv)$/i,"")),content:body.slice(0,60000)};
+    answer=(answer.slice(0,fm.index)+(end>=0?rest.slice(end).replace(/^[ \t]*ENDFILE[ \t]*$/im,""):"")).trim();
+  }
   var setNow=[];
   answer=answer.replace(/^[ \t>*-]*REMIND:[ \t]*(\d{4})-(\d{1,2})-(\d{1,2})[ T,]+(\d{1,2})[:.](\d{2})[ \t]*(?:\||-|–)?[ \t]*(.*)$/gim,function(all,y,mo,d,h,mi,what){
     var at=new Date(+y,+mo-1,+d,+h,+mi).getTime();what=(what||"").trim().replace(/^["'“]|["'”]$/g,"")||"Reminder";
@@ -705,6 +734,7 @@ function toReply(answer){
   if(src.length&&!reply.gen)reply.sources=src;
   if(ask.suggest&&!reply.gen)reply.suggest=ask.suggest;
   if(saved.length)reply.saved=saved;
+  if(doc&&!reply.gen){reply.doc=doc;if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Poftim fișierul.":"Here’s your file."}
   if(setNow.length){reply.reminders=setNow.map(function(r){return{id:r.id,at:r.at,text:r.text}});if(!reply.text||reply.text==="Got it.")reply.text="Okay, I’ll remind you."}
   if(next.length&&!reply.gen&&!open)reply.next=next;
   if(open){reply.open=open;if(!reply.text||reply.text==="Got it.")reply.text="Opening "+open.h+".";
@@ -733,6 +763,7 @@ function send(text){
   if(pic&&pic.file){var fid=newId();ATT[fid]=pic;userMsg.file={id:fid,name:pic.name,kind:pic.kind}}
   else if(pic)userMsg.image=pic.url;
   var base=msgs.concat(userMsg);msgs=base;
+  if(BRIEF_RE.test(text)){briefMode=true;run(ask(contents(base),false,false,!!S.web).then(function(a){briefMode=false;return toReply(a)},function(e){briefMode=false;throw e}),base);return}
   run(ask(contents(base),false).then(toReply),base);
 }
 // put a question back in the box to change it (and its photo or file, when Nova still has it)
@@ -753,6 +784,163 @@ function retry(){
   run(ask(contents(base),false).then(toReply),base);
 }
 
+/* ---------- files Nova makes: Word, Excel, PDF, text ---------- */
+var FILE_TYPES={docx:"Word document",xlsx:"Excel spreadsheet",pdf:"PDF",txt:"Text file",md:"Text file",csv:"CSV spreadsheet"};
+// Markdown → simple blocks (headings, paragraphs, lists, tables, code)
+function mdBlocks(md){
+  var lines=String(md||"").replace(/\r/g,"").split("\n"),out=[],para=[],i=0;
+  function flush(){if(para.length){out.push({t:"p",text:para.join(" ")});para=[]}}
+  while(i<lines.length){
+    var l=lines[i],m;
+    if(/^\s*```/.test(l)){flush();var code=[];i++;while(i<lines.length&&!/^\s*```/.test(lines[i]))code.push(lines[i++]);out.push({t:"code",text:code.join("\n")});i++;continue}
+    if(/^\s*\|.*\|\s*$/.test(l)){flush();var rows=[];while(i<lines.length&&/^\s*\|.*\|\s*$/.test(lines[i])){var cells=lines[i].trim().replace(/^\||\|$/g,"").split("|").map(function(c){return c.trim()});
+        if(!cells.every(function(c){return /^:?-{2,}:?$/.test(c)}))rows.push(cells);i++}
+      if(rows.length)out.push({t:"table",rows:rows});continue}
+    if((m=l.match(/^\s*(#{1,4})\s+(.*)$/))){flush();out.push({t:"h",level:m[1].length,text:m[2].replace(/#+\s*$/,"")});i++;continue}
+    if((m=l.match(/^\s*[-*•]\s+(.*)$/))){flush();out.push({t:"li",text:m[1]});i++;continue}
+    if((m=l.match(/^\s*(\d+)[.)]\s+(.*)$/))){flush();out.push({t:"li",n:+m[1],text:m[2]});i++;continue}
+    if(!l.trim()){flush();i++;continue}
+    para.push(l.trim());i++;
+  }
+  flush();return out;
+}
+// **bold**, *italic*, `code` → runs
+function mdRuns(t){
+  var runs=[],re=/(\*\*([^*]+)\*\*|__([^_]+)__|\*([^*\s][^*]*)\*|`([^`]+)`)/g,last=0,m;
+  while((m=re.exec(t))){if(m.index>last)runs.push({text:t.slice(last,m.index)});
+    if(m[2]||m[3])runs.push({text:m[2]||m[3],b:1});else if(m[4])runs.push({text:m[4],i:1});else runs.push({text:m[5],code:1});last=re.lastIndex}
+  if(last<t.length)runs.push({text:t.slice(last)});
+  return runs;
+}
+function xmlEsc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]}).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"")}
+// a tiny ZIP writer (files stored as they are) — Word and Excel files are ZIP files inside
+var CRC_T=(function(){var t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(b){var c=0xFFFFFFFF;for(var i=0;i<b.length;i++)c=CRC_T[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
+function zipFiles(files){
+  var enc=new TextEncoder(),parts=[],central=[],off=0;
+  function u16(v){return[v&255,(v>>>8)&255]}function u32(v){return[v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255]}
+  files.forEach(function(f){
+    var name=enc.encode(f.name),data=typeof f.data==="string"?enc.encode(f.data):f.data,crc=crc32(data);
+    var head=[].concat(u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0x21),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0));
+    parts.push(new Uint8Array(head),name,data);
+    central.push(new Uint8Array([].concat(u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0x21),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off))),name);
+    off+=head.length+name.length+data.length;
+  });
+  var size=central.reduce(function(s,a){return s+a.length},0);
+  return new Blob(parts.concat(central,[new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(size),u32(off),u16(0)))]));
+}
+// Word (.docx)
+function makeDocx(md){
+  var W='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+  function runs(t,extra){return mdRuns(t).map(function(r){var p=(r.b||extra==="b"?"<w:b/>":"")+(r.i?"<w:i/>":"")+(r.code||extra==="code"?'<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:cs="Consolas"/><w:sz w:val="20"/>':"");
+    return"<w:r>"+(p?"<w:rPr>"+p+"</w:rPr>":"")+'<w:t xml:space="preserve">'+xmlEsc(r.text)+"</w:t></w:r>"}).join("")}
+  function p(inner,ppr){return"<w:p>"+(ppr?"<w:pPr>"+ppr+"</w:pPr>":"")+inner+"</w:p>"}
+  var body=mdBlocks(md).map(function(b){
+    if(b.t==="h")return p(runs(b.text),'<w:pStyle w:val="Heading'+Math.min(b.level,3)+'"/>');
+    if(b.t==="li")return p(runs((b.n?b.n+".":"•")+"\t"+b.text),'<w:tabs><w:tab w:val="left" w:pos="360"/></w:tabs><w:spacing w:after="60"/><w:ind w:left="360" w:hanging="360"/>');
+    if(b.t==="code")return b.text.split("\n").map(function(l){return p(runs(l||" ","code"),'<w:spacing w:after="0"/><w:shd w:val="clear" w:color="auto" w:fill="F2F2F2"/>')}).join("")+p("");
+    if(b.t==="table"){var cols=Math.max.apply(null,b.rows.map(function(r){return r.length}));
+      return'<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>'+["top","left","bottom","right","insideH","insideV"].map(function(s){return"<w:"+s+' w:val="single" w:sz="4" w:space="0" w:color="BFBFBF"/>'}).join("")+'</w:tblBorders><w:tblCellMar><w:left w:w="100" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>'+
+        new Array(cols+1).join('<w:gridCol w:w="'+Math.floor(9000/cols)+'"/>')+"</w:tblGrid>"+
+        b.rows.map(function(r,ri){var cells="";for(var c=0;c<cols;c++)cells+="<w:tc><w:tcPr>"+(ri===0?'<w:shd w:val="clear" w:color="auto" w:fill="E7ECF7"/>':"")+"</w:tcPr>"+p(runs(r[c]||"",ri===0?"b":""),'<w:spacing w:after="0"/>')+"</w:tc>";return"<w:tr>"+cells+"</w:tr>"}).join("")+"</w:tbl>"+p("")}
+    return p(runs(b.text));
+  }).join("")||p("");
+  var doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+W+'><w:body>'+body+'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>';
+  function hs(id,name,sz,color,before){return'<w:style w:type="paragraph" w:styleId="'+id+'"><w:name w:val="'+name+'"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:spacing w:before="'+before+'" w:after="120"/><w:outlineLvl w:val="'+(+id.slice(-1)-1)+'"/></w:pPr><w:rPr><w:b/><w:color w:val="'+color+'"/><w:sz w:val="'+sz+'"/></w:rPr></w:style>'}
+  var styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles '+W+'><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="22"/><w:lang w:val="ro-RO"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="160" w:line="276" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>'+
+    '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>'+hs("Heading1","heading 1",36,"1F3864",240)+hs("Heading2","heading 2",28,"2F5496",200)+hs("Heading3","heading 3",24,"2F5496",160)+'</w:styles>';
+  return zipFiles([
+    {name:"[Content_Types].xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>'},
+    {name:"_rels/.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'},
+    {name:"word/_rels/document.xml.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+    {name:"word/document.xml",data:doc},{name:"word/styles.xml",data:styles}]);
+}
+// the tables in a reply (Excel/CSV); text without a table becomes one column
+function mdTables(md){
+  var bl=mdBlocks(md),tabs=[],lastHead="";
+  bl.forEach(function(b){if(b.t==="h")lastHead=b.text;if(b.t==="table")tabs.push({name:lastHead,rows:b.rows})});
+  if(!tabs.length)tabs.push({name:"",rows:bl.filter(function(b){return b.t!=="code"}).map(function(b){return[(b.n?b.n+". ":"")+b.text]})});
+  return tabs.map(function(t){t.rows=t.rows.map(function(r){return r.map(function(c){return c.replace(/\*\*|__|`/g,"")})});return t});
+}
+function colName(n){var s="";n++;while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s}
+// Excel (.xlsx): one sheet per table; numbers stay numbers, cells starting with = become formulas
+function makeXlsx(md){
+  var tabs=mdTables(md),used={},sheets=tabs.map(function(t,k){
+    var name=(t.name||"Sheet"+(k+1)).replace(/[\\\/?*\[\]:]/g," ").slice(0,31).trim()||"Sheet"+(k+1);while(used[name.toLowerCase()])name=name.slice(0,28)+" "+(k+1);used[name.toLowerCase()]=1;
+    var widths=[];
+    var rows=t.rows.map(function(r,ri){return'<row r="'+(ri+1)+'">'+r.map(function(c,ci){
+      widths[ci]=Math.max(widths[ci]||8,Math.min(60,c.length+2));var ref=colName(ci)+(ri+1),s=ri===0&&t.rows.length>1?' s="1"':"";
+      if(/^=/.test(c))return'<c r="'+ref+'"'+s+"><f>"+xmlEsc(c.slice(1))+"</f></c>";
+      var num=c.replace(/\s/g,"");if(ri>0&&/^-?\d+(\.\d+)?$/.test(num))return'<c r="'+ref+'"'+s+"><v>"+num+"</v></c>";
+      return'<c r="'+ref+'" t="inlineStr"'+s+'><is><t xml:space="preserve">'+xmlEsc(c)+"</t></is></c>"}).join("")+"</row>"}).join("");
+    return{name:name,xml:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+(t.rows.length>1?'<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>':"")+
+      (widths.length?"<cols>"+widths.map(function(w,i){return'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>'}).join("")+"</cols>":"")+"<sheetData>"+rows+"</sheetData></worksheet>"};
+  });
+  var files=[
+    {name:"[Content_Types].xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+
+      sheets.map(function(s,k){return'<Override PartName="/xl/worksheets/sheet'+(k+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'}).join("")+"</Types>"},
+    {name:"_rels/.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+    {name:"xl/workbook.xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+sheets.map(function(s,k){return'<sheet name="'+xmlEsc(s.name)+'" sheetId="'+(k+1)+'" r:id="rId'+(k+1)+'"/>'}).join("")+"</sheets></workbook>"},
+    {name:"xl/_rels/workbook.xml.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map(function(s,k){return'<Relationship Id="rId'+(k+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(k+1)+'.xml"/>'}).join("")+'<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+    {name:"xl/styles.xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE7ECF7"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'}];
+  sheets.forEach(function(s,k){files.push({name:"xl/worksheets/sheet"+(k+1)+".xml",data:s.xml})});
+  return zipFiles(files);
+}
+function makeCsv(md){var t=mdTables(md)[0];return new Blob(["﻿"+t.rows.map(function(r){return r.map(function(c){return/[",\n;]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(",")}).join("\r\n")],{type:"text/csv"})}
+function mdHtml(md){
+  function inl(t){return mdRuns(t).map(function(r){var s=esc(r.text);return r.b?"<b>"+s+"</b>":r.i?"<i>"+s+"</i>":r.code?"<code>"+s+"</code>":s}).join("")}
+  var h="",inList="";
+  mdBlocks(md).forEach(function(b){
+    var want=b.t==="li"?(b.n?"ol":"ul"):"";if(inList&&want!==inList){h+="</"+inList+">";inList=""}if(want&&!inList){h+="<"+want+">";inList=want}
+    if(b.t==="h")h+="<h"+Math.min(b.level,3)+">"+inl(b.text)+"</h"+Math.min(b.level,3)+">";
+    else if(b.t==="li")h+="<li>"+inl(b.text)+"</li>";
+    else if(b.t==="code")h+="<pre>"+esc(b.text)+"</pre>";
+    else if(b.t==="table")h+="<table>"+b.rows.map(function(r,ri){return"<tr>"+r.map(function(c){return(ri?"<td>":"<th>")+inl(c)+(ri?"</td>":"</th>")}).join("")+"</tr>"}).join("")+"</table>";
+    else h+="<p>"+inl(b.text)+"</p>";
+  });
+  return h+(inList?"</"+inList+">":"");
+}
+// PDF: the page is drawn and the print window opens — pick "Save as PDF" (or "Microsoft Print to PDF" on PC)
+function printPdf(md,name){
+  var f=document.createElement("iframe");f.setAttribute("aria-hidden","true");f.style.cssText="position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0";document.body.appendChild(f);
+  var d=f.contentWindow.document;
+  d.open();d.write('<!doctype html><html lang="ro"><head><meta charset="utf-8"><title>'+esc(name)+'</title><style>@page{margin:20mm}body{font:11pt/1.5 Calibri,"Segoe UI",Arial,sans-serif;color:#111}h1{font-size:20pt;color:#1F3864;margin:0 0 10pt}h2{font-size:15pt;color:#2F5496;margin:16pt 0 6pt}h3{font-size:12.5pt;color:#2F5496;margin:12pt 0 4pt}p{margin:0 0 8pt}ul,ol{margin:0 0 8pt 18pt;padding:0}li{margin:0 0 3pt}table{border-collapse:collapse;width:100%;margin:6pt 0 10pt}th,td{border:1px solid #bbb;padding:4pt 6pt;text-align:left;vertical-align:top}th{background:#E7ECF7}pre{background:#f2f2f2;padding:8pt;white-space:pre-wrap;font:9.5pt Consolas,monospace}code{font-family:Consolas,monospace}</style></head><body>'+mdHtml(md)+"</body></html>");d.close();
+  setTimeout(function(){try{f.contentWindow.focus();f.contentWindow.print()}catch(e){toast("Couldn’t open the print window.")}setTimeout(function(){f.remove()},60000)},250);
+}
+// file names: plain letters only (browsers refuse names with ă, ș, ț…); the text inside keeps them
+function safeName(n){return(String(n||"Nova").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7e]/g,"").replace(/[\\\/:*?"<>|]+/g," ").replace(/\s+/g," ").trim()||"Nova").slice(0,80)}
+function saveBlob(blob,filename){
+  var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},60000);
+}
+function downloadFile(f){
+  var name=safeName(f.name);
+  try{
+    if(f.type==="pdf"){printPdf(f.content,name);toast(isRo()?"Alege „Salvează ca PDF”":"Choose “Save as PDF”");return}
+    if(f.type==="docx")saveBlob(makeDocx(f.content),name+".docx");
+    else if(f.type==="xlsx")saveBlob(makeXlsx(f.content),name+".xlsx");
+    else if(f.type==="csv")saveBlob(makeCsv(f.content),name+".csv");
+    else saveBlob(new Blob([f.content],{type:"text/plain;charset=utf-8"}),name+"."+(f.type==="md"?"md":"txt"));
+    toast((isRo()?"Salvat: ":"Saved: ")+name+"."+f.type);
+  }catch(e){console.log("[Nova] file:",e);toast("Couldn’t make that file. Try again.")}
+}
+// a whole chat as a document
+function chatMarkdown(c){
+  var ro=isRo(),md="# "+chatName(c).replace(/\n/g," ")+"\n\n"+new Date(c.updated).toLocaleString(ro?"ro-RO":[],{dateStyle:"long",timeStyle:"short"})+"\n\n";
+  c.msgs.forEach(function(m){
+    var who=m.role==="user"?(ro?"Tu":"You"):"Nova",t=(m.text||"").trim();
+    if(m.file&&m.file.name&&m.role==="user")t="["+m.file.name+"]\n\n"+t;
+    md+="## "+who+"\n\n"+t+"\n\n";
+    if(m.doc)md+=(m.doc.content||"")+"\n\n";
+    if(m.sources&&m.sources.length)md+=(ro?"Surse: ":"Sources: ")+m.sources.map(function(s){return s.t+" ("+s.u+")"}).join(", ")+"\n\n";
+  });
+  return md;
+}
+function exportChat(id,type){
+  var c=chats.filter(function(x){return x.id===id})[0]||(id===chatId?{id:chatId,title:title(msgs),updated:Date.now(),msgs:msgs}:null);
+  if(!c||!c.msgs.length){toast("This chat is empty.");return}
+  downloadFile({type:type,name:chatName(c),content:chatMarkdown(c)});
+}
+
 /* ---------- sharing Nova ---------- */
 var SITE="https://stefputamica-ctrl.github.io/nova-ai/";
 function isRo(){return S.lang==="ro"||(S.lang==="auto"&&/^ro\b/i.test(navigator.language||""))}
@@ -765,6 +953,24 @@ function withNovaLine(text){var ro=langOf(text)==="ro";return text+"\n\n— "+(r
 function shareNova(){var ro=isRo();shareOut(ro?"Încearcă Nova, un asistent AI gratuit cu care vorbești în română: "+SITE+"ro/":"Try Nova, a free AI assistant you can talk to: "+SITE);store("nova.askedShare",true)}
 // after your 5th answer, Nova asks once whether you'd share it
 function countAnswer(){var n=load("nova.answerCount",0)+1;store("nova.answerCount",n);if(n>=5&&!load("nova.askedShare",false))render.askShare=true}
+
+/* ---------- morning brief ---------- */
+function briefText(){return isRo()?"\u2600\ufe0f Rezumatul de dimineață: vremea de azi, știrile principale și mementourile mele":"\u2600\ufe0f Morning brief: today’s weather, top news and my reminders"}
+function checkBrief(){
+  if(!S.brief||!S.key)return;
+  var now=new Date(),p=(S.briefAt||"08:00").split(":"),at=new Date(now.getFullYear(),now.getMonth(),now.getDate(),+p[0],+p[1]).getTime(),day=now.toDateString();
+  if(now.getTime()<at||now.getTime()-at>3*3600e3||load("nova.briefDay","")===day)return;
+  store("nova.briefDay",day);store("nova.briefPending",day);
+  notify({id:"brief",text:isRo()?"Bună dimineața! Rezumatul tău e gata.":"Good morning! Your brief is ready."});
+  runPendingBrief();
+}
+// open Nova after the morning notification: the brief is written in a new chat
+function runPendingBrief(){
+  if(load("nova.briefPending","")!==new Date().toDateString()||busy||convo||document.visibilityState!=="visible")return;
+  store("nova.briefPending","");
+  if(msgs.length){msgs=[];chatId=newId();store("nova.current",chatId)}
+  send(briefText());
+}
 
 /* ---------- reminders ---------- */
 var DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -1046,7 +1252,7 @@ function setCustomWall(data){S.customWall=data;S.wallpaper="custom";if(!save()){
 function syncSettings(){
   $("sKey").value=S.key;$("sPicKey").value=S.picKey;$("sCustom").value=S.custom;
   $("sSpeak").setAttribute("aria-checked",String(!!S.speak));$("sRemember").setAttribute("aria-checked",String(!!S.remember));
-  $("sWeb").setAttribute("aria-checked",String(!!S.web));$("sSync").setAttribute("aria-checked",String(!!S.sync));showSyncState();$("sMemory").setAttribute("aria-checked",String(!!S.memory));$("sNext").setAttribute("aria-checked",String(!!S.next));renderMemory();renderReminders();
+  $("sWeb").setAttribute("aria-checked",String(!!S.web));$("sSync").setAttribute("aria-checked",String(!!S.sync));showSyncState();$("sMemory").setAttribute("aria-checked",String(!!S.memory));$("sNext").setAttribute("aria-checked",String(!!S.next));renderMemory();renderReminders();$("sBrief").setAttribute("aria-checked",String(!!S.brief));$("sBriefAt").value=S.briefAt;$("briefTimeRow").hidden=!S.brief;
   var segs=document.querySelectorAll(".seg");
   for(var i=0;i<segs.length;i++){var k=segs[i].getAttribute("data-key"),bs=segs[i].querySelectorAll("button");
     for(var j=0;j<bs.length;j++)bs[j].setAttribute("aria-pressed",String(bs[j].getAttribute("data-v")===String(S[k])))}
@@ -1065,24 +1271,31 @@ function renderChats(){
   var q=$("chatSearch").value.trim().toLowerCase();
   var list=chats.slice().sort(function(a,b){return (b.pinned?1:0)-(a.pinned?1:0)||b.updated-a.updated});
   $("chatSearch").hidden=chats.length<2&&!q;
-  if(q)list=list.filter(function(c){return chatName(c).toLowerCase().indexOf(q)>=0||c.msgs.some(function(m){return (m.text||"").toLowerCase().indexOf(q)>=0})});
-  if(!list.length){$("chatList").innerHTML='<p class="note" style="text-align:center;margin-top:20px">'+(q?"No chats match “"+esc(q)+"”.":"Your conversations will appear here.")+'</p>';return}
+  if(q)list=list.filter(function(c){return chatName(c).toLowerCase().indexOf(q)>=0||(c.folder||"").toLowerCase().indexOf(q)>=0||c.msgs.some(function(m){return (m.text||"").toLowerCase().indexOf(q)>=0})});
+  var folders=[];chats.forEach(function(c){if(c.folder&&folders.indexOf(c.folder)<0)folders.push(c.folder)});folders.sort(function(a,b){return a.localeCompare(b)});
+  if(folderView&&folders.indexOf(folderView)<0)folderView="";
+  if(folderView)list=list.filter(function(c){return c.folder===folderView});
+  var ro=isRo(),bar=folders.length?'<div class="folders" role="tablist" aria-label="Folders"><button data-fview="" class="'+(folderView?"":"on")+'">'+(ro?"Toate":"All")+'</button>'+folders.map(function(f){return'<button data-fview="'+esc(f)+'" class="'+(folderView===f?"on":"")+'">📁 '+esc(f)+'</button>'}).join("")+"</div>":"";
+  if(!list.length){$("chatList").innerHTML=bar+'<p class="note" style="text-align:center;margin-top:20px">'+(q?"No chats match “"+esc(q)+"”.":"Your conversations will appear here.")+'</p>';return}
   $("chatList").innerHTML=list.map(function(c){
     var d=new Date(c.updated),today=new Date().toDateString()===d.toDateString();
     var when=today?d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):d.toLocaleDateString([],{day:"numeric",month:"short"});
     var found=q&&chatName(c).toLowerCase().indexOf(q)<0?snippet(c,q):"";
-    var head=renaming===c.id?'<div class="grow"><input class="field ren" data-ren-input="'+c.id+'" maxlength="60" value="'+esc(chatName(c))+'" aria-label="Chat name"></div>'
-      :'<div class="grow" data-open="'+c.id+'"><div class="t">'+(c.pinned?'<span class="pin" aria-label="Pinned">★ </span>':"")+esc(chatName(c))+'</div><div class="note">'+(found?esc(found):(c.id===chatId?"Open now · ":"")+when+" · "+c.msgs.length+(c.msgs.length===1?" message":" messages"))+'</div></div>';
+    var head=renaming===c.id?'<div class="grow"><input class="field ren" data-ren-input="'+c.id+'" maxlength="'+(renameMode==="folder"?30:60)+'" value="'+esc(renameMode==="folder"?(c.folder||""):chatName(c))+'" placeholder="'+(renameMode==="folder"?(ro?"Numele dosarului (gol = fără dosar)":"Folder name (empty = no folder)"):"")+'" aria-label="'+(renameMode==="folder"?"Folder name":"Chat name")+'"></div>'
+      :'<div class="grow" data-open="'+c.id+'"><div class="t">'+(c.pinned?'<span class="pin" aria-label="Pinned">★ </span>':"")+esc(chatName(c))+'</div><div class="note">'+(found?esc(found):(c.folder&&!folderView?"📁 "+esc(c.folder)+" · ":"")+(c.id===chatId?"Open now · ":"")+when+" · "+c.msgs.length+(c.msgs.length===1?" message":" messages"))+'</div></div>';
     return '<div class="chat glass">'+head+(renaming===c.id?'<button class="done" data-ren-save="'+c.id+'">Save</button>':'<button class="more" data-more="'+c.id+'" aria-label="More for this chat" aria-expanded="'+(menuFor===c.id)+'">•••</button>')+
-      (menuFor===c.id?'<div class="menu"><button data-pin="'+c.id+'">'+(c.pinned?"Unpin":"Pin to top")+'</button><button data-ren="'+c.id+'">Rename</button><button class="danger" data-del="'+c.id+'">Delete</button></div>':"")+'</div>';
+      (menuFor===c.id?'<div class="menu"><button data-pin="'+c.id+'">'+(c.pinned?"Unpin":"Pin to top")+'</button><button data-ren="'+c.id+'">Rename</button><button data-fold="'+c.id+'">'+(ro?"Mută în dosar":"Move to folder")+'</button><button data-exp="'+c.id+'|docx">'+(ro?"Salvează Word":"Save as Word")+'</button><button data-exp="'+c.id+'|pdf">'+(ro?"Salvează PDF":"Save as PDF")+'</button><button data-exp="'+c.id+'|txt">'+(ro?"Salvează text":"Save as text")+'</button><button class="danger" data-del="'+c.id+'">Delete</button></div>':"")+'</div>';
   }).join("");
+  $("chatList").innerHTML=bar+$("chatList").innerHTML;
   if(renaming){var inp=$("chatList").querySelector("[data-ren-input]");if(inp&&document.activeElement!==inp){inp.focus();inp.select()}}
 }
 function setChatMeta(id,fn){var c=chats.filter(function(x){return x.id===id})[0];if(!c)return;fn(c);c.metaAt=Date.now();
-  if(!c.name)delete c.name;if(!c.pinned)delete c.pinned;store("nova.chats",chats)}
+  if(!c.name)delete c.name;if(!c.pinned)delete c.pinned;if(!c.folder)delete c.folder;store("nova.chats",chats)}
 function finishRename(save){
   var inp=$("chatList").querySelector("[data-ren-input]"),id=renaming;renaming="";
-  if(save&&inp){var v=inp.value.trim().replace(/\s+/g," ").slice(0,60);setChatMeta(id,function(c){c.name=v&&v!==c.title?v:""})}
+  if(save&&inp){var v=inp.value.trim().replace(/\s+/g," ").slice(0,60);
+    if(renameMode==="folder")setChatMeta(id,function(c){c.folder=v.slice(0,30)});else setChatMeta(id,function(c){c.name=v&&v!==c.title?v:""})}
+  renameMode="name";
   renderChats();
 }
 
@@ -1098,8 +1311,10 @@ $("talkMode").addEventListener("click",function(){askNotify(true);startConvo()})
 $("remList").addEventListener("click",function(e){var b=e.target.closest("[data-unremind]");if(b)unremind(b.getAttribute("data-unremind"))});
 $("remPerm").addEventListener("click",function(){askNotify(true)});
 $("sShareNova").addEventListener("click",shareNova);
-setInterval(checkReminders,20000);checkReminders();planReminder();
-document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")checkReminders()});
+$("sBrief").addEventListener("click",function(){S.brief=!S.brief;save();syncSettings();if(S.brief){askNotify(true);toast(isRo()?"Rezumatul de dimineață e pornit":"Morning brief is on")}});
+$("sBriefAt").addEventListener("change",function(){if(/^\d\d:\d\d$/.test(this.value)){S.briefAt=this.value;save();store("nova.briefDay","")}});
+setInterval(function(){checkReminders();checkBrief()},20000);checkReminders();planReminder();setTimeout(checkBrief,1500);
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible"){checkReminders();checkBrief();runPendingBrief()}});
 // shared from another app (installed Nova on Android: Share → Nova)
 (function(){
   var q=new URLSearchParams(location.search),t=[q.get("title"),q.get("text"),q.get("url")].filter(function(x){return x&&x.trim()});
@@ -1135,7 +1350,11 @@ $("chatList").addEventListener("click",function(e){
   if(rs){finishRename(true);return}
   if(mo){var mid=mo.getAttribute("data-more");menuFor=menuFor===mid?"":mid;renderChats();return}
   if(pn){var pid=pn.getAttribute("data-pin");menuFor="";setChatMeta(pid,function(c){c.pinned=!c.pinned});renderChats();return}
-  if(rn){renaming=rn.getAttribute("data-ren");menuFor="";renderChats();return}
+  if(rn){renaming=rn.getAttribute("data-ren");renameMode="name";menuFor="";renderChats();return}
+  var fo=e.target.closest("[data-fold]"),ex=e.target.closest("[data-exp]"),fv=e.target.closest("[data-fview]");
+  if(fo){renaming=fo.getAttribute("data-fold");renameMode="folder";menuFor="";renderChats();return}
+  if(ex){var xp=ex.getAttribute("data-exp").split("|");menuFor="";renderChats();exportChat(xp[0],xp[1]);return}
+  if(fv){folderView=fv.getAttribute("data-fview");renderChats();return}
   var o=e.target.closest("[data-open]"),d=e.target.closest("[data-del]");
   if(o&&!busy){var c=chats.filter(function(x){return x.id===o.getAttribute("data-open")})[0];if(c){stopSpeaking();chatId=c.id;msgs=c.msgs.slice();store("nova.current",chatId);$("chats").hidden=true;render.error="";render()}}
   if(d){var id=d.getAttribute("data-del");
@@ -1152,6 +1371,7 @@ $("inner").addEventListener("click",function(e){
   if(act==="copy"||act==="copycode"){var text=act==="copy"?msgs[i].text:a.closest(".code").querySelector("code").textContent;
     (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){a.textContent="Copied";setTimeout(function(){a.textContent=act==="copy"?"Copy":"Copy code"},1500)},function(){toast("Couldn’t copy. Long-press the text to copy it.")})}
   if(act==="share")shareOut(withNovaLine(msgs[i].text));
+  if(act==="dl"&&msgs[i].doc)downloadFile(msgs[i].doc);
   if(act==="sharenova"){render.askShare=false;shareNova();render()}
   if(act==="noshare"){render.askShare=false;store("nova.askedShare",true);render()}
   if(act==="retry")retry();
@@ -1442,7 +1662,7 @@ function syncNow(){
     if(!$("settings").hidden&&!document.querySelector("#settings [data-sure]")&&document.activeElement.tagName!=="TEXTAREA"&&document.activeElement.tagName!=="INPUT"){syncSettings()}
     if(!$("chats").hidden&&!$("chatList").querySelector("[data-sure]")&&!renaming)renderChats(); // never undo a half-done delete tap
     // upload: no photos, no keys
-    var up={v:1,chats:S.remember?chats.map(function(c){return{id:c.id,title:c.title,updated:c.updated,name:c.name,pinned:c.pinned,metaAt:c.metaAt,msgs:c.msgs.map(function(m){var x=Object.assign({},m);delete x.image;return x})}}):(R.chats||[]),
+    var up={v:1,chats:S.remember?chats.map(function(c){return{id:c.id,title:c.title,updated:c.updated,name:c.name,pinned:c.pinned,folder:c.folder,metaAt:c.metaAt,msgs:c.msgs.map(function(m){var x=Object.assign({},m);delete x.image;return x})}}):(R.chats||[]),
       mem:mem,prefs:outPrefs,prefsAt:outPrefsAt,gone:gone};
     return fetch(SYNC_URL+"?on_conflict=user_id",{method:"POST",headers:Object.assign(authHeaders(token),{"Prefer":"resolution=merge-duplicates,return=minimal"}),
       body:JSON.stringify({user_id:uid,data:up,updated_at:new Date().toISOString()})})

@@ -14,6 +14,9 @@
 - 🧠 **Memory.** Nova remembers your name and what you like, chat after chat. You can see and delete every note.
 - 🖼️ **Photos, PDFs and text files.** Ask what's in a picture, or get a summary of a PDF.
 - 🎨 **Makes pictures.** Ask for a drawing, then save it or set it as your wallpaper.
+- 📄 **Word, Excel and PDF files.** "Turn this into a Word document" or "make my budget into an Excel table", and Nova makes the file. Save any chat as Word, PDF or text.
+- ☀️ **Morning brief.** Weather, top news and your reminders for the day, every morning.
+- 📁 **Chat folders**, synced between devices.
 - 💻 **Code help.** Code arrives in its own box with a copy button.
 - 🔗 **Opens apps and sites.** Say "play lofi on YouTube" and it opens YouTube.
 - 📲 **Share into Nova** from any Android app: links, text, photos and PDFs.
