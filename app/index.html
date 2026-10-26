@@ -102,7 +102,7 @@ header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:1
 .err{color:var(--danger);font-size:14px;margin:4px 0 0}
 
 /* composer */
-#bottom{position:absolute;z-index:5;left:10px;right:10px;bottom:calc(var(--bot) + 12px);max-width:760px;margin:0 auto;display:grid;gap:8px}
+#bottom{position:absolute;z-index:5;left:10px;right:10px;bottom:calc(var(--bot) + 12px);max-width:760px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
 #photoChip{justify-self:start;display:flex;align-items:center;gap:10px;padding:7px 14px 7px 7px;border-radius:18px;font-size:13px;font-weight:600}
 #photoChip img{width:36px;height:36px;border-radius:10px;object-fit:cover}
 #photoChip button{color:var(--dim)}
@@ -118,6 +118,16 @@ header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:1
 .listen .rec{width:10px;height:10px;border-radius:50%;background:#e5484d;animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.35}}
 .listen span{flex:1;font-weight:600}
+.listen{cursor:pointer}
+.listen.convo .rec{background:var(--sun)}
+.listen.convo.think .rec,.listen.convo.speak .rec{animation:pulse .6s ease-in-out infinite}
+.listen.convo.speak .rec{background:#46c46a}
+#endConvo{flex:none;padding:9px 16px;border-radius:999px;background:var(--sun);color:#15181f;font-weight:800;font-size:14px}
+#talkMode{background:var(--glass);border:1px solid var(--edge)}
+#talkMode svg{width:21px;height:21px}
+.remind{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:9px 14px;border-radius:14px;background:var(--glass);border:1px solid var(--edge);font-size:14px;font-weight:600}
+.remind.off{opacity:.6;text-decoration:line-through}
+.remind button{color:var(--sun);font-weight:700;font-size:13px}
 
 /* sheets */
 .sheet{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;background:var(--bg)}
@@ -221,9 +231,10 @@ a{color:inherit}
     <div id="composer" class="composer glass">
       <button class="round" id="plus" aria-label="Attach a photo or file">+</button>
       <textarea id="input" rows="1" placeholder="Message Nova" aria-label="Message Nova"></textarea>
+      <button class="round" id="talkMode" aria-label="Conversation mode: talk with Nova hands-free" title="Conversation mode"></button>
       <button class="round" id="act" aria-label="Talk to Nova"></button>
     </div>
-    <button id="listening" class="listen glass" hidden><i class="rec"></i><span id="listenText">Listening… tap to send</span></button>
+    <div id="listening" class="listen glass" role="button" tabindex="0" hidden><i class="rec"></i><span id="listenText">Listening… tap to send</span><button id="endConvo" hidden>End</button></div>
   </div>
   <input type="file" id="file" accept="image/*,application/pdf,.pdf,text/*,.txt,.md,.csv,.json,.html,.htm,.xml,.js,.ts,.py,.java,.c,.cpp,.cs,.css,.lua,.sql,.log,.srt,.lrc" hidden>
   <input type="file" id="wallFile" accept="image/*" hidden>
@@ -278,6 +289,12 @@ a{color:inherit}
         <div class="seg glass" data-key="wallpaper"><button data-v="space">Space</button><button data-v="sky">Sky</button><button data-v="colours">Colours</button><button data-v="custom" id="segCustom" hidden>Photo</button></div>
         <button class="btn" id="chooseWall">Choose your own photo</button>
       </div>
+    </div>
+
+    <div class="sec">Reminders</div>
+    <div class="card glass">
+      <div class="stack"><div class="note">Say “remind me at 6 to practise guitar” or “remind me in 20 minutes to check the oven”. <span id="remWhere"></span></div><div id="remList"></div></div>
+      <div class="row" id="remPermRow" hidden><button class="btn" id="remPerm">Turn on notifications</button></div>
     </div>
 
     <div class="sec">Memory</div>
@@ -346,7 +363,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.26-d";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.26-e";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -361,6 +378,7 @@ var OPEN_RULES=" You can open websites for the user. When they ask you to open, 
 var WEB_RULES=" You can search the web and read links the user sends. For news, prices, scores, weather, people in the news or anything recent, answer from search results when you have them (use the Google Search tool if it is available). If you have no results for a current fact, say you couldn't check it right now instead of guessing. Never say that you can't browse the internet.";
 var MEMORY_RULES=" Memory: you can remember lasting facts about the user between chats. When the user shares something lasting about themselves (their name, where they live, their job, hobbies or music, people in their life, projects, likes, how they want you to talk) or asks you to remember something, end your reply with an extra line that starts with REMEMBER: followed by one short fact about the user, like 'REMEMBER: Their name is Stef.' At most two REMEMBER lines, and only for facts you don't already know. Never remember passwords, keys, money details, health details or anything they ask you not to keep. If the user asks you to forget something, end with a line FORGET: followed by a few words naming it. Never talk about these lines in the rest of your reply.";
 var NEXT_RULES=" At the very end of your answer, add one line that starts with NEXT: followed by 2 or 3 short follow-up questions or requests the user might want to send you next, separated by |, written the way the user would type them, in the user's language, each under 8 words. Leave out the NEXT line for pictures, opened websites, or when a follow-up makes no sense (like after a simple thanks).";
+var REMIND_RULES=" Reminders: you can set reminders for the user, and Nova will notify them at that time. When they ask you to remind them about something (or to set an alarm or a timer), reply with one short sentence that confirms what and when, and then a new line that starts with REMIND: followed by the date and time as YYYY-MM-DD HH:MM (24-hour clock, the user's local time), then | and what to remind them about, short, in the user's language. Example: 'REMIND: 2026-10-26 18:00 | Practise guitar'. Work out times like 'in 20 minutes', 'at 6' (the next 6 o'clock that hasn't passed, usually 18:00 unless they mean morning) or 'tomorrow morning' (09:00) from the current time below. If they don't say when, ask them instead of guessing. To cancel a reminder, write a line CANCEL: followed by the words of that reminder. Never say you can't set reminders.";
 var FILE_GONE=" (This file was attached earlier and isn't available any more. If you need it, ask the user to attach it again.)";
 var TRANSCRIBE_RULES=" The user's last message is a voice recording. In 'heard', write only the words the user spoke, word for word, in the language they spoke, and nothing else. Leave 'answer' empty.";
 var LENGTH={short:" Keep every answer to one to three sentences.",normal:" Keep answers to a few short paragraphs at most.",detailed:" Give thorough, detailed answers when the question deserves it."};
@@ -380,6 +398,7 @@ var msgs=[];
 if(S.remember){var cur=chats.filter(function(c){return c.id===chatId})[0];if(cur)msgs=cur.msgs}
 var mem=load("nova.memory",[]), webOk=true, webLevel=2, transcribing=false; // webLevel: 2 search+links, 1 search only, 0 none
 var ATT={}; // files you attached in this session (PDFs and text files are kept here, not saved on the device)
+var reminders=load("nova.reminders",[]), convo=false, convoMisses=0;
 var busy=false, abortCtl=null, photo=null, recog=null, recorder=null, recChunks=[], heardText="";
 
 function newId(){return Date.now()+"-"+Math.floor(Math.random()*1e6)}
@@ -435,6 +454,7 @@ function render(){
           (m.open?'<a class="openbtn" href="'+esc(m.open.u)+'" target="_blank" rel="noopener">Open '+esc(m.open.h)+' <span aria-hidden="true">↗</span></a>':"")+
           (m.suggest?'<iframe class="gsugg" sandbox="allow-popups allow-popups-to-escape-sandbox" title="Google Search suggestions" srcdoc="'+esc(m.suggest).replace(/'/g,"&#39;")+'"></iframe>':"")+
           (m.sources?'<div class="srcs">'+m.sources.map(function(x){return'<a href="'+esc(x.u)+'" target="_blank" rel="noopener">'+esc(x.t)+'</a>'}).join("")+'</div>':"")+
+          (m.reminders?m.reminders.map(function(r){var on=reminders.some(function(x){return x.id===r.id});return'<div class="remind'+(on||r.at>Date.now()?"":" off")+'">⏰ '+esc(r.text)+' · '+esc(fmtWhen(r.at))+(on?' <button data-unremind="'+esc(r.id)+'">Cancel</button>':"")+'</div>'}).join(""):"")+
           (m.saved?m.saved.map(function(x){return'<div class="memo">'+esc(x)+'</div>'}).join(""):"")+
           '<div class="acts"><button data-act="listen" data-i="'+i+'">Listen</button><button data-act="copy" data-i="'+i+'">Copy</button><button data-act="share" data-i="'+i+'">Share</button>'+
           (i===msgs.length-1&&!busy?'<button data-act="retry">Retry</button><button data-act="edit">Edit question</button>':"")+'</div>'+
@@ -483,8 +503,10 @@ function loadGen(box){
 /* ---------- composer button ---------- */
 var MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>';
 var STOP='<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor"/></svg>';
+var TALK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg>';
 function updateAct(){
-  var a=$("act");
+  var a=$("act"),tm=$("talkMode");if(!tm.innerHTML)tm.innerHTML=TALK;
+  tm.hidden=busy||!!($("input").value.trim()||photo);
   if(busy){a.className="round";a.innerHTML=STOP;a.setAttribute("aria-label","Stop");return}
   if($("input").value.trim()||photo){a.className="round send";a.textContent="↑";a.setAttribute("aria-label","Send");return}
   a.className="round";a.innerHTML=MIC;a.setAttribute("aria-label","Talk to Nova");
@@ -513,7 +535,11 @@ function persist(){
 function system(voice){
   var t=SYSTEM+OPEN_RULES+LENGTH[S.length]+(S.web&&webOk&&!voice?WEB_RULES:"");
   if(S.memory){t+=MEMORY_RULES;if(mem.length)t+=" Things you remember about the user from earlier chats (use them naturally, only when they matter): "+mem.map(function(m){return m.t}).join(" | ")}
-  if(S.next&&!voice)t+=NEXT_RULES;
+  t+=REMIND_RULES+" The user's local date and time right now: "+nowText()+".";
+  var up=reminders.filter(function(r){return r.at>Date.now()});
+  if(up.length)t+=" Reminders already set: "+up.map(function(r){return fmtWhen(r.at)+" – "+r.text}).join(" | ")+".";
+  if(convo)t+=" You are in a spoken conversation: answer in one to three short spoken sentences, no lists, no code, no links, and end naturally so the user can reply.";
+  if(S.next&&!voice&&!convo)t+=NEXT_RULES;
   if(S.custom.trim())t+=" The user's own instructions for you: "+S.custom.trim();
   if(voice)t+=(transcribing?TRANSCRIBE_RULES:VOICE_RULES)+(S.lang==="ro"?" The user usually speaks Romanian.":"");
   return t;
@@ -653,6 +679,17 @@ function toReply(answer){
     try{var x=new URL(u.replace(/[).,]+$/,""));if(/^https?:$/.test(x.protocol)&&!open)open={u:x.href,h:x.hostname.replace(/^www\./,"")}}catch(e){}
     return"";
   }).trim();
+  var setNow=[];
+  answer=answer.replace(/^[ \t>*-]*REMIND:[ \t]*(\d{4})-(\d{1,2})-(\d{1,2})[ T,]+(\d{1,2})[:.](\d{2})[ \t]*(?:\||-|–)?[ \t]*(.*)$/gim,function(all,y,mo,d,h,mi,what){
+    var at=new Date(+y,+mo-1,+d,+h,+mi).getTime();what=(what||"").trim().replace(/^["'“]|["'”]$/g,"")||"Reminder";
+    if(isNaN(at)||at<Date.now()-60000)return"";
+    var r={id:newId(),at:at,text:what.slice(0,140)};reminders.push(r);setNow.push(r);return"";
+  }).replace(/^[ \t>*-]*CANCEL:[ \t]*(.+)$/gim,function(all,what){
+    var w=what.toLowerCase().split(/[^\wăâîșțşţ]+/).filter(function(x){return x.length>2}),before=reminders.length;
+    reminders=reminders.filter(function(r){var t=r.text.toLowerCase();return !w.length||!w.every(function(x){return t.indexOf(x)>=0})});
+    if(reminders.length!==before)saved.push("Reminder cancelled");return"";
+  }).trim();
+  if(setNow.length||saved.indexOf("Reminder cancelled")>=0){saveReminders();askNotify()}
   var src=ask.sources||[],reply;
   var m=answer.match(/IMAGE:\s*([\s\S]+)/);
   if(m&&m[1].trim())reply={role:"model",text:"Here’s your picture.",gen:picUrl(m[1].trim().slice(0,500)+PIC[S.picStyle])};
@@ -660,6 +697,7 @@ function toReply(answer){
   if(src.length&&!reply.gen)reply.sources=src;
   if(ask.suggest&&!reply.gen)reply.suggest=ask.suggest;
   if(saved.length)reply.saved=saved;
+  if(setNow.length){reply.reminders=setNow.map(function(r){return{id:r.id,at:r.at,text:r.text}});if(!reply.text||reply.text==="Got it.")reply.text="Okay, I’ll remind you."}
   if(next.length&&!reply.gen&&!open)reply.next=next;
   if(open){reply.open=open;if(!reply.text||reply.text==="Got it.")reply.text="Opening "+open.h+".";
     // the PC app opens it right away in your browser; phones and browsers need a tap (they block pop-ups)
@@ -667,9 +705,9 @@ function toReply(answer){
   return reply;
 }
 function run(promise,base){
-  busy=true;render.error="";render();
-  promise.then(function(reply){msgs=base.concat(reply);persist();if(S.speak)say(reply.text)})
-  .catch(function(e){if(e.message!=="__stopped__")render.error=e.message;msgs=base.slice()})
+  busy=true;render.error="";render();if(convo)setConvoState("think");
+  promise.then(function(reply){msgs=base.concat(reply);persist();spoken(reply)})
+  .catch(function(e){if(e.message!=="__stopped__")render.error=e.message;msgs=base.slice();if(convo)endConvo()})
   .finally(function(){busy=false;render()});
 }
 function needKey(){if(S.key)return false;render.error="Paste your Gemini key first (at the top, or in Settings).";render();return true}
@@ -681,6 +719,7 @@ function send(text){
   var ro=S.lang==="ro";
   if(!text)text=pic&&pic.file?(ro?"Rezumă acest fișier.":"Summarize this file."):(ro?"Ce e în poza asta?":"What’s in this picture?");
   vibrate();stopSpeaking();
+  if(/remind|alarm|timer|aminte|alarm|cronometru|notific/i.test(text))askNotify(true);
   $("input").value="";autoGrow();setPhoto(null);
   var userMsg={role:"user",text:text};
   if(pic&&pic.file){var fid=newId();ATT[fid]=pic;userMsg.file={id:fid,name:pic.name,kind:pic.kind}}
@@ -706,6 +745,62 @@ function retry(){
   run(ask(contents(base),false).then(toReply),base);
 }
 
+/* ---------- reminders ---------- */
+var DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+function pad(n){return(n<10?"0":"")+n}
+function nowText(){var d=new Date();return DAYS[d.getDay()]+" "+d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes())}
+function fmtWhen(at){
+  var d=new Date(at),n=new Date(),t=pad(d.getHours())+":"+pad(d.getMinutes()),ro=S.lang==="ro";
+  var day=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(),dd=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(),diff=Math.round((dd-day)/864e5);
+  if(diff===0)return(ro?"azi ":"today ")+t;if(diff===1)return(ro?"mâine ":"tomorrow ")+t;
+  return d.toLocaleDateString(ro?"ro-RO":[],{weekday:"short",day:"numeric",month:"short"})+" "+t;
+}
+function saveReminders(){reminders.sort(function(a,b){return a.at-b.at});reminders=reminders.slice(-50);store("nova.reminders",reminders);planReminder();if(!$("settings").hidden)renderReminders()}
+var canNotify="Notification" in window;
+function askNotify(gesture){
+  if(!canNotify||Notification.permission!=="default")return;
+  if(gesture||navigator.userActivation&&navigator.userActivation.isActive){try{var p=Notification.requestPermission();if(p&&p.then)p.then(renderReminders,function(){})}catch(e){}}
+}
+function notify(r){
+  var body=r.text,title=S.lang==="ro"?"Nova îți amintește":"Nova reminder";
+  vibrate();try{navigator.vibrate&&navigator.vibrate([250,120,250])}catch(e){}
+  if(canNotify&&Notification.permission==="granted"){
+    var opts={body:body,tag:"nova-"+r.id,icon:"icons/icon-192.png",badge:"icons/icon-192.png",requireInteraction:true};
+    (navigator.serviceWorker&&navigator.serviceWorker.ready?navigator.serviceWorker.ready.then(function(reg){return reg.showNotification(title,opts)}):Promise.reject())
+      .catch(function(){try{new Notification(title,opts)}catch(e){}});
+  }
+  showAlarm(r);
+}
+// the reminder also shows inside Nova (and Nova says it) while the app is open
+function showAlarm(r){
+  var el=$("toast");el.innerHTML="⏰ <b>"+esc(r.text)+"</b>";el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){el.hidden=true},12000);
+  if(!convo&&!busy&&synth)say((S.lang==="ro"?"Îți amintesc: ":"Reminder: ")+r.text);
+  try{var a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=880;g.gain.setValueAtTime(.12,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.9);o.start();o.stop(a.currentTime+.9)}catch(e){}
+  if(/Electron/i.test(navigator.userAgent))try{window.focus()}catch(e){}
+}
+function checkReminders(){
+  var now=Date.now(),due=reminders.filter(function(r){return r.at<=now+500});
+  if(!due.length)return;
+  reminders=reminders.filter(function(r){return r.at>now+500});store("nova.reminders",reminders);
+  var late=due.filter(function(r){return now-r.at>15*60000});
+  due.filter(function(r){return now-r.at<=15*60000}).forEach(notify);
+  if(late.length)setTimeout(function(){toast((S.lang==="ro"?"Ai ratat: ":"Missed reminder: ")+late.map(function(r){return r.text+" ("+fmtWhen(r.at)+")"}).join(", "))},800);
+  if(!$("settings").hidden)renderReminders();render();
+}
+function planReminder(){
+  clearTimeout(planReminder.t);var next=reminders[0];if(!next)return;
+  planReminder.t=setTimeout(checkReminders,Math.min(Math.max(0,next.at-Date.now()),60000)); // re-check at least every minute (timers sleep with the screen)
+}
+function renderReminders(){
+  var up=reminders.filter(function(r){return r.at>Date.now()});
+  $("remList").innerHTML=up.length?up.map(function(r){return'<div class="mem"><span>⏰ '+esc(r.text)+' · '+esc(fmtWhen(r.at))+'</span><button class="danger" data-unremind="'+esc(r.id)+'">Cancel</button></div>'}).join("")
+    :'<p class="note" style="margin:0">No reminders.</p>';
+  var el=/Electron/i.test(navigator.userAgent),standalone=matchMedia("(display-mode: standalone)").matches;
+  $("remWhere").textContent=el?"Reminders pop up while the Nova app is running.":"Reminders pop up while Nova is open in a tab or as an installed app"+(canNotify&&Notification.permission==="granted"?", as notifications.":".");
+  $("remPermRow").hidden=!(canNotify&&Notification.permission==="default");
+}
+function unremind(id){reminders=reminders.filter(function(r){return r.id!==id});saveReminders();render();toast("Reminder cancelled")}
+
 /* ---------- voice in ---------- */
 // The desktop app (Electron) has no working speech recognizer, so there Nova records audio and Gemini listens.
 var SR=/Electron/i.test(navigator.userAgent)?null:(window.SpeechRecognition||window.webkitSpeechRecognition);
@@ -714,15 +809,19 @@ function startTalking(){
   stopSpeaking();vibrate();render.error="";
   if(SR){
     try{
-      recog=new SR();recog.lang=S.lang==="ro"?"ro-RO":S.lang==="en"?"en-US":(navigator.language||"en-US");recog.interimResults=true;recog.continuous=true;heardText="";
-      recog.onresult=function(e){var t="";for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;heardText=t;$("listenText").textContent=(t||"Listening…")+"  · tap to send"};
+      var me=recog=new SR();recog.lang=S.lang==="ro"?"ro-RO":S.lang==="en"?"en-US":(navigator.language||"en-US");recog.interimResults=true;recog.continuous=!convo;heardText="";
+      recog.onresult=function(e){var t="";for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;heardText=t;$("listenText").textContent=(t||"Listening…")+(convo?"":"  · tap to send")};
       recog.onerror=function(e){
+        if(recog!==me)return;
         if(e.error==="not-allowed"||e.error==="service-not-allowed"){render.error="Nova needs the microphone. Allow it in your browser’s settings for this site.";}
         else if(e.error!=="aborted"&&e.error!=="no-speech"){render.error="Voice input stopped ("+e.error+"). Try again.";}
+        recog=null;
+        if(convo&&e.error==="no-speech"){convoHeardNothing();return}
+        if(convo)endConvo();
         showListening(false);render();
       };
-      recog.onend=function(){if(!$("listening").hidden){finishSpeech()}};
-      recog.start();showListening(true);return;
+      recog.onend=function(){if(recog===me&&!$("listening").hidden){finishSpeech()}};
+      recog.start();showListening(true);setConvoState("listen");return;
     }catch(e){recog=null}
   }
   // no speech recognition in this browser: record audio and let Gemini listen
@@ -732,36 +831,84 @@ function startTalking(){
     recorder=new MediaRecorder(stream,type?{mimeType:type}:undefined);recChunks=[];
     recorder.ondataavailable=function(e){if(e.data&&e.data.size)recChunks.push(e.data)};
     recorder.onstop=function(){stream.getTracks().forEach(function(t){t.stop()});sendAudio(new Blob(recChunks,{type:recorder.mimeType||type||"audio/webm"}))};
-    recorder.start();$("listenText").textContent="Listening… tap to send";showListening(true);
-  },function(){render.error="Nova needs the microphone. Allow it in your browser’s settings for this site.";render()});
+    recorder.start();$("listenText").textContent=convo?"Listening…":"Listening… tap to send";showListening(true);setConvoState("listen");
+    if(convo)watchSilence(stream,recorder);
+  },function(){if(convo)endConvo();render.error="Nova needs the microphone. Allow it in your browser’s settings for this site.";render()});
 }
-function showListening(on){$("listening").hidden=!on;$("composer").hidden=on}
+function showListening(on){on=on||convo;$("listening").hidden=!on;$("composer").hidden=on}
 function stopTalking(){
+  if(convo&&!recog&&!(recorder&&recorder.state!=="inactive")){ // tap while Nova talks: interrupt and listen
+    if(!busy){stopSpeaking();startTalking()}return}
   if(recog){var r=recog;recog=null;showListening(false);try{r.stop()}catch(e){}finishSpeech(true);return}
   if(recorder&&recorder.state!=="inactive"){showListening(false);recorder.stop()}
 }
 function finishSpeech(manual){
+  recog=null;
   showListening(false);
   var t=heardText.trim();heardText="";
-  if(t)send(t);
+  if(t){convoMisses=0;send(t)}
+  else if(convo)convoHeardNothing();
+}
+/* ---------- conversation mode: Nova listens, answers out loud, then listens again ---------- */
+function setConvoState(st){
+  var l=$("listening");l.classList.toggle("convo",convo);l.classList.toggle("think",convo&&st==="think");l.classList.toggle("speak",convo&&st==="speak");
+  $("endConvo").hidden=!convo;
+  if(convo)$("listenText").textContent=st==="think"?"Nova is thinking…":st==="speak"?"Nova is talking · tap to interrupt":"Listening… just talk";
+}
+function startConvo(){
+  if(busy||needKey())return;
+  convo=true;convoMisses=0;stopSpeaking();toast("Conversation mode: talk, then pause. Tap End to stop.");
+  showListening(true);startTalking();
+}
+function endConvo(){
+  if(!convo)return;convo=false;convoMisses=0;if(busy&&abortCtl)abortCtl.abort();
+  var r=recog;recog=null;if(r){try{r.abort()}catch(e){}}
+  if(recorder&&recorder.state!=="inactive"){recorder.onstop=function(){try{recorder.stream.getTracks().forEach(function(t){t.stop()})}catch(e){}recorder=null};try{recorder.stop()}catch(e){}}
+  stopSpeaking();setConvoState("");showListening(false);render();
+}
+function convoHeardNothing(){
+  if(!convo)return;
+  if(++convoMisses>=2){endConvo();toast("Conversation ended. Tap the conversation button to start again.");return}
+  setTimeout(function(){if(convo&&!busy)startTalking()},300);
+}
+// after an answer: read it out, and in conversation mode listen again when Nova is done talking
+function spoken(reply){
+  if(convo){setConvoState("speak");say(reply.text,function(){if(convo&&!busy)setTimeout(function(){if(convo&&!busy)startTalking()},250)});return}
+  if(S.speak)say(reply.text);
+}
+// no speech recognizer (PC app): stop recording by itself after a pause
+function watchSilence(stream,rec){
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext,ac=new AC(),src=ac.createMediaStreamSource(stream),an=ac.createAnalyser();an.fftSize=1024;src.connect(an);
+    var buf=new Float32Array(an.fftSize),heard=false,quietSince=0,start=Date.now(),loud=0;
+    var iv=setInterval(function(){
+      if(rec.state==="inactive"||!convo){clearInterval(iv);ac.close().catch(function(){});return}
+      an.getFloatTimeDomainData(buf);var sum=0;for(var i=0;i<buf.length;i++)sum+=buf[i]*buf[i];var rms=Math.sqrt(sum/buf.length);
+      if(rms>0.035){loud++;if(loud>=3)heard=true;quietSince=0}else{loud=0;if(!quietSince)quietSince=Date.now()}
+      var now=Date.now();
+      if((heard&&quietSince&&now-quietSince>1400)||now-start>30000){clearInterval(iv);ac.close().catch(function(){});showListening(false);rec.stop()}
+      else if(!heard&&now-start>8000){clearInterval(iv);ac.close().catch(function(){});rec.onstop=function(){stream.getTracks().forEach(function(t){t.stop()});recorder=null;convoHeardNothing()};rec.stop()}
+    },100);
+  }catch(e){}
 }
 function sendAudio(blob){
   recorder=null;
-  if(!blob.size){render.error="Nothing was recorded. Try again.";render();return}
+  if(!blob.size){if(convo){convoHeardNothing();return}render.error="Nothing was recorded. Try again.";render();return}
   var mime=(blob.type||"audio/webm").split(";")[0];
   blobToB64(blob).then(function(b64){
     var base=msgs.slice();
     var parts=contents(base).concat([{role:"user",parts:[{inlineData:{mimeType:mime,data:b64}}]}]);
-    busy=true;render.error="";render();
+    busy=true;render.error="";render();setConvoState("think");
     var twoStep=S.web; // write the words down first, then answer them with web search (Google or free) available
     transcribing=twoStep;
     ask(parts,true).then(function(raw){
       var heard="",answer=raw;try{var o=JSON.parse(raw);heard=String(o.heard||"").trim();answer=String(o.answer||"").trim()}catch(e){}
       var said=base.concat({role:"user",text:heard||"(voice message)"});
+      if(!heard&&convo){msgs=base.slice();convoHeardNothing();return}
       if(twoStep){if(!heard)throw new Error("Nova couldn’t make out what you said. Try again.");msgs=said;render();
-        return ask(contents(said),false).then(function(a){return toReply(a)}).then(function(reply){msgs=said.concat(reply);persist();if(S.speak)say(reply.text)})}
-      var reply=toReply(answer);msgs=said.concat(reply);persist();if(S.speak)say(reply.text);
-    }).catch(function(e){if(e.message!=="__stopped__")render.error=e.message;msgs=base.slice()}).finally(function(){busy=false;transcribing=false;render()});
+        return ask(contents(said),false).then(function(a){return toReply(a)}).then(function(reply){msgs=said.concat(reply);persist();spoken(reply)})}
+      var reply=toReply(answer);msgs=said.concat(reply);persist();spoken(reply);
+    }).catch(function(e){if(e.message!=="__stopped__")render.error=e.message;msgs=base.slice();if(convo)endConvo()}).finally(function(){busy=false;transcribing=false;render()});
   });
 }
 function blobToB64(blob){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){var s=String(r.result);res(s.slice(s.indexOf(",")+1))};r.onerror=rej;r.readAsDataURL(blob)})}
@@ -789,20 +936,23 @@ function pickVoice(lang){
   return voices.filter(function(v){return re.test(v.lang)}).sort(function(a,b){return score(b)-score(a)})[0]||null;
 }
 function forSpeech(t){return t.replace(/```[\s\S]*?```/g," ").replace(/[*_#`>|]/g,"").replace(/https?:\/\/\S+/g,"link").replace(/\s+/g," ").trim()}
-function say(text){
-  if(!synth)return;stopSpeaking();
+function say(text,done){
+  if(!synth){if(done)done();return}stopSpeaking();
+  var fin=false;function finish(){if(fin||say.finish!==finish)return;fin=true;clearTimeout(say.guard);$("stopTalk").hidden=true;if(done)done()}
+  say.finish=finish;
   var chunks=forSpeech(text).match(/[^.!?…]+[.!?…]*\s*/g)||[];
   var lang=langOf(text),v=pickVoice(lang);
   $("stopTalk").hidden=false;
   chunks.forEach(function(c,i){
     var u=new SpeechSynthesisUtterance(c);if(v){u.voice=v;u.lang=v.lang}else u.lang=lang==="ro"?"ro-RO":"en-US";
     u.rate=+S.rate;u.pitch=+S.pitch;
-    if(i===chunks.length-1){u.onend=u.onerror=function(){$("stopTalk").hidden=true}}
+    if(i===chunks.length-1){u.onend=u.onerror=finish}
     synth.speak(u);
   });
-  if(!chunks.length)$("stopTalk").hidden=true;
+  if(!chunks.length)finish();
+  else if(done){var words=forSpeech(text).split(/\s+/).length;say.guard=setTimeout(function(){if(!synth.speaking)finish()},Math.max(4000,words*600/(+S.rate||1)))}
 }
-function stopSpeaking(){try{synth&&synth.cancel()}catch(e){}$("stopTalk").hidden=true}
+function stopSpeaking(){say.finish=null;clearTimeout(say.guard);try{synth&&synth.cancel()}catch(e){}$("stopTalk").hidden=true}
 
 /* ---------- photos ---------- */
 function shrink(file,max,quality){
@@ -873,7 +1023,7 @@ function setCustomWall(data){S.customWall=data;S.wallpaper="custom";if(!save()){
 function syncSettings(){
   $("sKey").value=S.key;$("sPicKey").value=S.picKey;$("sCustom").value=S.custom;
   $("sSpeak").setAttribute("aria-checked",String(!!S.speak));$("sRemember").setAttribute("aria-checked",String(!!S.remember));
-  $("sWeb").setAttribute("aria-checked",String(!!S.web));$("sSync").setAttribute("aria-checked",String(!!S.sync));showSyncState();$("sMemory").setAttribute("aria-checked",String(!!S.memory));$("sNext").setAttribute("aria-checked",String(!!S.next));renderMemory();
+  $("sWeb").setAttribute("aria-checked",String(!!S.web));$("sSync").setAttribute("aria-checked",String(!!S.sync));showSyncState();$("sMemory").setAttribute("aria-checked",String(!!S.memory));$("sNext").setAttribute("aria-checked",String(!!S.next));renderMemory();renderReminders();
   var segs=document.querySelectorAll(".seg");
   for(var i=0;i<segs.length;i++){var k=segs[i].getAttribute("data-key"),bs=segs[i].querySelectorAll("button");
     for(var j=0;j<bs.length;j++)bs[j].setAttribute("aria-pressed",String(bs[j].getAttribute("data-v")===String(S[k])))}
@@ -918,7 +1068,22 @@ function autoGrow(){var t=$("input");t.style.height="auto";t.style.height=Math.m
 $("input").addEventListener("input",function(){autoGrow();updateAct()});
 $("input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing&&matchMedia("(pointer:fine)").matches){e.preventDefault();send()}});
 $("act").addEventListener("click",function(){if(busy){abortCtl&&abortCtl.abort();return}if($("input").value.trim()||photo)send();else startTalking()});
-$("listening").addEventListener("click",stopTalking);
+$("listening").addEventListener("click",function(e){if(e.target.closest("#endConvo"))return;stopTalking()});
+$("listening").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();stopTalking()}});
+$("endConvo").addEventListener("click",function(e){e.stopPropagation();endConvo()});
+$("talkMode").addEventListener("click",function(){askNotify(true);startConvo()});
+$("remList").addEventListener("click",function(e){var b=e.target.closest("[data-unremind]");if(b)unremind(b.getAttribute("data-unremind"))});
+$("remPerm").addEventListener("click",function(){askNotify(true)});
+setInterval(checkReminders,20000);checkReminders();planReminder();
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")checkReminders()});
+// shared from another app (installed Nova on Android: Share → Nova)
+(function(){
+  var q=new URLSearchParams(location.search),t=[q.get("title"),q.get("text"),q.get("url")].filter(function(x){return x&&x.trim()});
+  if(!q.has("share")&&!t.length)return;
+  if(t.length){var uniq=[];t.forEach(function(x){if(!uniq.some(function(u){return u.indexOf(x)>=0||x.indexOf(u)>=0}))uniq.push(x)});
+    $("input").value=uniq.join("\n");autoGrow();updateAct();setTimeout(function(){$("input").focus()},300);toast("Shared to Nova. Add a question and send.")}
+  try{history.replaceState(null,"",location.pathname)}catch(e){}
+})();
 $("plus").addEventListener("click",function(){if(!busy)$("file").click()});
 $("file").addEventListener("change",function(){var f=this.files[0];this.value="";if(f)readFile(f)});
 // PC: drop a file anywhere, or paste a picture into the message box
@@ -954,6 +1119,7 @@ $("chatList").addEventListener("click",function(e){
     chats=chats.filter(function(x){return x.id!==id});store("nova.chats",chats);if(id===chatId){msgs=[];chatId=newId()}menuFor="";renderChats();render()}
 });
 $("inner").addEventListener("click",function(e){
+  var ur=e.target.closest("[data-unremind]");if(ur){unremind(ur.getAttribute("data-unremind"));return}
   var s=e.target.closest(".starter,.next button");if(s){send(s.getAttribute("data-q"));return}
   var v=e.target.closest("[data-view]");if(v){openViewer(v.getAttribute("data-view"));return}
   if(e.target.id==="wSave"){var k=$("wKey").value.trim();if(k){S.key=k;save();render.error="";render();toast("Key saved on this device")}return}
