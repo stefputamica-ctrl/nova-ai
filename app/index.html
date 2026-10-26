@@ -369,7 +369,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.26-f";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.26-g";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -787,8 +787,10 @@ function notify(r){
   vibrate();try{navigator.vibrate&&navigator.vibrate([250,120,250])}catch(e){}
   if(canNotify&&Notification.permission==="granted"){
     var opts={body:body,tag:"nova-"+r.id,icon:"icons/icon-192.png",badge:"icons/icon-192.png",requireInteraction:true};
-    (navigator.serviceWorker&&navigator.serviceWorker.ready?navigator.serviceWorker.ready.then(function(reg){return reg.showNotification(title,opts)}):Promise.reject())
-      .catch(function(){try{new Notification(title,opts)}catch(e){}});
+    // the PC app (Electron) shows a normal Windows notification; browsers go through the service worker (needed on Android)
+    var direct=function(){try{var n=new Notification(title,opts);n.onclick=function(){try{window.focus()}catch(e){}}}catch(e){}};
+    if(/Electron/i.test(navigator.userAgent)||!(navigator.serviceWorker&&navigator.serviceWorker.controller))direct();
+    else navigator.serviceWorker.ready.then(function(reg){return reg.showNotification(title,opts)}).catch(direct);
   }
   showAlarm(r);
 }
@@ -817,7 +819,7 @@ function renderReminders(){
   $("remList").innerHTML=up.length?up.map(function(r){return'<div class="mem"><span>⏰ '+esc(r.text)+' · '+esc(fmtWhen(r.at))+'</span><button class="danger" data-unremind="'+esc(r.id)+'">Cancel</button></div>'}).join("")
     :'<p class="note" style="margin:0">No reminders.</p>';
   var el=/Electron/i.test(navigator.userAgent),standalone=matchMedia("(display-mode: standalone)").matches;
-  $("remWhere").textContent=el?"Reminders pop up while the Nova app is running.":"Reminders pop up while Nova is open in a tab or as an installed app"+(canNotify&&Notification.permission==="granted"?", as notifications.":".");
+  $("remWhere").textContent=el?(canNotify&&Notification.permission==="granted"?"Reminders pop up as Windows notifications while the Nova app is running.":"Reminders show inside Nova while it’s running. Install the newest Nova for PC from the website to get Windows notifications too."):"Reminders pop up while Nova is open in a tab or as an installed app"+(canNotify&&Notification.permission==="granted"?", as notifications.":".");
   $("remPermRow").hidden=!(canNotify&&Notification.permission==="default");
 }
 function unremind(id){reminders=reminders.filter(function(r){return r.id!==id});saveReminders();render();toast("Reminder cancelled")}
