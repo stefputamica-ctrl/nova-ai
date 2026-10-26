@@ -152,6 +152,22 @@ a{color:inherit}
 .chat{border-radius:20px;display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:10px}
 .chat .grow{cursor:pointer}
 .chat .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat{flex-wrap:wrap}
+.chat .pin{color:var(--sun)}
+.chat .more{font-size:15px;font-weight:800;color:var(--dim);padding:6px 4px;letter-spacing:2px}
+.chat .menu{flex-basis:100%;display:flex;flex-wrap:wrap;gap:22px;padding-top:12px;border-top:1px solid var(--edge);font-size:14px;font-weight:600}
+.chat .menu button{color:var(--ink)}.chat .menu .danger{color:var(--danger)}
+.chat .ren{flex:1;min-width:0;padding:8px 12px}
+#chatSearch{margin-bottom:12px}
+.next{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:12px}
+.next button{font-size:14px;font-weight:600;text-align:left;padding:7px 13px;border-radius:14px;background:var(--glass);border:1px solid var(--edge);max-width:100%}
+.next button::before{content:"↳ ";color:var(--sun)}
+.ufile{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 8px;border-radius:16px;background:var(--glass);border:1px solid var(--edge);font-size:14px;font-weight:600;max-width:84%;overflow-wrap:anywhere}
+.ficon{display:inline-grid;place-items:center;flex:none;width:34px;height:38px;border-radius:9px;background:var(--sun);color:#15181f;font-size:10px;font-weight:800;letter-spacing:.02em}
+#photoChip .ficon{width:36px;height:36px}
+#photoChip span{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dropZone{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(5,7,14,.6);pointer-events:none}
+#dropZone div{padding:22px 30px;border-radius:24px;font-weight:700;font-size:18px;border:2px dashed var(--sun)}
 
 /* viewer */
 #viewer{position:fixed;inset:0;z-index:30;background:#000;display:flex;align-items:center;justify-content:center}
@@ -201,15 +217,15 @@ a{color:inherit}
   </header>
   <main id="log"><div class="inner" id="inner"></div></main>
   <div id="bottom">
-    <div id="photoChip" class="glass" hidden><img alt=""><span>Photo attached</span><button id="rmPhoto">Remove</button></div>
+    <div id="photoChip" class="glass" hidden><img alt=""><i class="ficon" hidden></i><span>Photo attached</span><button id="rmPhoto">Remove</button></div>
     <div id="composer" class="composer glass">
-      <button class="round" id="plus" aria-label="Attach a photo">+</button>
+      <button class="round" id="plus" aria-label="Attach a photo or file">+</button>
       <textarea id="input" rows="1" placeholder="Message Nova" aria-label="Message Nova"></textarea>
       <button class="round" id="act" aria-label="Talk to Nova"></button>
     </div>
     <button id="listening" class="listen glass" hidden><i class="rec"></i><span id="listenText">Listening… tap to send</span></button>
   </div>
-  <input type="file" id="file" accept="image/*" hidden>
+  <input type="file" id="file" accept="image/*,application/pdf,.pdf,text/*,.txt,.md,.csv,.json,.html,.htm,.xml,.js,.ts,.py,.java,.c,.cpp,.cs,.css,.lua,.sql,.log,.srt,.lrc" hidden>
   <input type="file" id="wallFile" accept="image/*" hidden>
 </div>
 
@@ -244,6 +260,7 @@ a{color:inherit}
     <div class="sec">Answers</div>
     <div class="card glass">
       <div class="stack"><div class="label">Answer length</div><div class="seg glass" data-key="length"><button data-v="short">Short</button><button data-v="normal">Normal</button><button data-v="detailed">Detailed</button></div></div>
+      <div class="row"><div class="grow"><div class="label">Suggest follow-up questions</div><div class="note">Nova offers a few questions you can tap to keep going.</div></div><button class="switch" role="switch" id="sNext" aria-label="Suggest follow-up questions"></button></div>
       <div class="row"><div class="grow"><div class="label">Search the web</div><div class="note">Nova can look things up on Google and read links you paste. Sources show under the answer.</div></div><button class="switch" role="switch" id="sWeb" aria-label="Search the web"></button></div>
       <div class="stack"><button class="btn" id="sWebTest">Test web search</button><div class="note" id="webTestOut"></div></div>
       <div class="stack"><div class="label">Custom instructions</div><div class="note">Tell Nova how to talk to you, for example “Keep it casual and use simple words.”</div><textarea class="field" id="sCustom" maxlength="600" placeholder="How should Nova respond?"></textarea></div>
@@ -283,7 +300,7 @@ a{color:inherit}
     </div>
 
     <div class="sec">About</div>
-    <div class="card glass"><div class="stack"><div class="label">Nova</div><div class="note">Answers come from Google Gemini, so they can be wrong. Messages, photos, voice recordings and your memory notes are sent to Google to get an answer, and Google Search may be used when “Search the web” is on. Pictures are made by Pollinations.ai, which receives the picture description.</div><div class="note" id="sVersion"></div><button class="btn" id="sUpdate" style="margin-top:8px">Check for updates</button></div></div>
+    <div class="card glass"><div class="stack"><div class="label">Nova</div><div class="note">Answers come from Google Gemini, so they can be wrong. Messages, photos, files you attach, voice recordings and your memory notes are sent to Google to get an answer, and Google Search may be used when “Search the web” is on. Pictures are made by Pollinations.ai, which receives the picture description.</div><div class="note" id="sVersion"></div><button class="btn" id="sUpdate" style="margin-top:8px">Check for updates</button></div></div>
   </div></div>
 </section>
 
@@ -293,6 +310,7 @@ a{color:inherit}
   <div class="sheet-head"><h2>Chats</h2><button class="done" data-close="chats">Done</button></div>
   <div class="sheet-body"><div>
     <button class="btn" id="chatsNew" style="margin-bottom:12px">Start a new chat</button>
+    <input class="field" id="chatSearch" type="search" placeholder="Search your chats" autocomplete="off" aria-label="Search your chats">
     <div id="chatList"></div>
   </div></div>
 </section>
@@ -304,6 +322,7 @@ a{color:inherit}
   <div class="vbot"><button class="vbtn" id="vWall">Set as wallpaper</button></div>
 </div>
 <div id="toast" class="toast glass" hidden></div>
+<div id="dropZone" hidden><div class="glass">Drop it here for Nova</div></div>
 <div id="updBar" class="updbar glass" hidden role="status"><span>A new version of Nova is ready.</span><button class="btn" id="updGo">Update</button></div>
 
 <!-- log in / sign up -->
@@ -327,7 +346,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.26-c";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.26-d";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -341,13 +360,15 @@ var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directl
 var OPEN_RULES=" You can open websites for the user. When they ask you to open, go to, play, watch, listen to or search something on a website or app (YouTube, Google, Maps, Spotify, Netflix, Instagram, TikTok, Wikipedia, Gmail and so on), reply with one short sentence like 'Opening YouTube.' and then a new line that starts with OPEN: followed by the full https link. To search or play something, use the site's search link, for example OPEN: https://www.youtube.com/results?search_query=lofi+music or OPEN: https://open.spotify.com/search/lofi or OPEN: https://www.google.com/maps/search/pizza+near+me. Only use OPEN: when they ask you to open or play something. You can open websites, not programs installed on the computer.";
 var WEB_RULES=" You can search the web and read links the user sends. For news, prices, scores, weather, people in the news or anything recent, answer from search results when you have them (use the Google Search tool if it is available). If you have no results for a current fact, say you couldn't check it right now instead of guessing. Never say that you can't browse the internet.";
 var MEMORY_RULES=" Memory: you can remember lasting facts about the user between chats. When the user shares something lasting about themselves (their name, where they live, their job, hobbies or music, people in their life, projects, likes, how they want you to talk) or asks you to remember something, end your reply with an extra line that starts with REMEMBER: followed by one short fact about the user, like 'REMEMBER: Their name is Stef.' At most two REMEMBER lines, and only for facts you don't already know. Never remember passwords, keys, money details, health details or anything they ask you not to keep. If the user asks you to forget something, end with a line FORGET: followed by a few words naming it. Never talk about these lines in the rest of your reply.";
+var NEXT_RULES=" At the very end of your answer, add one line that starts with NEXT: followed by 2 or 3 short follow-up questions or requests the user might want to send you next, separated by |, written the way the user would type them, in the user's language, each under 8 words. Leave out the NEXT line for pictures, opened websites, or when a follow-up makes no sense (like after a simple thanks).";
+var FILE_GONE=" (This file was attached earlier and isn't available any more. If you need it, ask the user to attach it again.)";
 var TRANSCRIBE_RULES=" The user's last message is a voice recording. In 'heard', write only the words the user spoke, word for word, in the language they spoke, and nothing else. Leave 'answer' empty.";
 var LENGTH={short:" Keep every answer to one to three sentences.",normal:" Keep answers to a few short paragraphs at most.",detailed:" Give thorough, detailed answers when the question deserves it."};
 var VOICE_RULES=" The user's last message is a voice recording. In 'heard', write only the words the user spoke, word for word, in the language they spoke, and nothing else. In 'answer', write your reply to what they said, in the same language as the words in 'heard'. A short greeting like 'hey' or 'hi' is English. If you are not sure which language it is, reply in English.";
 var PIC={photo:", candid photograph taken on a 35mm film camera, natural daylight, soft film grain, muted true-to-life colors, slightly imperfect framing, realistic proportions, no glow, no fantasy lighting",
  art:", hand-made illustration, gouache and colored pencil on textured paper, visible brush strokes, limited muted palette, flat light, imperfect lines",free:""};
 var STARTERS=["Help me write a chorus for a sad song","Search the web: what happened in tech news today?","Give me a fun fact about space","Write a Python script that renames my photos by date","Draw a cozy cabin in the snow at sunset"];
-var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true,memory:true,web:true,lang:"auto",sync:true};
+var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true,memory:true,web:true,lang:"auto",sync:true,next:true};
 
 var $=function(id){return document.getElementById(id)};
 function load(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
@@ -358,6 +379,7 @@ var chatId=load("nova.current","")||newId();
 var msgs=[];
 if(S.remember){var cur=chats.filter(function(c){return c.id===chatId})[0];if(cur)msgs=cur.msgs}
 var mem=load("nova.memory",[]), webOk=true, webLevel=2, transcribing=false; // webLevel: 2 search+links, 1 search only, 0 none
+var ATT={}; // files you attached in this session (PDFs and text files are kept here, not saved on the device)
 var busy=false, abortCtl=null, photo=null, recog=null, recorder=null, recChunks=[], heardText="";
 
 function newId(){return Date.now()+"-"+Math.floor(Math.random()*1e6)}
@@ -400,12 +422,13 @@ function render(){
     h+='<div class="hero'+(low?" low":"")+'">';
     if(!low)h+='<h1>'+greeting()+'</h1><p class="sub">What’s on your mind?</p>';
     (low?STARTERS.slice(0,3):STARTERS).forEach(function(q){h+='<button class="starter" data-q="'+esc(q)+'">'+esc(q)+'</button>'});
-    if(!low)h+='<div class="hint">Tap the microphone to talk, or + to ask about a photo.</div>';
+    if(!low)h+='<div class="hint">Tap the microphone to talk, or + to ask about a photo or a PDF.</div>';
     h+='</div>';
   }else{
     msgs.forEach(function(m,i){
       if(m.role==="user"){
-        h+='<div class="msg u" data-i="'+i+'">'+(m.image?'<img class="uimg" src="'+esc(m.image)+'" alt="Your photo" data-view="'+esc(m.image)+'">':"")+'<div class="ub" data-edit="'+i+'">'+esc(m.text)+'</div></div>';
+        h+='<div class="msg u" data-i="'+i+'">'+(m.image?'<img class="uimg" src="'+esc(m.image)+'" alt="Your photo" data-view="'+esc(m.image)+'">':"")+
+          (m.file?'<div class="ufile"><i class="ficon">'+esc(m.file.kind||"FILE")+'</i><span>'+esc(m.file.name)+'</span></div>':"")+'<div class="ub" data-edit="'+i+'">'+esc(m.text)+'</div></div>';
       }else{
         h+='<div class="msg n"><span class="dot"></span><div>'+formatAnswer(m.text)+
           (m.gen?'<div class="gen" data-gen="'+esc(m.gen)+'"><div class="state"><span class="spin"></span>Painting your picture…</div></div>':"")+
@@ -414,7 +437,8 @@ function render(){
           (m.sources?'<div class="srcs">'+m.sources.map(function(x){return'<a href="'+esc(x.u)+'" target="_blank" rel="noopener">'+esc(x.t)+'</a>'}).join("")+'</div>':"")+
           (m.saved?m.saved.map(function(x){return'<div class="memo">'+esc(x)+'</div>'}).join(""):"")+
           '<div class="acts"><button data-act="listen" data-i="'+i+'">Listen</button><button data-act="copy" data-i="'+i+'">Copy</button><button data-act="share" data-i="'+i+'">Share</button>'+
-          (i===msgs.length-1&&!busy?'<button data-act="retry">Retry</button>':"")+'</div></div></div>';
+          (i===msgs.length-1&&!busy?'<button data-act="retry">Retry</button><button data-act="edit">Edit question</button>':"")+'</div>'+
+          (i===msgs.length-1&&!busy&&m.next&&S.next?'<div class="next">'+m.next.map(function(q){return'<button data-q="'+esc(q)+'">'+esc(q)+'</button>'}).join("")+'</div>':"")+'</div></div>';
       }
     });
   }
@@ -467,13 +491,21 @@ function updateAct(){
 }
 
 /* ---------- saving chats ---------- */
-function title(ms){var f=(ms.filter(function(m){return m.role==="user"})[0]||{}).text||"New chat";return f.length>48?f.slice(0,47)+"…":f}
+// a chat's own name and pin travel together; metaAt says when they last changed
+function copyMeta(to,from){["name","pinned","metaAt"].forEach(function(k){if(from[k])to[k]=from[k];else delete to[k]})}
+// keep at most 50 chats, never dropping pinned ones
+function cap(list){var pins=list.filter(function(c){return c.pinned}).length;var room=Math.max(0,50-pins);
+  return list.filter(function(c){if(c.pinned)return true;if(room>0){room--;return true}return false})}
+function chatName(c){return c.name||c.title}
+function title(ms){var u=ms.filter(function(m){return m.role==="user"})[0]||{},f=(u.file?u.file.name:u.text)||"New chat";return f.length>48?f.slice(0,47)+"…":f}
 function persist(){
   store("nova.current",chatId);
   if(!S.remember||!msgs.length)return;
   // photos you attach are kept small so chats fit on the device
   var clean=msgs.map(function(m){var c=Object.assign({},m);if(c.image&&c.image.length>400000)delete c.image;return c});
-  chats=[{id:chatId,title:title(msgs),updated:Date.now(),msgs:clean}].concat(chats.filter(function(c){return c.id!==chatId})).slice(0,50);
+  var old=chats.filter(function(c){return c.id===chatId})[0]||{},entry={id:chatId,title:title(msgs),updated:Date.now(),msgs:clean};
+  copyMeta(entry,old);
+  chats=cap([entry].concat(chats.filter(function(c){return c.id!==chatId})));
   store("nova.chats",chats);
 }
 
@@ -481,11 +513,26 @@ function persist(){
 function system(voice){
   var t=SYSTEM+OPEN_RULES+LENGTH[S.length]+(S.web&&webOk&&!voice?WEB_RULES:"");
   if(S.memory){t+=MEMORY_RULES;if(mem.length)t+=" Things you remember about the user from earlier chats (use them naturally, only when they matter): "+mem.map(function(m){return m.t}).join(" | ")}
+  if(S.next&&!voice)t+=NEXT_RULES;
   if(S.custom.trim())t+=" The user's own instructions for you: "+S.custom.trim();
   if(voice)t+=(transcribing?TRANSCRIBE_RULES:VOICE_RULES)+(S.lang==="ro"?" The user usually speaks Romanian.":"");
   return t;
 }
-function contents(list){return list.slice(-30).map(function(m){return{role:m.role,parts:[{text:m.text}]}})}
+// the last 30 messages; photos from the last few and the 2 newest files go along so Nova can keep talking about them
+function contents(list){
+  var n=list.length,start=Math.max(0,n-30),files=[];
+  for(var j=n-1;j>=start&&files.length<2;j--)if(list[j].file)files.push(list[j].file.id);
+  return list.slice(start).map(function(m,k){
+    var i=start+k,parts=[];
+    if(m.role==="user"&&m.image&&i>=n-6&&/^data:image\/[\w+.-]+;base64,/.test(m.image))
+      parts.push({inlineData:{mimeType:m.image.slice(5,m.image.indexOf(";")),data:m.image.slice(m.image.indexOf(",")+1)}});
+    if(m.role==="user"&&m.file){var a=ATT[m.file.id];
+      if(a&&files.indexOf(m.file.id)>=0)parts.push(a.text!=null?{text:"[File: "+m.file.name+"]\n"+a.text+"\n[End of file]"}:{inlineData:{mimeType:a.mime,data:a.b64}});
+      else parts.push({text:"[File: "+m.file.name+"]"+(a?"":FILE_GONE)})}
+    parts.push({text:m.text||" "});
+    return{role:m.role,parts:parts};
+  });
+}
 var BADKEY=/API key not valid|API_KEY_INVALID|API key expired|API_KEY_EXPIRED|invalid api key|key was reported as leaked|PERMISSION_DENIED.*key/i;
 var REFUSED=/\b(i|i'm|i am|sorry,? (but )?i)\b[^.!?\n]{0,60}\b(don'?t|do not|can'?t|cannot|am unable|am not able|have no|lack|unable)\b[^.!?\n]{0,80}\b(real[- ]?time|internet|brows\w*|search\w*|web|online|current (information|events|data|news)|live data|up[- ]to[- ]date)|\b(nu pot|nu am acces|n-am acces|nu am posibilitatea|nu dispun)\b[^.!?\n]{0,80}\b(internet|timp real|căuta|cauta|naviga|web|online|actual|în acest moment|acum)|\b(restricții|restrictii|restrictions?|limitations?)\b[^.!?\n]{0,60}\b(timp real|real[- ]?time|internet|online)/i;
 // Free web search: when Google Search isn't included with the key, Nova reads a DuckDuckGo results page
@@ -596,6 +643,11 @@ function toReply(answer){
     if(!mem.some(function(m){return m.t.toLowerCase()===what.toLowerCase()})){mem.push({t:what.slice(0,200),at:Date.now()});mem=mem.slice(-60);store("nova.memory",mem);saved.push("Remembered: "+what)}
     return"";
   }).trim();
+  var next=[];
+  answer=answer.replace(/^[ \t>*-]*NEXT:[ \t]*(.+)$/gim,function(all,list){
+    if(!next.length)next=list.split("|").map(function(q){return q.trim().replace(/^["'“]|["'”]$/g,"").replace(/^\d+[.)]\s*/,"")}).filter(function(q){return q&&q.length<=90}).slice(0,3);
+    return"";
+  }).trim();
   var open=null;
   answer=answer.replace(/^[ \t]*OPEN:[ \t]*(\S+)[ \t]*$/gim,function(all,u){
     try{var x=new URL(u.replace(/[).,]+$/,""));if(/^https?:$/.test(x.protocol)&&!open)open={u:x.href,h:x.hostname.replace(/^www\./,"")}}catch(e){}
@@ -608,6 +660,7 @@ function toReply(answer){
   if(src.length&&!reply.gen)reply.sources=src;
   if(ask.suggest&&!reply.gen)reply.suggest=ask.suggest;
   if(saved.length)reply.saved=saved;
+  if(next.length&&!reply.gen&&!open)reply.next=next;
   if(open){reply.open=open;if(!reply.text||reply.text==="Got it.")reply.text="Opening "+open.h+".";
     // the PC app opens it right away in your browser; phones and browsers need a tap (they block pop-ups)
     if(/Electron/i.test(navigator.userAgent))setTimeout(function(){window.open(open.u,"_blank")},50)}
@@ -625,14 +678,25 @@ function send(text){
   text=(text==null?$("input").value:text).trim();
   var pic=arguments.length&&arguments[0]!=null?null:photo;
   if((!text&&!pic)||busy||needKey())return;
-  if(!text)text="What’s in this picture?";
+  var ro=S.lang==="ro";
+  if(!text)text=pic&&pic.file?(ro?"Rezumă acest fișier.":"Summarize this file."):(ro?"Ce e în poza asta?":"What’s in this picture?");
   vibrate();stopSpeaking();
   $("input").value="";autoGrow();setPhoto(null);
-  var userMsg={role:"user",text:text};if(pic)userMsg.image=pic.url;
+  var userMsg={role:"user",text:text};
+  if(pic&&pic.file){var fid=newId();ATT[fid]=pic;userMsg.file={id:fid,name:pic.name,kind:pic.kind}}
+  else if(pic)userMsg.image=pic.url;
   var base=msgs.concat(userMsg);msgs=base;
-  var parts=contents(base);
-  if(pic)parts[parts.length-1].parts=[{inlineData:{mimeType:pic.mime,data:pic.b64}},{text:text}];
-  run(ask(parts,false).then(toReply),base);
+  run(ask(contents(base),false).then(toReply),base);
+}
+// put a question back in the box to change it (and its photo or file, when Nova still has it)
+function editAt(i){
+  if(busy||!msgs[i]||msgs[i].role!=="user")return;
+  var m=msgs[i];vibrate();stopSpeaking();
+  $("input").value=m.text;autoGrow();
+  if(m.file&&ATT[m.file.id])setPhoto(ATT[m.file.id]);
+  else if(m.image&&/^data:image\//.test(m.image))setPhoto({url:m.image,mime:m.image.slice(5,m.image.indexOf(";")),b64:m.image.slice(m.image.indexOf(",")+1)});
+  else setPhoto(null);
+  msgs=msgs.slice(0,i);persist();render();$("input").focus();
 }
 function retry(){
   if(busy||needKey())return;
@@ -754,7 +818,34 @@ function shrink(file,max,quality){
     img.src=url;
   });
 }
-function setPhoto(p){photo=p;$("photoChip").hidden=!p;if(p)$("photoChip").querySelector("img").src=p.url;updateAct()}
+function setPhoto(p){photo=p;var c=$("photoChip");c.hidden=!p;
+  if(p){var f=!!p.file;c.querySelector("img").hidden=f;c.querySelector(".ficon").hidden=!f;
+    if(f){c.querySelector(".ficon").textContent=p.kind;c.querySelector("span").textContent=p.name}
+    else{c.querySelector("img").src=p.url;c.querySelector("span").textContent="Photo attached"}}
+  updateAct()}
+// photos, PDFs and text files
+var TEXT_EXT=/^(txt|md|markdown|csv|tsv|json|html?|xml|ya?ml|js|mjs|ts|tsx|jsx|py|java|kt|c|h|cpp|hpp|cs|go|rs|rb|php|swift|css|scss|lua|sql|sh|bat|ps1|ini|cfg|toml|log|srt|lrc|tex)$/;
+function readFile(f){
+  return Promise.resolve().then(function(){
+    var name=f.name||"file",ext=(name.indexOf(".")>=0?name.split(".").pop():"").toLowerCase();
+    if(/^image\//.test(f.type)||/^(jpe?g|png|gif|webp|heic|heif|bmp)$/.test(ext))
+      return shrink(f,1280,.82).then(function(url){setPhoto({url:url,mime:"image/jpeg",b64:url.slice(url.indexOf(",")+1)})});
+    if(f.type==="application/pdf"||ext==="pdf"){
+      if(f.size>15e6)throw new Error("That PDF is too big. Nova can read PDFs up to 15 MB.");
+      return blobToB64(f).then(function(b64){setPhoto({file:true,name:name,kind:"PDF",mime:"application/pdf",b64:b64})});
+    }
+    if(TEXT_EXT.test(ext)||/^text\//.test(f.type)||f.type==="application/json"){
+      if(f.size>3e6)throw new Error("That file is too big. Nova can read text files up to 3 MB.");
+      return f.text().then(function(t){
+        if(/\u0000/.test(t.slice(0,2000)))throw new Error("That file isn’t plain text, so Nova can’t read it.");
+        setPhoto({file:true,name:name,kind:(ext||"txt").toUpperCase().slice(0,4),mime:"text/plain",text:t.slice(0,300000)});
+        if(t.length>300000)toast("That’s a long file. Nova will read the first part of it.");
+      });
+    }
+    if(/^(docx?|odt|rtf|pages|xlsx?|ods|pptx?|odp|key)$/.test(ext))throw new Error("Nova can’t open Word, Excel or PowerPoint files yet. Save it as a PDF and attach that.");
+    throw new Error("Nova can read photos, PDFs and text files.");
+  }).catch(function(e){toast(e.message)});
+}
 
 /* ---------- viewer ---------- */
 var viewing="";
@@ -782,7 +873,7 @@ function setCustomWall(data){S.customWall=data;S.wallpaper="custom";if(!save()){
 function syncSettings(){
   $("sKey").value=S.key;$("sPicKey").value=S.picKey;$("sCustom").value=S.custom;
   $("sSpeak").setAttribute("aria-checked",String(!!S.speak));$("sRemember").setAttribute("aria-checked",String(!!S.remember));
-  $("sWeb").setAttribute("aria-checked",String(!!S.web));$("sSync").setAttribute("aria-checked",String(!!S.sync));showSyncState();$("sMemory").setAttribute("aria-checked",String(!!S.memory));renderMemory();
+  $("sWeb").setAttribute("aria-checked",String(!!S.web));$("sSync").setAttribute("aria-checked",String(!!S.sync));showSyncState();$("sMemory").setAttribute("aria-checked",String(!!S.memory));$("sNext").setAttribute("aria-checked",String(!!S.next));renderMemory();
   var segs=document.querySelectorAll(".seg");
   for(var i=0;i<segs.length;i++){var k=segs[i].getAttribute("data-key"),bs=segs[i].querySelectorAll("button");
     for(var j=0;j<bs.length;j++)bs[j].setAttribute("aria-pressed",String(bs[j].getAttribute("data-v")===String(S[k])))}
@@ -791,14 +882,35 @@ function renderMemory(){
   $("memList").innerHTML=mem.length?mem.map(function(m,i){return'<div class="mem"><span>'+esc(m.t)+'</span><button class="danger" data-forget="'+i+'">Forget</button></div>'}).join("")
     :'<p class="note" style="margin:0">Nothing yet. Tell Nova about yourself, or say “remember that…”.</p>';
 }
+var menuFor="",renaming="";
+function snippet(c,q){
+  for(var i=0;i<c.msgs.length;i++){var t=c.msgs[i].text||"",at=t.toLowerCase().indexOf(q);
+    if(at>=0){var a=Math.max(0,at-30);return (a?"…":"")+t.slice(a,at+q.length+50).replace(/\s+/g," ")+(at+q.length+50<t.length?"…":"")}}
+  return"";
+}
 function renderChats(){
-  var list=chats.slice().sort(function(a,b){return b.updated-a.updated});
-  if(!list.length){$("chatList").innerHTML='<p class="note" style="text-align:center;margin-top:20px">Your conversations will appear here.</p>';return}
+  var q=$("chatSearch").value.trim().toLowerCase();
+  var list=chats.slice().sort(function(a,b){return (b.pinned?1:0)-(a.pinned?1:0)||b.updated-a.updated});
+  $("chatSearch").hidden=chats.length<2&&!q;
+  if(q)list=list.filter(function(c){return chatName(c).toLowerCase().indexOf(q)>=0||c.msgs.some(function(m){return (m.text||"").toLowerCase().indexOf(q)>=0})});
+  if(!list.length){$("chatList").innerHTML='<p class="note" style="text-align:center;margin-top:20px">'+(q?"No chats match “"+esc(q)+"”.":"Your conversations will appear here.")+'</p>';return}
   $("chatList").innerHTML=list.map(function(c){
     var d=new Date(c.updated),today=new Date().toDateString()===d.toDateString();
     var when=today?d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):d.toLocaleDateString([],{day:"numeric",month:"short"});
-    return '<div class="chat glass"><div class="grow" data-open="'+c.id+'"><div class="t">'+esc(c.title)+'</div><div class="note">'+(c.id===chatId?"Open now · ":"")+when+" · "+c.msgs.length+' messages</div></div><button class="danger" data-del="'+c.id+'">Delete</button></div>';
+    var found=q&&chatName(c).toLowerCase().indexOf(q)<0?snippet(c,q):"";
+    var head=renaming===c.id?'<div class="grow"><input class="field ren" data-ren-input="'+c.id+'" maxlength="60" value="'+esc(chatName(c))+'" aria-label="Chat name"></div>'
+      :'<div class="grow" data-open="'+c.id+'"><div class="t">'+(c.pinned?'<span class="pin" aria-label="Pinned">★ </span>':"")+esc(chatName(c))+'</div><div class="note">'+(found?esc(found):(c.id===chatId?"Open now · ":"")+when+" · "+c.msgs.length+(c.msgs.length===1?" message":" messages"))+'</div></div>';
+    return '<div class="chat glass">'+head+(renaming===c.id?'<button class="done" data-ren-save="'+c.id+'">Save</button>':'<button class="more" data-more="'+c.id+'" aria-label="More for this chat" aria-expanded="'+(menuFor===c.id)+'">•••</button>')+
+      (menuFor===c.id?'<div class="menu"><button data-pin="'+c.id+'">'+(c.pinned?"Unpin":"Pin to top")+'</button><button data-ren="'+c.id+'">Rename</button><button class="danger" data-del="'+c.id+'">Delete</button></div>':"")+'</div>';
   }).join("");
+  if(renaming){var inp=$("chatList").querySelector("[data-ren-input]");if(inp&&document.activeElement!==inp){inp.focus();inp.select()}}
+}
+function setChatMeta(id,fn){var c=chats.filter(function(x){return x.id===id})[0];if(!c)return;fn(c);c.metaAt=Date.now();
+  if(!c.name)delete c.name;if(!c.pinned)delete c.pinned;store("nova.chats",chats)}
+function finishRename(save){
+  var inp=$("chatList").querySelector("[data-ren-input]"),id=renaming;renaming="";
+  if(save&&inp){var v=inp.value.trim().replace(/\s+/g," ").slice(0,60);setChatMeta(id,function(c){c.name=v&&v!==c.title?v:""})}
+  renderChats();
 }
 
 /* ---------- events ---------- */
@@ -808,24 +920,41 @@ $("input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKe
 $("act").addEventListener("click",function(){if(busy){abortCtl&&abortCtl.abort();return}if($("input").value.trim()||photo)send();else startTalking()});
 $("listening").addEventListener("click",stopTalking);
 $("plus").addEventListener("click",function(){if(!busy)$("file").click()});
-$("file").addEventListener("change",function(){var f=this.files[0];this.value="";if(!f)return;
-  shrink(f,1280,.82).then(function(url){setPhoto({url:url,mime:"image/jpeg",b64:url.slice(url.indexOf(",")+1)})}).catch(function(e){toast(e.message)})});
+$("file").addEventListener("change",function(){var f=this.files[0];this.value="";if(f)readFile(f)});
+// PC: drop a file anywhere, or paste a picture into the message box
+(function(){var n=0,dz=$("dropZone");
+  function files(e){var t=e.dataTransfer&&e.dataTransfer.types;return !!t&&Array.prototype.indexOf.call(t,"Files")>=0}
+  window.addEventListener("dragenter",function(e){if(!files(e))return;e.preventDefault();n++;dz.hidden=false});
+  window.addEventListener("dragover",function(e){if(files(e))e.preventDefault()});
+  window.addEventListener("dragleave",function(e){if(!files(e))return;n=Math.max(0,n-1);if(!n)dz.hidden=true});
+  window.addEventListener("drop",function(e){if(!files(e))return;e.preventDefault();n=0;dz.hidden=true;var f=e.dataTransfer.files[0];if(f&&!busy)readFile(f)});
+  $("input").addEventListener("paste",function(e){var f=e.clipboardData&&e.clipboardData.files&&e.clipboardData.files[0];if(f){e.preventDefault();readFile(f)}});
+})();
 $("rmPhoto").addEventListener("click",function(){setPhoto(null)});
 $("stopTalk").addEventListener("click",stopSpeaking);
 $("newChat").addEventListener("click",function(){if(busy)return;stopSpeaking();setPhoto(null);msgs=[];chatId=newId();render.error="";store("nova.current",chatId);render()});
 $("openSettings").addEventListener("click",function(){syncSettings();loadVoices();$("settings").hidden=false});
-$("openChats").addEventListener("click",function(){renderChats();$("chats").hidden=false});
+$("openChats").addEventListener("click",function(){menuFor="";renaming="";$("chatSearch").value="";renderChats();$("chats").hidden=false});
 document.addEventListener("click",function(e){var c=e.target.closest("[data-close]");if(c){$(c.getAttribute("data-close")).hidden=true;render()}});
 $("chatsNew").addEventListener("click",function(){$("newChat").click();$("chats").hidden=true});
+$("chatSearch").addEventListener("input",function(){menuFor="";renderChats()});
+$("chatList").addEventListener("keydown",function(e){if(!e.target.hasAttribute("data-ren-input"))return;
+  if(e.key==="Enter"){e.preventDefault();finishRename(true)}if(e.key==="Escape"){e.preventDefault();finishRename(false)}});
+$("chatList").addEventListener("focusout",function(e){if(e.target.hasAttribute("data-ren-input")&&renaming)setTimeout(function(){if(renaming)finishRename(true)},150)});
 $("chatList").addEventListener("click",function(e){
+  var mo=e.target.closest("[data-more]"),pn=e.target.closest("[data-pin]"),rn=e.target.closest("[data-ren]"),rs=e.target.closest("[data-ren-save]");
+  if(rs){finishRename(true);return}
+  if(mo){var mid=mo.getAttribute("data-more");menuFor=menuFor===mid?"":mid;renderChats();return}
+  if(pn){var pid=pn.getAttribute("data-pin");menuFor="";setChatMeta(pid,function(c){c.pinned=!c.pinned});renderChats();return}
+  if(rn){renaming=rn.getAttribute("data-ren");menuFor="";renderChats();return}
   var o=e.target.closest("[data-open]"),d=e.target.closest("[data-del]");
   if(o&&!busy){var c=chats.filter(function(x){return x.id===o.getAttribute("data-open")})[0];if(c){stopSpeaking();chatId=c.id;msgs=c.msgs.slice();store("nova.current",chatId);$("chats").hidden=true;render.error="";render()}}
   if(d){var id=d.getAttribute("data-del");
     if(d.getAttribute("data-sure")!=="1"){d.setAttribute("data-sure","1");d.textContent="Tap to delete";setTimeout(function(){if(d.isConnected){d.removeAttribute("data-sure");d.textContent="Delete"}},3000);return}
-    chats=chats.filter(function(x){return x.id!==id});store("nova.chats",chats);if(id===chatId){msgs=[];chatId=newId()}renderChats();render()}
+    chats=chats.filter(function(x){return x.id!==id});store("nova.chats",chats);if(id===chatId){msgs=[];chatId=newId()}menuFor="";renderChats();render()}
 });
 $("inner").addEventListener("click",function(e){
-  var s=e.target.closest(".starter");if(s){send(s.getAttribute("data-q"));return}
+  var s=e.target.closest(".starter,.next button");if(s){send(s.getAttribute("data-q"));return}
   var v=e.target.closest("[data-view]");if(v){openViewer(v.getAttribute("data-view"));return}
   if(e.target.id==="wSave"){var k=$("wKey").value.trim();if(k){S.key=k;save();render.error="";render();toast("Key saved on this device")}return}
   var a=e.target.closest("[data-act]");if(!a)return;var act=a.getAttribute("data-act"),i=+a.getAttribute("data-i");
@@ -834,12 +963,13 @@ $("inner").addEventListener("click",function(e){
     (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){a.textContent="Copied";setTimeout(function(){a.textContent=act==="copy"?"Copy":"Copy code"},1500)},function(){toast("Couldn’t copy. Long-press the text to copy it.")})}
   if(act==="share"){if(navigator.share)navigator.share({text:msgs[i].text}).catch(function(){});else{navigator.clipboard&&navigator.clipboard.writeText(msgs[i].text);toast("Copied, ready to paste")}}
   if(act==="retry")retry();
+  if(act==="edit"){for(var u=msgs.length-1;u>=0;u--)if(msgs[u].role==="user"){editAt(u);break}}
   if(act==="regen"){var box=a.closest(".gen");box.innerHTML='<div class="state"><span class="spin"></span>Painting your picture…</div>';loadGen(box)}
 });
 // press and hold your message to edit it
 (function(){var timer=null;
   $("inner").addEventListener("pointerdown",function(e){var b=e.target.closest("[data-edit]");if(!b||busy)return;
-    timer=setTimeout(function(){var i=+b.getAttribute("data-edit");vibrate();stopSpeaking();$("input").value=msgs[i].text;autoGrow();msgs=msgs.slice(0,i);persist();render();$("input").focus()},450)});
+    timer=setTimeout(function(){editAt(+b.getAttribute("data-edit"))},450)});
   ["pointerup","pointerleave","pointercancel","pointermove"].forEach(function(ev){$("inner").addEventListener(ev,function(e){if(ev==="pointermove"&&Math.abs(e.movementY)<4)return;clearTimeout(timer)})});
   $("inner").addEventListener("contextmenu",function(e){if(e.target.closest("[data-edit]"))e.preventDefault()});
 })();
@@ -905,6 +1035,7 @@ $("sWebTest").addEventListener("click",function(){
 });
 $("sWeb").addEventListener("click",function(){S.web=!S.web;webOk=true;webLevel=2;try{localStorage.removeItem("nova.searchOff")}catch(e){}save();syncSettings()});
 $("sMemory").addEventListener("click",function(){S.memory=!S.memory;save();syncSettings()});
+$("sNext").addEventListener("click",function(){S.next=!S.next;save();syncSettings();render()});
 $("memList").addEventListener("click",function(e){var b=e.target.closest("[data-forget]");if(!b)return;mem.splice(+b.getAttribute("data-forget"),1);store("nova.memory",mem);renderMemory();toast("Forgotten")});
 $("sForget").addEventListener("click",function(){var b=this;
   if(b.getAttribute("data-sure")!=="1"){b.setAttribute("data-sure","1");b.textContent="Tap again to forget everything";setTimeout(function(){b.removeAttribute("data-sure");b.textContent="Forget everything"},3000);return}
@@ -1035,7 +1166,7 @@ function startAuth(){
 // Chats, memory and answer settings are kept in your Nova account (a private row only you can read),
 // merged with what's on this device. Keys, voice and wallpaper never leave the device.
 var SYNC_URL=(CFG.supabaseUrl||"").replace(/\/$/,"")+"/rest/v1/nova_sync";
-var PREF_KEYS=["custom","length","lang","picStyle","memory","web","theme","remember"];
+var PREF_KEYS=["custom","length","lang","picStyle","memory","web","theme","remember","next"];
 var syncTimer=null, syncing=false, applying=false, syncAgain=false, lastSync=load("nova.lastSync",0), syncErr="";
 function prefsOf(o){var p={};PREF_KEYS.forEach(function(k){p[k]=o[k]});return p}
 var prefsJson=JSON.stringify(prefsOf(S));
@@ -1091,9 +1222,11 @@ function syncNow(){
         if(!lc||rc.updated>lc.updated){
           // photos aren't uploaded; keep this device's copy of them
           if(lc)rc.msgs.forEach(function(m,i){var o=lc.msgs[i];if(o&&o.image&&!m.image&&o.text===m.text)m.image=o.image});
-          byId[rc.id]=rc}});
-      out=Object.keys(byId).map(function(id){return byId[id]}).filter(function(c){return !(gone.chats[c.id]>=c.updated)})
-        .sort(function(a,b){return b.updated-a.updated}).slice(0,50);
+          byId[rc.id]=rc}
+        // name and pin: the most recent change wins, separately from the messages
+        if(lc&&(rc.metaAt||0)!==(lc.metaAt||0))copyMeta(byId[rc.id],(rc.metaAt||0)>(lc.metaAt||0)?rc:lc)});
+      out=cap(Object.keys(byId).map(function(id){return byId[id]}).filter(function(c){return !(gone.chats[c.id]>=c.updated)})
+        .sort(function(a,b){return b.updated-a.updated}));
     }
     // memory: everything from both sides, minus forgotten notes
     var mm={};mem.concat(R.mem||[]).forEach(function(m){var k=m.t.toLowerCase();if(!mm[k]||m.at<mm[k].at)mm[k]=m});
@@ -1115,9 +1248,9 @@ function syncNow(){
     var cur=chats.filter(function(c){return c.id===chatId})[0];
     if(!busy&&cur&&JSON.stringify(cur.msgs)!==curBefore&&!$("input").value){msgs=cur.msgs.slice();render()}
     if(!$("settings").hidden&&!document.querySelector("#settings [data-sure]")&&document.activeElement.tagName!=="TEXTAREA"&&document.activeElement.tagName!=="INPUT"){syncSettings()}
-    if(!$("chats").hidden&&!$("chatList").querySelector("[data-sure]"))renderChats(); // never undo a half-done delete tap
+    if(!$("chats").hidden&&!$("chatList").querySelector("[data-sure]")&&!renaming)renderChats(); // never undo a half-done delete tap
     // upload: no photos, no keys
-    var up={v:1,chats:S.remember?chats.map(function(c){return{id:c.id,title:c.title,updated:c.updated,msgs:c.msgs.map(function(m){var x=Object.assign({},m);delete x.image;return x})}}):(R.chats||[]),
+    var up={v:1,chats:S.remember?chats.map(function(c){return{id:c.id,title:c.title,updated:c.updated,name:c.name,pinned:c.pinned,metaAt:c.metaAt,msgs:c.msgs.map(function(m){var x=Object.assign({},m);delete x.image;return x})}}):(R.chats||[]),
       mem:mem,prefs:outPrefs,prefsAt:outPrefsAt,gone:gone};
     return fetch(SYNC_URL+"?on_conflict=user_id",{method:"POST",headers:Object.assign(authHeaders(token),{"Prefer":"resolution=merge-duplicates,return=minimal"}),
       body:JSON.stringify({user_id:uid,data:up,updated_at:new Date().toISOString()})})
