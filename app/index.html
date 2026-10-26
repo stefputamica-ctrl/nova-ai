@@ -128,6 +128,12 @@ header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:1
 .remind{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:9px 14px;border-radius:14px;background:var(--glass);border:1px solid var(--edge);font-size:14px;font-weight:600}
 .remind.off{opacity:.6;text-decoration:line-through}
 .remind button{color:var(--sun);font-weight:700;font-size:13px}
+.askshare{margin:14px 0 4px 18px;padding:14px 16px;border-radius:18px;font-size:15px;line-height:1.45}
+.askshare b{display:block;margin-bottom:4px}
+.askshare .row2{display:flex;gap:10px;margin-top:10px}
+.askshare .row2 button{padding:8px 16px;border-radius:999px;font-weight:700;font-size:14px}
+.askshare .row2 .yes{background:var(--sun);color:#15181f}
+.askshare .row2 .no{color:var(--dim)}
 
 /* sheets */
 .sheet{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;background:var(--bg)}
@@ -317,7 +323,7 @@ a{color:inherit}
     </div>
 
     <div class="sec">About</div>
-    <div class="card glass"><div class="stack"><div class="label">Nova</div><div class="note">Answers come from Google Gemini, so they can be wrong. Messages, photos, files you attach, voice recordings and your memory notes are sent to Google to get an answer, and Google Search may be used when “Search the web” is on. Pictures are made by Pollinations.ai, which receives the picture description.</div><div class="note" id="sVersion"></div><button class="btn" id="sUpdate" style="margin-top:8px">Check for updates</button></div></div>
+    <div class="card glass"><div class="stack"><div class="label">Nova</div><div class="note">Answers come from Google Gemini, so they can be wrong. Messages, photos, files you attach, voice recordings and your memory notes are sent to Google to get an answer, and Google Search may be used when “Search the web” is on. Pictures are made by Pollinations.ai, which receives the picture description.</div><div class="note" id="sVersion"></div><button class="btn" id="sShareNova" style="margin-top:8px">Share Nova with a friend</button><button class="btn" id="sUpdate" style="margin-top:8px;background:var(--glass);color:var(--ink);border:1px solid var(--edge)">Check for updates</button></div></div>
   </div></div>
 </section>
 
@@ -363,7 +369,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.26-e";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.26-f";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -463,6 +469,8 @@ function render(){
     });
   }
   if(busy)h+='<div class="msg n"><span class="dot"></span><div><span class="spin" style="display:inline-block"></span></div></div>';
+  if(render.askShare&&!busy&&msgs.length&&!convo){var ro=isRo();h+='<div class="askshare glass"><b>'+(ro?"Îți place Nova?":"Enjoying Nova?")+'</b>'+(ro?"Trimite-l unui prieten. E gratuit și îl ajuți mult pe cel care l-a făcut.":"Share it with a friend. It’s free, and it really helps the person who made it.")+
+    '<div class="row2"><button class="yes" data-act="sharenova">'+(ro?"Trimite Nova":"Share Nova")+'</button><button class="no" data-act="noshare">'+(ro?"Nu acum":"Not now")+'</button></div></div>'}
   if(render.error)h+='<p class="err">'+esc(render.error)+'</p>';
   $("inner").innerHTML=h;
   $("wall").classList.toggle("talking",msgs.length>0||busy);
@@ -706,7 +714,7 @@ function toReply(answer){
 }
 function run(promise,base){
   busy=true;render.error="";render();if(convo)setConvoState("think");
-  promise.then(function(reply){msgs=base.concat(reply);persist();spoken(reply)})
+  promise.then(function(reply){msgs=base.concat(reply);persist();countAnswer();spoken(reply)})
   .catch(function(e){if(e.message!=="__stopped__")render.error=e.message;msgs=base.slice();if(convo)endConvo()})
   .finally(function(){busy=false;render()});
 }
@@ -744,6 +752,19 @@ function retry(){
   var base=msgs.slice(0,li+1);msgs=base;stopSpeaking();
   run(ask(contents(base),false).then(toReply),base);
 }
+
+/* ---------- sharing Nova ---------- */
+var SITE="https://stefputamica-ctrl.github.io/nova-ai/";
+function isRo(){return S.lang==="ro"||(S.lang==="auto"&&/^ro\b/i.test(navigator.language||""))}
+function shareOut(text){
+  if(navigator.share)return navigator.share({text:text}).catch(function(){});
+  if(navigator.clipboard)navigator.clipboard.writeText(text).then(function(){toast(isRo()?"Copiat, gata de lipit":"Copied, ready to paste")},function(){});
+}
+// an answer you share ends with a short line about Nova, so friends can find it
+function withNovaLine(text){var ro=langOf(text)==="ro";return text+"\n\n— "+(ro?"Nova, asistent AI gratuit: "+SITE+"ro/":"Nova, a free AI assistant: "+SITE)}
+function shareNova(){var ro=isRo();shareOut(ro?"Încearcă Nova, un asistent AI gratuit cu care vorbești în română: "+SITE+"ro/":"Try Nova, a free AI assistant you can talk to: "+SITE);store("nova.askedShare",true)}
+// after your 5th answer, Nova asks once whether you'd share it
+function countAnswer(){var n=load("nova.answerCount",0)+1;store("nova.answerCount",n);if(n>=5&&!load("nova.askedShare",false))render.askShare=true}
 
 /* ---------- reminders ---------- */
 var DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -906,8 +927,8 @@ function sendAudio(blob){
       var said=base.concat({role:"user",text:heard||"(voice message)"});
       if(!heard&&convo){msgs=base.slice();convoHeardNothing();return}
       if(twoStep){if(!heard)throw new Error("Nova couldn’t make out what you said. Try again.");msgs=said;render();
-        return ask(contents(said),false).then(function(a){return toReply(a)}).then(function(reply){msgs=said.concat(reply);persist();spoken(reply)})}
-      var reply=toReply(answer);msgs=said.concat(reply);persist();spoken(reply);
+        return ask(contents(said),false).then(function(a){return toReply(a)}).then(function(reply){msgs=said.concat(reply);persist();countAnswer();spoken(reply)})}
+      var reply=toReply(answer);msgs=said.concat(reply);persist();countAnswer();spoken(reply);
     }).catch(function(e){if(e.message!=="__stopped__")render.error=e.message;msgs=base.slice();if(convo)endConvo()}).finally(function(){busy=false;transcribing=false;render()});
   });
 }
@@ -1074,6 +1095,7 @@ $("endConvo").addEventListener("click",function(e){e.stopPropagation();endConvo(
 $("talkMode").addEventListener("click",function(){askNotify(true);startConvo()});
 $("remList").addEventListener("click",function(e){var b=e.target.closest("[data-unremind]");if(b)unremind(b.getAttribute("data-unremind"))});
 $("remPerm").addEventListener("click",function(){askNotify(true)});
+$("sShareNova").addEventListener("click",shareNova);
 setInterval(checkReminders,20000);checkReminders();planReminder();
 document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")checkReminders()});
 // shared from another app (installed Nova on Android: Share → Nova)
@@ -1127,7 +1149,9 @@ $("inner").addEventListener("click",function(e){
   if(act==="listen")say(msgs[i].text);
   if(act==="copy"||act==="copycode"){var text=act==="copy"?msgs[i].text:a.closest(".code").querySelector("code").textContent;
     (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){a.textContent="Copied";setTimeout(function(){a.textContent=act==="copy"?"Copy":"Copy code"},1500)},function(){toast("Couldn’t copy. Long-press the text to copy it.")})}
-  if(act==="share"){if(navigator.share)navigator.share({text:msgs[i].text}).catch(function(){});else{navigator.clipboard&&navigator.clipboard.writeText(msgs[i].text);toast("Copied, ready to paste")}}
+  if(act==="share")shareOut(withNovaLine(msgs[i].text));
+  if(act==="sharenova"){render.askShare=false;shareNova();render()}
+  if(act==="noshare"){render.askShare=false;store("nova.askedShare",true);render()}
   if(act==="retry")retry();
   if(act==="edit"){for(var u=msgs.length-1;u>=0;u--)if(msgs[u].role==="user"){editAt(u);break}}
   if(act==="regen"){var box=a.closest(".gen");box.innerHTML='<div class="state"><span class="spin"></span>Painting your picture…</div>';loadGen(box)}
