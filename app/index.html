@@ -106,6 +106,12 @@ header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:1
 #photoChip{justify-self:start;display:flex;align-items:center;gap:10px;padding:7px 14px 7px 7px;border-radius:18px;font-size:13px;font-weight:600}
 #photoChip img{width:36px;height:36px;border-radius:10px;object-fit:cover}
 #photoChip button{color:var(--dim)}
+#picActs{display:flex;gap:8px;flex-wrap:wrap}
+#picActs button{padding:7px 13px;border-radius:999px;background:var(--glass);border:1px solid var(--edge);font-size:13.5px;font-weight:600;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#picActs button::before{content:"↳ ";color:var(--sun)}
+#plusMenu{justify-self:start;display:flex;gap:6px;padding:6px;border-radius:18px}
+#plusMenu button{padding:9px 14px;border-radius:13px;font-weight:600;font-size:14px}
+#plusMenu button:hover{background:var(--glass)}
 .composer{display:flex;align-items:flex-end;gap:8px;padding:7px;border-radius:28px}
 .round{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none}
 #plus{background:var(--glass);border:1px solid var(--edge);font-size:24px;line-height:1}
@@ -243,6 +249,8 @@ a{color:inherit}
   <main id="log"><div class="inner" id="inner"></div></main>
   <div id="bottom">
     <div id="photoChip" class="glass" hidden><img alt=""><i class="ficon" hidden></i><span>Photo attached</span><button id="rmPhoto">Remove</button></div>
+    <div id="picActs" hidden></div>
+    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo or file</button><button data-plus="screen">My screen</button></div>
     <div id="composer" class="composer glass">
       <button class="round" id="plus" aria-label="Attach a photo or file">+</button>
       <textarea id="input" rows="1" placeholder="Message Nova" aria-label="Message Nova"></textarea>
@@ -384,7 +392,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.27-a";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.27-b";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -400,6 +408,7 @@ var WEB_RULES=" You can search the web and read links the user sends. For news, 
 var MEMORY_RULES=" Memory: you can remember lasting facts about the user between chats. When the user shares something lasting about themselves (their name, where they live, their job, hobbies or music, people in their life, projects, likes, how they want you to talk) or asks you to remember something, end your reply with an extra line that starts with REMEMBER: followed by one short fact about the user, like 'REMEMBER: Their name is Stef.' At most two REMEMBER lines, and only for facts you don't already know. Never remember passwords, keys, money details, health details or anything they ask you not to keep. If the user asks you to forget something, end with a line FORGET: followed by a few words naming it. Never talk about these lines in the rest of your reply.";
 var NEXT_RULES=" At the very end of your answer, add one line that starts with NEXT: followed by 2 or 3 short follow-up questions or requests the user might want to send you next, separated by |, written the way the user would type them, in the user's language, each under 8 words. Leave out the NEXT line for pictures, opened websites, or when a follow-up makes no sense (like after a simple thanks).";
 var REMIND_RULES=" Reminders: you can set reminders for the user, and Nova will notify them at that time. When they ask you to remind them about something (or to set an alarm or a timer), reply with one short sentence that confirms what and when, and then a new line that starts with REMIND: followed by the date and time as YYYY-MM-DD HH:MM (24-hour clock, the user's local time), then | and what to remind them about, short, in the user's language. Example: 'REMIND: 2026-10-26 18:00 | Practise guitar'. Work out times like 'in 20 minutes', 'at 6' (the next 6 o'clock that hasn't passed, usually 18:00 unless they mean morning) or 'tomorrow morning' (09:00) from the current time below. If they don't say when, ask them instead of guessing. To cancel a reminder, write a line CANCEL: followed by the words of that reminder. Never say you can't set reminders.";
+var HOMEWORK_RULES=" Homework and exercises: when the user sends a photo or screenshot of homework, an exercise, a test question or a problem (math, physics, chemistry, languages, anything), read it carefully first, then explain the solution step by step with numbered steps, showing the working, and give the final answer clearly at the end. Match the school level of the exercise. If they ask you to check their answer, say clearly what is right and what is wrong and why. If part of the photo is unreadable, say which part.";
 var FILE_RULES=" Files: you can make files the user can download: Word documents (docx), Excel spreadsheets (xlsx), PDFs (pdf), text files (txt) and CSV files (csv). When the user asks you to make, create, write, turn, convert or export something into a document, file, Word, Excel, spreadsheet, PDF or text file, reply with one short sentence about the file, then a line FILE: <type> | <file name without extension>, then the whole content of the file written in Markdown (# headings, **bold**, - lists, | tables |), then a line ENDFILE. For Excel and CSV put the data in Markdown tables, first row = column names; you may use Excel formulas like =SUM(B2:B5) in cells. Inside the file you may use Markdown. Write the file in the user's language. One file per reply. Only use FILE when they ask for a file or document. Never say you can't make files.";
 var BRIEF_RULES=" The user asked for their morning brief. Reply in their language with: a one-line greeting with today's day and date; the weather today where they live (use what you remember about where they live; if you don't know their city, say so in one line and ask them which city); 3 short top news headlines from today, one line each; their reminders for today (from the reminders listed here, or say there are none); and one short encouraging line to start the day. Plain short lines, no markdown.";
 var BRIEF_RE=/^\u2600\ufe0f?\s*(morning brief|rezumatul de diminea[\u021b\u0163]\u0103)/i;
@@ -564,7 +573,7 @@ function system(voice){
   var t=SYSTEM+OPEN_RULES+LENGTH[S.length]+(S.web&&webOk&&!voice?WEB_RULES:"");
   if(S.memory){t+=MEMORY_RULES;if(mem.length)t+=" Things you remember about the user from earlier chats (use them naturally, only when they matter): "+mem.map(function(m){return m.t}).join(" | ")}
   t+=REMIND_RULES+" The user's local date and time right now: "+nowText()+".";
-  if(!convo&&!voice)t+=FILE_RULES;
+  if(!convo&&!voice)t+=FILE_RULES+HOMEWORK_RULES;
   if(briefMode)t+=BRIEF_RULES;
   var up=reminders.filter(function(r){return r.at>Date.now()});
   if(up.length)t+=" Reminders already set: "+up.map(function(r){return fmtWhen(r.at)+" – "+r.text}).join(" | ")+".";
@@ -1200,8 +1209,27 @@ function shrink(file,max,quality){
 function setPhoto(p){photo=p;var c=$("photoChip");c.hidden=!p;
   if(p){var f=!!p.file;c.querySelector("img").hidden=f;c.querySelector(".ficon").hidden=!f;
     if(f){c.querySelector(".ficon").textContent=p.kind;c.querySelector("span").textContent=p.name}
-    else{c.querySelector("img").src=p.url;c.querySelector("span").textContent="Photo attached"}}
+    else{c.querySelector("img").src=p.url;c.querySelector("span").textContent=p.screen?(isRo()?"Ecranul tău":"Your screen"):"Photo attached"}}
+  var acts=$("picActs"),ro=isRo();acts.hidden=!p||!!p.file;
+  if(p&&!p.file)acts.innerHTML=(p.screen?[ro?"Ce e pe ecranul meu?":"What’s on my screen?",ro?"Explică eroarea asta":"Explain this error",ro?"Rezolvă pas cu pas":"Solve this step by step"]
+      :[ro?"Rezolvă pas cu pas":"Solve this step by step",ro?"Explică-mi asta":"Explain this to me",ro?"Verifică-mi răspunsul":"Check my answer"]).map(function(q){return'<button data-picq="'+esc(q)+'">'+esc(q)+'</button>'}).join("");
   updateAct()}
+// "My screen": one picture of your screen (computers only)
+var canScreen=!!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia)&&matchMedia("(pointer:fine)").matches;
+function grabScreen(){
+  var el=/Electron/i.test(navigator.userAgent);
+  navigator.mediaDevices.getDisplayMedia({video:{frameRate:5},audio:false,preferCurrentTab:false,selfBrowserSurface:"exclude",monitorTypeSurfaces:"include"}).then(function(stream){
+    var v=document.createElement("video");v.muted=true;v.playsInline=true;v.srcObject=stream;
+    return v.play().then(function(){return new Promise(function(r){setTimeout(r,350)})}).then(function(){
+      var w=v.videoWidth,h=v.videoHeight,k=Math.min(1,1600/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.round(w*k);c.height=Math.round(h*k);
+      c.getContext("2d").drawImage(v,0,0,c.width,c.height);stream.getTracks().forEach(function(t){t.stop()});
+      var url=c.toDataURL("image/jpeg",.85);setPhoto({url:url,mime:"image/jpeg",b64:url.slice(url.indexOf(",")+1),screen:true});$("input").focus();
+    });
+  }).catch(function(e){
+    if(e&&e.name==="NotAllowedError"&&!el)return; // you pressed Cancel
+    toast(el?(isRo()?"Instalează cea mai nouă versiune Nova pentru PC ca să poți arăta ecranul.":"Install the newest Nova for PC from the website to share your screen."):(isRo()?"Browserul nu poate arăta ecranul.":"This browser can’t share the screen."));
+  });
+}
 // photos, PDFs and text files
 var TEXT_EXT=/^(txt|md|markdown|csv|tsv|json|html?|xml|ya?ml|js|mjs|ts|tsx|jsx|py|java|kt|c|h|cpp|hpp|cs|go|rs|rb|php|swift|css|scss|lua|sql|sh|bat|ps1|ini|cfg|toml|log|srt|lrc|tex)$/;
 function readFile(f){
@@ -1323,7 +1351,10 @@ document.addEventListener("visibilitychange",function(){if(document.visibilitySt
     $("input").value=uniq.join("\n");autoGrow();updateAct();setTimeout(function(){$("input").focus()},300);toast("Shared to Nova. Add a question and send.")}
   try{history.replaceState(null,"",location.pathname)}catch(e){}
 })();
-$("plus").addEventListener("click",function(){if(!busy)$("file").click()});
+$("plus").addEventListener("click",function(e){if(busy)return;if(canScreen){e.stopPropagation();$("plusMenu").hidden=!$("plusMenu").hidden;return}$("file").click()});
+$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;if(b.getAttribute("data-plus")==="screen")grabScreen();else $("file").click()});
+document.addEventListener("click",function(e){if(!$("plusMenu").hidden&&!e.target.closest("#plusMenu"))$("plusMenu").hidden=true});
+$("picActs").addEventListener("click",function(e){var b=e.target.closest("[data-picq]");if(b&&!busy){$("input").value=b.getAttribute("data-picq");send()}});
 $("file").addEventListener("change",function(){var f=this.files[0];this.value="";if(f)readFile(f)});
 // PC: drop a file anywhere, or paste a picture into the message box
 (function(){var n=0,dz=$("dropZone");
