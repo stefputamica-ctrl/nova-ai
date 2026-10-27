@@ -112,6 +112,22 @@ header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:1
 #plusMenu{justify-self:start;display:flex;gap:6px;padding:6px;border-radius:18px}
 #plusMenu button{padding:9px 14px;border-radius:13px;font-weight:600;font-size:14px}
 #plusMenu button:hover{background:var(--glass)}
+#plusMenu button[hidden]{display:none}
+.songcard{margin-top:10px;padding:12px;border-radius:18px;background:var(--glass);border:1px solid var(--edge);max-width:460px}
+.songcard .top{display:flex;align-items:center;gap:12px}
+.songcard .disc{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:radial-gradient(circle at 50% 50%,#15181f 0 18%,transparent 19%),conic-gradient(from 0deg,var(--sun),#ff5fa2,#7c5cff,var(--sun))}
+.songcard .disc.spin{animation:discspin 1.6s linear infinite}
+@keyframes discspin{to{transform:rotate(360deg)}}
+.songcard .grow{min-width:0;flex:1}
+.songcard b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.songcard span{font-size:12.5px;color:var(--dim)}
+.songcard .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.songcard .row button{padding:8px 14px;border-radius:999px;font-weight:700;font-size:13.5px;background:var(--glass);border:1px solid var(--edge)}
+.songcard .row button.main{background:var(--sun);color:#15181f;border-color:transparent}
+.songcard .bar{height:4px;border-radius:4px;background:var(--edge);margin-top:10px;overflow:hidden}
+.songcard .bar i{display:block;height:100%;width:0;background:var(--sun)}
+.songcard .note{font-size:12px;color:var(--dim);margin-top:8px}
+.songcard .err{font-size:13px;margin-top:8px;color:#ff8a8a}
 .composer{display:flex;align-items:flex-end;gap:8px;padding:7px;border-radius:28px}
 .round{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none}
 #plus{background:var(--glass);border:1px solid var(--edge);font-size:24px;line-height:1}
@@ -250,7 +266,7 @@ a{color:inherit}
   <div id="bottom">
     <div id="photoChip" class="glass" hidden><img alt=""><i class="ficon" hidden></i><span>Photo attached</span><button id="rmPhoto">Remove</button></div>
     <div id="picActs" hidden></div>
-    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo or file</button><button data-plus="screen">My screen</button></div>
+    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo or file</button><button data-plus="screen">My screen</button><button data-plus="song">Make a song</button></div>
     <div id="composer" class="composer glass">
       <button class="round" id="plus" aria-label="Attach a photo or file">+</button>
       <textarea id="input" rows="1" placeholder="Message Nova" aria-label="Message Nova"></textarea>
@@ -392,7 +408,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.27-b";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.27-c";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -408,6 +424,7 @@ var WEB_RULES=" You can search the web and read links the user sends. For news, 
 var MEMORY_RULES=" Memory: you can remember lasting facts about the user between chats. When the user shares something lasting about themselves (their name, where they live, their job, hobbies or music, people in their life, projects, likes, how they want you to talk) or asks you to remember something, end your reply with an extra line that starts with REMEMBER: followed by one short fact about the user, like 'REMEMBER: Their name is Stef.' At most two REMEMBER lines, and only for facts you don't already know. Never remember passwords, keys, money details, health details or anything they ask you not to keep. If the user asks you to forget something, end with a line FORGET: followed by a few words naming it. Never talk about these lines in the rest of your reply.";
 var NEXT_RULES=" At the very end of your answer, add one line that starts with NEXT: followed by 2 or 3 short follow-up questions or requests the user might want to send you next, separated by |, written the way the user would type them, in the user's language, each under 8 words. Leave out the NEXT line for pictures, opened websites, or when a follow-up makes no sense (like after a simple thanks).";
 var REMIND_RULES=" Reminders: you can set reminders for the user, and Nova will notify them at that time. When they ask you to remind them about something (or to set an alarm or a timer), reply with one short sentence that confirms what and when, and then a new line that starts with REMIND: followed by the date and time as YYYY-MM-DD HH:MM (24-hour clock, the user's local time), then | and what to remind them about, short, in the user's language. Example: 'REMIND: 2026-10-26 18:00 | Practise guitar'. Work out times like 'in 20 minutes', 'at 6' (the next 6 o'clock that hasn't passed, usually 18:00 unless they mean morning) or 'tomorrow morning' (09:00) from the current time below. If they don't say when, ask them instead of guessing. To cancel a reminder, write a line CANCEL: followed by the words of that reminder. Never say you can't set reminders.";
+var MUSIC_RULES=" Music: you are also a skilled music producer and songwriter, an expert in hard dance and any other genre: hardstyle (150-155 BPM: euphoric with big supersaw leads, reverse bass and emotional breaks, or raw with distorted screech leads), rawstyle, hardcore and gabber (160-200 BPM, hard distorted kicks), frenchcore (180-200 BPM), uptempo (200-250 BPM), and the internet styles hoodtrap and mylancore (sped-up, pitched-up pop-style vocals over hard, distorted, bouncy kicks with trap hi-hats and 808s, about 150-170 BPM, short catchy TikTok-ready hooks). For track ideas give concrete production help: BPM, key, chord progression, structure with bar counts, kick, bass, lead and vocal tips. When the user asks you to make, create, produce or write a song, beat or track that they want to hear, write a short plan (genre, BPM, key, mood, structure) and the full original lyrics if it has vocals, then add a song block at the very end exactly like this:\nSONG: <short title> | <genre> | <BPM>\n<one detailed English prompt for an AI music model: genre and subgenre, BPM, key, mood, sound design (kick, bass, leads, drums, effects), vocal type, gender and language, then the structure with section tags like [Intro] [Build-up] [Drop] [Break] [Verse] [Chorus] [Outro], each with a short description and the lyrics under it>\nENDSONG\nThe app turns the block into real audio. In the song block never name real artists, producers or existing songs and never use existing lyrics: describe the sound instead and write original lyrics. If the user asks for a remix or cover of an existing song, say that isn't possible and make an original song in that style. Write the lyrics in the language the user wants. Only add a song block when the user wants an actual song made, or wants to change one you made (then write the whole new block).";
 var HOMEWORK_RULES=" Homework and exercises: when the user sends a photo or screenshot of homework, an exercise, a test question or a problem (math, physics, chemistry, languages, anything), read it carefully first, then explain the solution step by step with numbered steps, showing the working, and give the final answer clearly at the end. Match the school level of the exercise. If they ask you to check their answer, say clearly what is right and what is wrong and why. If part of the photo is unreadable, say which part.";
 var FILE_RULES=" Files: you can make files the user can download: Word documents (docx), Excel spreadsheets (xlsx), PDFs (pdf), text files (txt) and CSV files (csv). When the user asks you to make, create, write, turn, convert or export something into a document, file, Word, Excel, spreadsheet, PDF or text file, reply with one short sentence about the file, then a line FILE: <type> | <file name without extension>, then the whole content of the file written in Markdown (# headings, **bold**, - lists, | tables |), then a line ENDFILE. For Excel and CSV put the data in Markdown tables, first row = column names; you may use Excel formulas like =SUM(B2:B5) in cells. Inside the file you may use Markdown. Write the file in the user's language. One file per reply. Only use FILE when they ask for a file or document. Never say you can't make files.";
 var BRIEF_RULES=" The user asked for their morning brief. Reply in their language with: a one-line greeting with today's day and date; the weather today where they live (use what you remember about where they live; if you don't know their city, say so in one line and ask them which city); 3 short top news headlines from today, one line each; their reminders for today (from the reminders listed here, or say there are none); and one short encouraging line to start the day. Plain short lines, no markdown.";
@@ -418,7 +435,7 @@ var LENGTH={short:" Keep every answer to one to three sentences.",normal:" Keep 
 var VOICE_RULES=" The user's last message is a voice recording. In 'heard', write only the words the user spoke, word for word, in the language they spoke, and nothing else. In 'answer', write your reply to what they said, in the same language as the words in 'heard'. A short greeting like 'hey' or 'hi' is English. If you are not sure which language it is, reply in English.";
 var PIC={photo:", candid photograph taken on a 35mm film camera, natural daylight, soft film grain, muted true-to-life colors, slightly imperfect framing, realistic proportions, no glow, no fantasy lighting",
  art:", hand-made illustration, gouache and colored pencil on textured paper, visible brush strokes, limited muted palette, flat light, imperfect lines",free:""};
-var STARTERS=["Help me write a chorus for a sad song","Search the web: what happened in tech news today?","Give me a fun fact about space","Write a Python script that renames my photos by date","Draw a cozy cabin in the snow at sunset"];
+var STARTERS=["Make me a hardstyle song about the night","Search the web: what happened in tech news today?","Give me a fun fact about space","Write a Python script that renames my photos by date","Draw a cozy cabin in the snow at sunset"];
 var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true,memory:true,web:true,lang:"auto",sync:true,next:true,brief:false,briefAt:"08:00"};
 
 var $=function(id){return document.getElementById(id)};
@@ -489,6 +506,7 @@ function render(){
           (m.suggest?'<iframe class="gsugg" sandbox="allow-popups allow-popups-to-escape-sandbox" title="Google Search suggestions" srcdoc="'+esc(m.suggest).replace(/'/g,"&#39;")+'"></iframe>':"")+
           (m.sources?'<div class="srcs">'+m.sources.map(function(x){return'<a href="'+esc(x.u)+'" target="_blank" rel="noopener">'+esc(x.t)+'</a>'}).join("")+'</div>':"")+
           (m.doc?'<div class="doccard"><i class="ficon">'+esc(m.doc.type.toUpperCase())+'</i><div class="grow"><b>'+esc(m.doc.name)+"."+esc(m.doc.type)+'</b><span>'+esc(FILE_TYPES[m.doc.type]||"File")+'</span></div><button data-act="dl" data-i="'+i+'">'+(m.doc.type==="pdf"?(isRo()?"Salvează PDF":"Save PDF"):(isRo()?"Descarcă":"Download"))+'</button></div>':"")+
+          (m.song?songCard(m.song,i):"")+
           (m.reminders?m.reminders.map(function(r){var on=reminders.some(function(x){return x.id===r.id});return'<div class="remind'+(on||r.at>Date.now()?"":" off")+'">⏰ '+esc(r.text)+' · '+esc(fmtWhen(r.at))+(on?' <button data-unremind="'+esc(r.id)+'">Cancel</button>':"")+'</div>'}).join(""):"")+
           (m.saved?m.saved.map(function(x){return'<div class="memo">'+esc(x)+'</div>'}).join(""):"")+
           '<div class="acts"><button data-act="listen" data-i="'+i+'">Listen</button><button data-act="copy" data-i="'+i+'">Copy</button><button data-act="share" data-i="'+i+'">Share</button>'+
@@ -573,7 +591,7 @@ function system(voice){
   var t=SYSTEM+OPEN_RULES+LENGTH[S.length]+(S.web&&webOk&&!voice?WEB_RULES:"");
   if(S.memory){t+=MEMORY_RULES;if(mem.length)t+=" Things you remember about the user from earlier chats (use them naturally, only when they matter): "+mem.map(function(m){return m.t}).join(" | ")}
   t+=REMIND_RULES+" The user's local date and time right now: "+nowText()+".";
-  if(!convo&&!voice)t+=FILE_RULES+HOMEWORK_RULES;
+  if(!convo&&!voice)t+=FILE_RULES+HOMEWORK_RULES+MUSIC_RULES;
   if(briefMode)t+=BRIEF_RULES;
   var up=reminders.filter(function(r){return r.at>Date.now()});
   if(up.length)t+=" Reminders already set: "+up.map(function(r){return fmtWhen(r.at)+" – "+r.text}).join(" | ")+".";
@@ -594,7 +612,7 @@ function contents(list){
     if(m.role==="user"&&m.file){var a=ATT[m.file.id];
       if(a&&files.indexOf(m.file.id)>=0)parts.push(a.text!=null?{text:"[File: "+m.file.name+"]\n"+a.text+"\n[End of file]"}:{inlineData:{mimeType:a.mime,data:a.b64}});
       else parts.push({text:"[File: "+m.file.name+"]"+(a?"":FILE_GONE)})}
-    parts.push({text:(m.text||" ")+(m.doc?"\n\n[The file you made: "+m.doc.name+"."+m.doc.type+"]\nFILE: "+m.doc.type+" | "+m.doc.name+"\n"+m.doc.content.slice(0,12000)+"\nENDFILE":"")});
+    parts.push({text:(m.text||" ")+(m.doc?"\n\n[The file you made: "+m.doc.name+"."+m.doc.type+"]\nFILE: "+m.doc.type+" | "+m.doc.name+"\n"+m.doc.content.slice(0,12000)+"\nENDFILE":"")+(m.song?"\n\nSONG: "+m.song.title+" | "+m.song.genre+" | "+m.song.bpm+"\n"+m.song.prompt.slice(0,6000)+"\nENDSONG":"")});
     return{role:m.role,parts:parts};
   });
 }
@@ -725,6 +743,13 @@ function toReply(answer){
     doc={type:ty,name:safeName(fm[2].replace(/\.(docx|xlsx|pdf|txt|md|csv)$/i,"")),content:body.slice(0,60000)};
     answer=(answer.slice(0,fm.index)+(end>=0?rest.slice(end).replace(/^[ \t]*ENDFILE[ \t]*$/im,""):"")).trim();
   }
+  var song=null,sm=answer.match(/^[ \t>*]*SONG:[ \t]*(.+?)[ \t]*$/im);
+  if(sm){
+    var srest=answer.slice(sm.index+sm[0].length),send_=srest.search(/^[ \t>*]*ENDSONG[ \t]*$/im),sp=(send_>=0?srest.slice(0,send_):srest).replace(/^\s*```[a-z]*[ \t]*\n([\s\S]*?)\n```\s*$/,"$1").trim();
+    var bits=sm[1].split("|").map(function(x){return x.trim().replace(/^\*+|\*+$/g,"")});
+    if(sp.length>20)song={id:newId(),title:(bits[0]||"Nova song").slice(0,80),genre:(bits[1]||"").slice(0,40),bpm:(bits[2]||"").replace(/\s*bpm$/i,"").slice(0,12),prompt:sp.slice(0,9000)};
+    answer=(answer.slice(0,sm.index)+(send_>=0?srest.slice(send_).replace(/^[ \t>*]*ENDSONG[ \t]*$/im,""):"")).trim();
+  }
   var setNow=[];
   answer=answer.replace(/^[ \t>*-]*REMIND:[ \t]*(\d{4})-(\d{1,2})-(\d{1,2})[ T,]+(\d{1,2})[:.](\d{2})[ \t]*(?:\||-|–)?[ \t]*(.*)$/gim,function(all,y,mo,d,h,mi,what){
     var at=new Date(+y,+mo-1,+d,+h,+mi).getTime();what=(what||"").trim().replace(/^["'“]|["'”]$/g,"")||"Reminder";
@@ -744,6 +769,7 @@ function toReply(answer){
   if(ask.suggest&&!reply.gen)reply.suggest=ask.suggest;
   if(saved.length)reply.saved=saved;
   if(doc&&!reply.gen){reply.doc=doc;if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Poftim fișierul.":"Here’s your file."}
+  if(song&&!reply.gen){reply.song=song;if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Piesa e gata de făcut.":"Your song is ready to make."}
   if(setNow.length){reply.reminders=setNow.map(function(r){return{id:r.id,at:r.at,text:r.text}});if(!reply.text||reply.text==="Got it.")reply.text="Okay, I’ll remind you."}
   if(next.length&&!reply.gen&&!open)reply.next=next;
   if(open){reply.open=open;if(!reply.text||reply.text==="Got it.")reply.text="Opening "+open.h+".";
@@ -791,6 +817,93 @@ function retry(){
   if(li<0)return;
   var base=msgs.slice(0,li+1);msgs=base;stopSpeaking();
   run(ask(contents(base),false).then(toReply),base);
+}
+
+/* ---------- songs Nova makes (Google Lyria) ---------- */
+// the audio is kept on this device (IndexedDB); the chat keeps the song's plan and lyrics
+var SONG_FULL=["lyria-3.5","lyria-3-pro-preview"],SONG_CLIP="lyria-3-clip-preview",SONG_TIMEOUT=300000;
+var songMaking={},songErr={},songUrl={},player=null,playing="";
+var GENRES=["hardstyle","rawstyle","hardcore","gabber","frenchcore","uptempo","hoodtrap","mylancore"];
+function songGenres(){var acts=$("picActs");acts.hidden=false;
+  acts.innerHTML=GENRES.map(function(g){return'<button data-genre="'+g+'">'+g.charAt(0).toUpperCase()+g.slice(1)+'</button>'}).join("");
+  $("input").focus()}
+function songDb(){return songDb.p||(songDb.p=new Promise(function(res,rej){
+  try{var r=indexedDB.open("nova-songs",1);r.onupgradeneeded=function(){r.result.createObjectStore("audio")};r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}}catch(e){rej(e)}}))}
+function songPut(id,blob){return songDb().then(function(db){return new Promise(function(res,rej){var t=db.transaction("audio","readwrite");t.objectStore("audio").put(blob,id);t.oncomplete=res;t.onerror=function(){rej(t.error)}})})}
+function songGet(id){return songDb().then(function(db){return new Promise(function(res){var q=db.transaction("audio").objectStore("audio").get(id);q.onsuccess=function(){res(q.result||null)};q.onerror=function(){res(null)}})}).catch(function(){return null})}
+function songCard(s,i){
+  var ro=isRo(),id=s.id,making=songMaking[id],has=!!s.audio,on=playing===id&&player&&!player.paused;
+  var h='<div class="songcard" data-song="'+esc(id)+'"><div class="top"><i class="disc'+(making||on?" spin":"")+'"></i><div class="grow"><b>'+esc(s.title)+'</b><span>'+esc([s.genre,s.bpm?s.bpm+" BPM":"",has?(s.audio.clip?(ro?"previzualizare 30 s":"30-sec preview"):(ro?"piesă completă":"full song")):""].filter(Boolean).join(" · "))+'</span></div></div>';
+  if(making)h+='<div class="note">'+(ro?"Se face piesa… durează cam un minut.":"Making your song… this takes about a minute.")+'</div>';
+  else{
+    h+='<div class="row">';
+    if(has)h+='<button class="main" data-act="songplay" data-i="'+i+'">'+(on?(ro?"❚❚ Pauză":"❚❚ Pause"):(ro?"▶ Ascultă":"▶ Play"))+'</button><button data-act="songdl" data-i="'+i+'">'+(ro?"Descarcă":"Download")+'</button>';
+    if(!has||s.audio.clip)h+='<button class="'+(has?"":"main")+'" data-act="song" data-i="'+i+'">'+(ro?"Fă piesa completă":"Make the full song")+'</button>';
+    if(!has)h+='<button data-act="songclip" data-i="'+i+'">'+(ro?"Previzualizare 30 s":"30-sec preview")+'</button>';
+    else h+='<button data-act="'+(s.audio.clip?"songclip":"song")+'" data-i="'+i+'">'+(ro?"Altă variantă":"Make another take")+'</button>';
+    h+='</div>';
+    if(has)h+='<div class="bar"><i></i></div>';
+    if(!has&&!songErr[id])h+='<div class="note">'+(ro?"Google taxează cam 0,08 $ pe piesă (0,04 $ previzualizarea). Cheia Gemini are nevoie de facturare pornită.":"Google charges about $0.08 per song ($0.04 for a preview). Your Gemini key needs billing turned on.")+'</div>';
+  }
+  if(songErr[id])h+='<div class="err">'+esc(songErr[id])+'</div>';
+  return h+'</div>';
+}
+function songBlob(b64,mime){var bin=atob(b64),u=new Uint8Array(bin.length);for(var k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k);return new Blob([u],{type:mime||"audio/mpeg"})}
+function callLyria(models,prompt,full){
+  var model=models[0],c=new AbortController(),t=setTimeout(function(){c.abort()},SONG_TIMEOUT);
+  var body={contents:[{role:"user",parts:[{text:prompt}]}]};
+  if(full)body.generationConfig={responseModalities:["AUDIO","TEXT"]};
+  return fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{method:"POST",signal:c.signal,headers:{"Content-Type":"application/json","x-goog-api-key":S.key},body:JSON.stringify(body)})
+  .then(function(r){return r.json().catch(function(){return null}).then(function(d){
+    if(!r.ok){
+      var msg=(d&&d.error&&d.error.message)||"",ro=isRo();
+      if(r.status===404&&models.length>1)return callLyria(models.slice(1),prompt,full);
+      if(BADKEY.test(msg))throw new Error(ro?"Cheia ta Gemini nu merge. Verific-o în Setări.":"Your Gemini key isn’t working. Check it in Settings.");
+      if(r.status===429||/billing|free tier|paid|quota|limit: ?0/i.test(msg))throw new Error(ro?"Pentru piese, Google cere facturare pornită pe cheia Gemini (cam 0,08 $ pe piesă). Pornește-o în aistudio.google.com la Billing, apoi încearcă din nou.":"Making songs needs billing turned on for your Gemini key (Google charges about $0.08 per song). Turn it on at aistudio.google.com under Billing, then try again.");
+      if(/safety|blocked|copyright|artist/i.test(msg))throw new Error(ro?"Google a refuzat descrierea piesei (de obicei din cauza unui artist sau a unor versuri existente). Cere-mi să o schimb.":"Google refused this song (usually because it names an artist or uses existing lyrics). Ask me to change it.");
+      throw new Error(msg||("Google answered with error "+r.status+"."));
+    }
+    var parts=(d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[],audio=null,text="";
+    parts.forEach(function(p){var x=p.inlineData||p.inline_data;if(x&&x.data&&!audio)audio={data:x.data,mime:x.mimeType||x.mime_type};else if(p.text)text+=p.text});
+    if(!audio){var why=(d&&d.candidates&&d.candidates[0]&&d.candidates[0].finishReason)||"";
+      throw new Error(isRo()?"Google n-a trimis audio"+(why&&why!=="STOP"?" ("+why+")":"")+". Încearcă din nou sau cere-mi să schimb piesa.":"Google didn’t send any audio"+(why&&why!=="STOP"?" ("+why+")":"")+". Try again, or ask me to change the song.")}
+    return{blob:songBlob(audio.data,audio.mime),text:text.trim(),model:model};
+  })},function(e){if(c.signal.aborted)throw new Error(isRo()?"Google n-a terminat piesa la timp. Încearcă din nou.":"Google didn’t finish the song in time. Try again.");throw new Error(isRo()?"Nu pot ajunge la Google. Verifică internetul.":"Couldn’t reach Google. Check your internet connection.")})
+  .finally(function(){clearTimeout(t)});
+}
+function makeSong(i,clip){
+  var m=msgs[i],s=m&&m.song;if(!s||songMaking[s.id]||needKey())return;
+  vibrate();songMaking[s.id]=1;delete songErr[s.id];render();
+  callLyria(clip?[SONG_CLIP]:SONG_FULL,s.prompt,!clip).then(function(out){
+    var aid=newId();return songPut(aid,out.blob).then(function(){
+      if(songUrl[s.id]){URL.revokeObjectURL(songUrl[s.id]);delete songUrl[s.id]}
+      if(playing===s.id&&player){player.pause();playing=""}
+      s.audio={id:aid,clip:!!clip,mime:out.blob.type,size:out.blob.size,at:Date.now()};
+      if(out.text&&!s.lyrics)s.lyrics=out.text.slice(0,4000);
+      persist();toast(isRo()?"Piesa e gata 🎵":"Your song is ready 🎵");
+    });
+  }).catch(function(e){songErr[s.id]=e.message||String(e)}).finally(function(){delete songMaking[s.id];render()});
+}
+function songSrc(s){
+  if(songUrl[s.id])return Promise.resolve(songUrl[s.id]);
+  return songGet(s.audio.id).then(function(b){if(!b)return null;return songUrl[s.id]=URL.createObjectURL(b)});
+}
+function songMissing(s){songErr[s.id]=isRo()?"Audio-ul piesei nu e pe acest dispozitiv. Apasă „Altă variantă” ca să o faci din nou.":"This song’s audio isn’t on this device. Tap “Make another take” to make it again.";render()}
+function playSong(s){
+  if(!s.audio)return;
+  if(playing===s.id&&player){if(player.paused)player.play();else player.pause();return}
+  songSrc(s).then(function(u){
+    if(!u)return songMissing(s);
+    if(!player){player=new Audio();
+      player.addEventListener("timeupdate",function(){var b=document.querySelector('.songcard[data-song="'+playing+'"] .bar i');if(b&&player.duration)b.style.width=(100*player.currentTime/player.duration)+"%"});
+      ["play","pause","ended"].forEach(function(ev){player.addEventListener(ev,function(){render()})})}
+    else player.pause();
+    stopSpeaking();playing=s.id;player.src=u;player.play().catch(function(){});
+  });
+}
+function saveSong(s){
+  songGet(s.audio.id).then(function(b){if(!b)return songMissing(s);
+    var ext=/wav/i.test(b.type)?".wav":/ogg/i.test(b.type)?".ogg":".mp3";saveBlob(b,safeName(s.title)+ext)});
 }
 
 /* ---------- files Nova makes: Word, Excel, PDF, text ---------- */
@@ -1351,10 +1464,11 @@ document.addEventListener("visibilitychange",function(){if(document.visibilitySt
     $("input").value=uniq.join("\n");autoGrow();updateAct();setTimeout(function(){$("input").focus()},300);toast("Shared to Nova. Add a question and send.")}
   try{history.replaceState(null,"",location.pathname)}catch(e){}
 })();
-$("plus").addEventListener("click",function(e){if(busy)return;if(canScreen){e.stopPropagation();$("plusMenu").hidden=!$("plusMenu").hidden;return}$("file").click()});
-$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;if(b.getAttribute("data-plus")==="screen")grabScreen();else $("file").click()});
+$("plus").addEventListener("click",function(e){if(busy)return;e.stopPropagation();$("plusMenu").querySelector("[data-plus=screen]").hidden=!canScreen;$("plusMenu").hidden=!$("plusMenu").hidden});
+$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else $("file").click()});
 document.addEventListener("click",function(e){if(!$("plusMenu").hidden&&!e.target.closest("#plusMenu"))$("plusMenu").hidden=true});
-$("picActs").addEventListener("click",function(e){var b=e.target.closest("[data-picq]");if(b&&!busy){$("input").value=b.getAttribute("data-picq");send()}});
+$("picActs").addEventListener("click",function(e){var g=e.target.closest("[data-genre]");if(g){var ro=isRo(),x=g.getAttribute("data-genre");$("input").value=(ro?"Fă-mi o piesă completă "+x+" despre ":"Make me a full "+x+" song about ");$("picActs").hidden=true;autoGrow();updateAct();$("input").focus();return}
+  var b=e.target.closest("[data-picq]");if(b&&!busy){$("input").value=b.getAttribute("data-picq");send()}});
 $("file").addEventListener("change",function(){var f=this.files[0];this.value="";if(f)readFile(f)});
 // PC: drop a file anywhere, or paste a picture into the message box
 (function(){var n=0,dz=$("dropZone");
@@ -1403,6 +1517,9 @@ $("inner").addEventListener("click",function(e){
     (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){a.textContent="Copied";setTimeout(function(){a.textContent=act==="copy"?"Copy":"Copy code"},1500)},function(){toast("Couldn’t copy. Long-press the text to copy it.")})}
   if(act==="share")shareOut(withNovaLine(msgs[i].text));
   if(act==="dl"&&msgs[i].doc)downloadFile(msgs[i].doc);
+  if((act==="song"||act==="songclip")&&msgs[i].song)makeSong(i,act==="songclip");
+  if(act==="songplay"&&msgs[i].song)playSong(msgs[i].song);
+  if(act==="songdl"&&msgs[i].song)saveSong(msgs[i].song);
   if(act==="sharenova"){render.askShare=false;shareNova();render()}
   if(act==="noshare"){render.askShare=false;store("nova.askedShare",true);render()}
   if(act==="retry")retry();
