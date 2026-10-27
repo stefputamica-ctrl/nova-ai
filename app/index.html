@@ -95,6 +95,20 @@ header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:1
 .srcs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .srcs a{font-size:12px;font-weight:600;padding:5px 10px;border-radius:12px;background:var(--glass);border:1px solid var(--edge);color:var(--dim);text-decoration:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .memo{font-size:12px;font-weight:600;color:var(--dim);margin-top:6px}
+#report{position:fixed;inset:0;z-index:25;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);padding:16px}
+#report[hidden]{display:none}
+#report .box{width:100%;max-width:440px;border-radius:24px;padding:18px;background:var(--bg);border:1px solid var(--edge);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+#report h3{margin:0 0 4px;font-size:18px}
+#report p{margin:0 0 12px;font-size:13.5px;color:var(--dim)}
+#report .why{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+#report .why button{padding:8px 13px;border-radius:999px;border:1px solid var(--edge);background:var(--glass);font-weight:600;font-size:13.5px}
+#report .why button.on{background:var(--sun);color:#15181f;border-color:transparent}
+#report textarea{width:100%;box-sizing:border-box;min-height:70px;border-radius:14px;border:1px solid var(--edge);background:var(--glass);color:var(--ink);padding:10px;font:inherit;font-size:14px;resize:vertical}
+#report .row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+#report .row button{padding:9px 16px;border-radius:999px;font-weight:700;border:1px solid var(--edge);background:var(--glass)}
+#report .row button.send{background:var(--sun);color:#15181f;border-color:transparent}
+#report .row button:disabled{opacity:.45}
+.acts button.reported{color:var(--dim)}
 .memo::before{content:"✦ ";color:var(--sun)}
 .mem{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--edge)}
 .mem:first-child{border-top:0}
@@ -369,6 +383,13 @@ a{color:inherit}
   <div class="vbot"><button class="vbtn" id="vWall">Set as wallpaper</button></div>
 </div>
 <div id="toast" class="toast glass" hidden></div>
+<div id="report" hidden role="dialog" aria-modal="true" aria-labelledby="reportTitle"><div class="box">
+  <h3 id="reportTitle">Report this answer</h3>
+  <p id="reportSub">Tell us what’s wrong. Your report goes to the Nova team by email, with this answer attached.</p>
+  <div class="why" id="reportWhy"></div>
+  <textarea id="reportNote" placeholder="Anything else? (optional)" maxlength="500"></textarea>
+  <div class="row"><button id="reportCancel">Cancel</button><button class="send" id="reportSend" disabled>Send report</button></div>
+</div></div>
 <div id="dropZone" hidden><div class="glass">Drop it here for Nova</div></div>
 <div id="updBar" class="updbar glass" hidden role="status"><span>A new version of Nova is ready.</span><button class="btn" id="updGo">Update</button></div>
 
@@ -393,7 +414,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.27-d";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.27-e";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -495,6 +516,7 @@ function render(){
           (m.reminders?m.reminders.map(function(r){var on=reminders.some(function(x){return x.id===r.id});return'<div class="remind'+(on||r.at>Date.now()?"":" off")+'">⏰ '+esc(r.text)+' · '+esc(fmtWhen(r.at))+(on?' <button data-unremind="'+esc(r.id)+'">Cancel</button>':"")+'</div>'}).join(""):"")+
           (m.saved?m.saved.map(function(x){return'<div class="memo">'+esc(x)+'</div>'}).join(""):"")+
           '<div class="acts"><button data-act="listen" data-i="'+i+'">Listen</button><button data-act="copy" data-i="'+i+'">Copy</button><button data-act="share" data-i="'+i+'">Share</button>'+
+          (m.reported?'<button class="reported" disabled>'+(isRo()?"Raportat":"Reported")+'</button>':'<button data-act="report" data-i="'+i+'">'+(isRo()?"Raportează":"Report")+'</button>')+
           (i===msgs.length-1&&!busy?'<button data-act="retry">Retry</button><button data-act="edit">Edit question</button>':"")+'</div>'+
           (i===msgs.length-1&&!busy&&m.next&&S.next?'<div class="next">'+m.next.map(function(q){return'<button data-q="'+esc(q)+'">'+esc(q)+'</button>'}).join("")+'</div>':"")+'</div></div>';
       }
@@ -808,6 +830,42 @@ var GENRES=["hardstyle","rawstyle","hardcore","gabber","frenchcore","uptempo","h
 function songGenres(){var acts=$("picActs");acts.hidden=false;
   acts.innerHTML=GENRES.map(function(g){return'<button data-genre="'+g+'">'+g.charAt(0).toUpperCase()+g.slice(1)+'</button>'}).join("");
   $("input").focus()}
+
+/* ---------- report an answer (inappropriate or wrong AI content) ---------- */
+var REPORT_TO="stefputamica@gmail.com",reportI=-1,reportWhy="";
+var REPORT_WHY=[["harmful","Harmful or dangerous","Periculos sau dăunător"],["offensive","Offensive or hateful","Ofensator sau cu ură"],["sexual","Sexual content","Conținut sexual"],["wrong","Wrong or misleading","Greșit sau înșelător"],["other","Something else","Altceva"]];
+function openReport(i){
+  if(!msgs[i]||msgs[i].role!=="model")return;
+  var ro=isRo();reportI=i;reportWhy="";
+  $("reportTitle").textContent=ro?"Raportează acest răspuns":"Report this answer";
+  $("reportSub").textContent=ro?"Spune-ne ce e greșit. Raportul ajunge la echipa Nova pe email, cu acest răspuns atașat.":"Tell us what’s wrong. Your report goes to the Nova team by email, with this answer attached.";
+  $("reportNote").placeholder=ro?"Mai vrei să adaugi ceva? (opțional)":"Anything else? (optional)";
+  $("reportCancel").textContent=ro?"Anulează":"Cancel";$("reportSend").textContent=ro?"Trimite raportul":"Send report";
+  $("reportWhy").innerHTML=REPORT_WHY.map(function(w){return'<button data-why="'+w[0]+'">'+esc(ro?w[2]:w[1])+'</button>'}).join("");
+  $("reportNote").value="";$("reportSend").disabled=true;$("report").hidden=false;
+}
+function closeReport(){$("report").hidden=true;reportI=-1}
+function reportMail(){
+  var m=msgs[reportI],q="";for(var k=reportI-1;k>=0;k--)if(msgs[k].role==="user"){q=msgs[k].text;break}
+  var why=REPORT_WHY.filter(function(w){return w[0]===reportWhy})[0];
+  var cut=function(t,n){t=String(t||"");return t.length>n?t.slice(0,n)+"…":t};
+  var body="Reason: "+(why?why[1]:reportWhy)+"\n"+(($("reportNote").value||"").trim()?"Note: "+$("reportNote").value.trim()+"\n":"")+
+    "\n--- Question ---\n"+cut(q,600)+"\n\n--- Nova's answer ---\n"+cut(m.text,1400)+
+    "\n\n--- Details ---\nNova "+VERSION+" · "+(/Electron/i.test(navigator.userAgent)?"Windows app":"web")+" · "+new Date().toISOString();
+  return"mailto:"+REPORT_TO+"?subject="+encodeURIComponent("Nova report: "+(why?why[1]:"answer"))+"&body="+encodeURIComponent(body);
+}
+$("reportWhy").addEventListener("click",function(e){var b=e.target.closest("[data-why]");if(!b)return;reportWhy=b.getAttribute("data-why");
+  Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b)});$("reportSend").disabled=false});
+$("reportCancel").addEventListener("click",closeReport);
+$("report").addEventListener("click",function(e){if(e.target===this)closeReport()});
+$("reportSend").addEventListener("click",function(){
+  if(reportI<0||!reportWhy)return;var url=reportMail(),i=reportI;
+  // the Windows app opens email links through the website's report page (its window only opens web links)
+  if(/Electron/i.test(navigator.userAgent))window.open("https://stefputamica-ctrl.github.io/nova-ai/report.html#"+encodeURIComponent(url),"_blank");
+  else{var a=document.createElement("a");a.href=url;a.target="_self";document.body.appendChild(a);a.click();a.remove()}
+  msgs[i].reported=true;persist();closeReport();render();toast(isRo()?"Mulțumim! Raportul e gata de trimis din aplicația de email.":"Thanks! Your report is ready to send in your email app.");
+});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!$("report").hidden)closeReport()});
 
 /* ---------- files Nova makes: Word, Excel, PDF, text ---------- */
 var FILE_TYPES={docx:"Word document",xlsx:"Excel spreadsheet",pdf:"PDF",txt:"Text file",md:"Text file",csv:"CSV spreadsheet"};
@@ -1421,6 +1479,7 @@ $("inner").addEventListener("click",function(e){
   if(act==="share")shareOut(withNovaLine(msgs[i].text));
   if(act==="dl"&&msgs[i].doc)downloadFile(msgs[i].doc);
 
+  if(act==="report")openReport(i);
   if(act==="sharenova"){render.askShare=false;shareNova();render()}
   if(act==="noshare"){render.askShare=false;store("nova.askedShare",true);render()}
   if(act==="retry")retry();
