@@ -104,6 +104,8 @@ header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:1
 .srcs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .srcs a{font-size:12px;font-weight:600;padding:5px 10px;border-radius:12px;background:var(--glass);border:1px solid var(--edge);color:var(--dim);text-decoration:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .memo{font-size:12px;font-weight:600;color:var(--dim);margin-top:6px}
+#kitSlots .row{gap:8px}#kitSlots .note{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kb{flex:none;padding:7px 14px;border-radius:999px;font-weight:700;font-size:13px;background:var(--glass);border:1px solid var(--edge)}.kb.main{background:var(--sun);color:#15181f;border-color:transparent}
 .beatcard,.quiz{margin-top:10px;padding:12px;border-radius:18px;background:var(--glass);border:1px solid var(--edge);max-width:520px}
 .beatcard{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .beatcard .pads{flex:none;display:grid;grid-template-columns:repeat(4,9px);gap:3px}
@@ -375,6 +377,13 @@ a{color:inherit}
       <div class="note" id="wakeState" style="padding:0 16px 14px"></div>
     </div>
 
+    <div class="sec">My drum kit</div>
+    <div class="card glass">
+      <div class="stack"><div class="note">Use your own drum samples (WAV, MP3…) in the beats Nova plays, for example from your FL Studio packs. They stay on this device. Empty slots use Nova’s sounds.</div></div>
+      <div id="kitSlots"></div>
+      <div class="row"><button class="btn" id="kitTest">▶ Test my kit</button></div>
+    </div>
+
     <div class="sec">Morning brief</div>
     <div class="card glass">
       <div class="row"><div class="grow"><div class="label">Morning brief</div><div class="note">Every morning Nova sums up the weather, top news and your reminders for the day. You can also tap “☀️ Morning brief” on the start screen anytime.</div></div><button class="switch" role="switch" id="sBrief" aria-label="Morning brief"></button></div>
@@ -454,7 +463,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.29-d";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.29-e";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -470,7 +479,7 @@ var WEB_RULES=" You can search the web and read links the user sends. For news, 
 var MEMORY_RULES=" Memory: you can remember lasting facts about the user between chats. When the user shares something lasting about themselves (their name, where they live, their job, hobbies or music, people in their life, projects, likes, how they want you to talk) or asks you to remember something, end your reply with an extra line that starts with REMEMBER: followed by one short fact about the user, like 'REMEMBER: Their name is Stef.' At most two REMEMBER lines, and only for facts you don't already know. Never remember passwords, keys, money details, health details or anything they ask you not to keep. If the user asks you to forget something, end with a line FORGET: followed by a few words naming it. Never talk about these lines in the rest of your reply.";
 var NEXT_RULES=" At the very end of your answer, add one line that starts with NEXT: followed by 2 or 3 short follow-up questions or requests the user might want to send you next, separated by |, written the way the user would type them, in the user's language, each under 8 words. Leave out the NEXT line for pictures, opened websites, or when a follow-up makes no sense (like after a simple thanks).";
 var REMIND_RULES=" Reminders: you can set reminders for the user, and Nova will notify them at that time. When they ask you to remind them about something (or to set an alarm or a timer), reply with one short sentence that confirms what and when, and then a new line that starts with REMIND: followed by the date and time as YYYY-MM-DD HH:MM (24-hour clock, the user's local time), then | and what to remind them about, short, in the user's language. Example: 'REMIND: 2026-10-26 18:00 | Practise guitar'. Work out times like 'in 20 minutes', 'at 6' (the next 6 o'clock that hasn't passed, usually 18:00 unless they mean morning) or 'tomorrow morning' (09:00) from the current time below. If they don't say when, ask them instead of guessing. To cancel a reminder, write a line CANCEL: followed by the words of that reminder. Never say you can't set reminders.";
-var MUSIC_RULES=" Music: you are also a skilled music producer and songwriter, an expert in hard dance and any other genre: hardstyle (150-155 BPM: euphoric with big supersaw leads, reverse bass and emotional breaks, or raw with distorted screech leads), rawstyle, hardcore and gabber (160-200 BPM, hard distorted kicks), frenchcore (180-200 BPM), uptempo (200-250 BPM), and the internet styles hoodtrap and mylancore (sped-up, pitched-up pop-style vocals over hard, distorted, bouncy kicks with trap hi-hats and 808s, about 150-170 BPM, short catchy TikTok-ready hooks). For track ideas give concrete production help: BPM, key, chord progression, structure with bar counts, kick, bass, lead and vocal tips. When the user asks you to make, create or write a song, beat or track, write the whole song as text they can build in their music app: title, genre, BPM, key, mood, chord progression, the structure with bar counts and what happens in each part (kick, bass, leads, build-ups, drops, breaks, vocal chops), the full original lyrics under section tags like [Intro] [Verse] [Build-up] [Drop] [Break] [Outro], and a few production tips for that genre. Never name real artists in place of describing the sound, and never copy existing lyrics: if they ask for a remix or cover of an existing song, write an original song in that style instead. Write the lyrics in the language the user wants. You can't make audio files or full songs as audio, but the app plays a drum loop for you: whenever you write a song or beat, or the user asks to hear a beat or drum pattern, add one line at the very end: BEAT: <genre> | <BPM> (for example BEAT: hardstyle | 150). Never offer to make full audio.";
+var MUSIC_RULES=" Music: you are also a skilled music producer and songwriter, an expert in hard dance and any other genre: hardstyle (150-155 BPM: euphoric with big supersaw leads, reverse bass and emotional breaks, or raw with distorted screech leads), rawstyle, hardcore and gabber (160-200 BPM, hard distorted kicks), frenchcore (180-200 BPM), uptempo (200-250 BPM), and the internet styles hoodtrap and mylancore (sped-up, pitched-up pop-style vocals over hard, distorted, bouncy kicks with trap hi-hats and 808s, about 150-170 BPM, short catchy TikTok-ready hooks). For track ideas give concrete production help: BPM, key, chord progression, structure with bar counts, kick, bass, lead and vocal tips. When the user asks you to make, create or write a song, beat or track, write the whole song as text they can build in their music app: title, genre, BPM, key, mood, chord progression, the structure with bar counts and what happens in each part (kick, bass, leads, build-ups, drops, breaks, vocal chops), the full original lyrics under section tags like [Intro] [Verse] [Build-up] [Drop] [Break] [Outro], and a few production tips for that genre. Never name real artists in place of describing the sound, and never copy existing lyrics: if they ask for a remix or cover of an existing song, write an original song in that style instead. Write the lyrics in the language the user wants. You can't make audio files or full songs as audio, but the app plays a drum loop for you: whenever you write a song or beat, or the user asks to hear a beat or drum pattern, add these lines at the very end: BEAT: <genre> | <BPM> (for example BEAT: hardstyle | 150), then CHORDS: the chord progression with one chord per bar, 4 or 8 chords (for example CHORDS: Fm Db Ab Eb), then MELODY: the main hook melody as notes with octave and length in 16th notes, R for a rest, covering 2 or 4 bars (32 or 64 sixteenths), for example MELODY: F5/2 Ab5/2 C6/4 Bb5/2 Ab5/2 G5/4 R/4 ... The melody must be original and fit the chords and key. The app plays a drum loop and can save the song as a MIDI file with drums, bass, chords and melody for the user's music app (like FL Studio). Never offer to make full audio.";
 var PY_RULES=" Python lessons: you are also a patient, encouraging Python teacher for beginners. When the user asks for a Python lesson (or picks one), teach just that one small topic: a short friendly explanation in plain words, one or two tiny examples in ```python code blocks (the app shows a Run button on them), then one small exercise. Never use input() in examples or exercises (the app can't type into a running program): use variables with example values instead. Tell them to write their answer in the message box (Shift+Enter makes a new line on a computer) and send it. When the user sends code, the app runs it and adds the real output or error to their message: use that to check their work. Say clearly what's right, explain any error in simple words and give a hint, not the full solution, unless they ask for it or have tried twice. When they solve the exercise, praise them briefly, then add a line LESSON DONE: <lesson number> on its own (the app ticks the lesson off) and offer the next lesson. Keep code beginner-friendly and use music, games and everyday examples.";
 var QUIZ_RULES=" Quizzes: when the user asks you to quiz or test them, make practice questions, or sends notes, a lesson, a photo of a page or a file and asks for a quiz, make a multiple-choice quiz. Use only the material they gave you (or the topic they name), in their language, at their level. Write one short friendly sentence, then the quiz in exactly this form: a line QUIZ: then one line of JSON {\"title\":\"...\",\"questions\":[{\"q\":\"question\",\"options\":[\"...\",\"...\",\"...\",\"...\"],\"answer\":0,\"why\":\"one or two sentences explaining the right answer\"}]} then a line ENDQUIZ. answer is the index (0-3) of the right option. Make 6 questions unless they ask for another number (up to 15), with 4 short plausible options each, only one right; mix easy and harder ones and vary which position is right. The app shows the quiz one question at a time and tells you the score afterwards.";
 var HOMEWORK_RULES=" Homework and exercises: when the user sends a photo or screenshot of homework, an exercise, a test question or a problem (math, physics, chemistry, languages, anything), read it carefully first, then explain the solution step by step with numbered steps, showing the working, and give the final answer clearly at the end. Match the school level of the exercise. If they ask you to check their answer, say clearly what is right and what is wrong and why. If part of the photo is unreadable, say which part.";
@@ -809,6 +818,8 @@ function toReply(answer){
   }
   var beatOut=null;
   answer=answer.replace(/^[ \t>*-]*BEAT:[ \t]*([^|\n]+?)[ \t]*\|[ \t]*(\d{2,3})(?:[ \t]*bpm)?[ \t.]*$/gim,function(all,g,b){if(!beatOut)beatOut={genre:g.trim().replace(/^\*+|\*+$/g,"").slice(0,30),bpm:+b};return""}).trim();
+  answer=answer.replace(/^[ \t>*-]*(CHORDS|MELODY):[ \t]*(.+)$/gim,function(all,k,v){v=v.trim().replace(/^\*+|\*+$/g,"").replace(/`/g,"");
+    if(beatOut){if(/^chords$/i.test(k)&&parseChords(v).length)beatOut.chords=v.slice(0,200);if(/^melody$/i.test(k)&&parseMelody(v).length)beatOut.melody=v.slice(0,800)}return beatOut?"":all}).trim();
   answer=answer.replace(/^[ \t>*-]*LESSON DONE:[ \t]*(\d+)[ \t.]*$/gim,function(all,n){lessonDone(+n);return""}).trim();
   var setNow=[];
   answer=answer.replace(/^[ \t>*-]*REMIND:[ \t]*(\d{4})-(\d{1,2})-(\d{1,2})[ T,]+(\d{1,2})[:.](\d{2})[ \t]*(?:\||-|–)?[ \t]*(.*)$/gim,function(all,y,mo,d,h,mi,what){
@@ -1024,8 +1035,9 @@ function chime(){try{var c=new (window.AudioContext||window.webkitAudioContext)(
 if(IS_PC_APP&&S.wake)setTimeout(wakeStart,1500);
 window.novaWake={heard:wakeHeard,state:function(){return{on:wake.on,mic:!!wake.stream}}}; // for testing
 
-/* ---------- beats: a drum loop for the song's genre and BPM, made right here (no service, free) ---------- */
-// makeBeat("hardstyle",150) → {wav: Uint8Array (16-bit mono WAV), seconds, style}
+/* ---------- beats: drum loops, your own drum kit, and MIDI files for the songs Nova writes (all made on the device, free) ---------- */
+// makeBeat(genre,bpm,{kit,chords}) → {wav,seconds,style,bpm}; makeMidi(genre,bpm,chords,melody) → .mid bytes; parseWav(bytes) → samples
+var BEAT_SR=44100;
 function beatStyle(genre){
   var g=String(genre||"").toLowerCase();
   if(/hoodtrap|mylan|hood/.test(g))return"hoodtrap";
@@ -1038,99 +1050,177 @@ function beatStyle(genre){
   if(/techno|house|edm|dance|trance|disco/.test(g))return"house";
   return"pop";
 }
-function makeBeat(genre,bpm){
-  var style=beatStyle(genre);
-  bpm=Math.round(+String(bpm||"").replace(/[^\d.]/g,""))||{hardstyle:150,rawstyle:155,hardcore:175,frenchcore:195,uptempo:220,hoodtrap:160,trap:140,house:126,pop:110}[style];
-  bpm=Math.max(60,Math.min(260,bpm));
-  var SR=44100,bars=4,step=60/bpm/4,len=Math.round(step*16*bars*SR),out=new Float32Array(len);
-  var seed=12345;function rnd(){seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff*2-1}
-  function add(at,buf,gain){var s=Math.round(at*SR);for(var i=0;i<buf.length;i++){var j=(s+i)%len;out[j]+=buf[i]*gain}} // wraps so tails loop smoothly
-  // sounds
-  // a big kick in three layers: a sharp punch, a distorted pitched tail (the part you hear on small speakers) and a clean sub (the part you feel)
-  function kick(o){ // o: f0,f1,pitchDecay,len,drive,hold,decay,tone,click,sub,tail
+function beatBpm(style,bpm){bpm=Math.round(+String(bpm||"").replace(/[^\d.]/g,""))||{hardstyle:150,rawstyle:155,hardcore:175,frenchcore:195,uptempo:220,hoodtrap:160,trap:140,house:126,pop:110}[style];return Math.max(60,Math.min(260,bpm))}
+function beatRand(seed){return function(){seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff*2-1}}
+
+// ---- chords and notes ----
+var NOTE_PC={c:0,d:2,e:4,f:5,g:7,a:9,b:11};
+function chordNotes(name){ // "F#m7" → [root pitch class, intervals]
+  var m=String(name||"").trim().match(/^([A-Ga-g])([#b♯♭]?)(.*)$/);if(!m)return null;
+  var pc=(NOTE_PC[m[1].toLowerCase()]+(/[#♯]/.test(m[2])?1:/[b♭]/.test(m[2])?-1:0)+12)%12,q=m[3].split("/")[0].toLowerCase();
+  var iv=/^(m|min|-)(?!aj)/.test(q)?[0,3,7]:/dim|°/.test(q)?[0,3,6]:/aug|\+/.test(q)?[0,4,8]:/sus2/.test(q)?[0,2,7]:/sus/.test(q)?[0,5,7]:/^5/.test(q)?[0,7]:[0,4,7];
+  if(/maj7|Δ/.test(q))iv=iv.concat(11);else if(/7/.test(q))iv=iv.concat(10);
+  if(/add9|9/.test(q))iv=iv.concat(14);
+  return{pc:pc,iv:iv};
+}
+function parseChords(text){return String(text||"").split(/[\s|,–-]+/).map(chordNotes).filter(Boolean).slice(0,16)}
+function parseMelody(text){ // "F5/2 Ab5/2 R/4 C6" → [{n:midi or -1, d:16ths}]
+  return String(text||"").split(/[\s,|]+/).map(function(t){var m=t.match(/^([A-Ga-g])([#b♯♭]?)(-?\d)?(?:\/(\d+))?$/),r=t.match(/^[Rr-](?:\/(\d+))?$/);
+    if(r)return{n:-1,d:Math.min(16,+r[1]||2)};if(!m)return null;
+    var pc=(NOTE_PC[m[1].toLowerCase()]+(/[#♯]/.test(m[2])?1:/[b♭]/.test(m[2])?-1:0)+12)%12,oct=m[3]!=null?+m[3]:5;
+    return{n:Math.max(36,Math.min(96,12*(oct+1)+pc)),d:Math.min(16,Math.max(1,+m[4]||2))}}).filter(Boolean).slice(0,128);
+}
+
+// ---- the pattern: what plays when, shared by the audio loop and the MIDI file ----
+// event: {s: 16th step from the start, i: instrument, v: velocity 0-1, d: length in 16ths (bass), n: note (bass)}
+function beatEvents(style,bars,chords){
+  var ev=[],r=beatRand(777);
+  function hit(s,i,v){ev.push({s:s,i:i,v:Math.max(0.05,Math.min(1,v*(1+r()*0.08)))})}
+  function bass(s,d,n,v){ev.push({s:s,i:"bass",d:d,n:n,v:v||0.8})}
+  var root=function(bar){var c=chords&&chords.length?chords[bar%chords.length]:null;return c?c.pc:9}; // A by default
+  for(var bar=0;bar<bars;bar++){var b=bar*16,last=bar%4===3;
+    for(var s=0;s<16;s++){var beat=s%4===0,S=b+s;
+      if(style==="hardstyle"||style==="rawstyle"){
+        if(beat&&!(last&&s===12))hit(S,"kick",0.95);
+        if(s%4===2)hit(S,"ohat",0.5);
+        if(s%4===0&&s)hit(S,"hat",0.25);
+        if(s===4||s===12)hit(S,"clap",0.85);
+        if(last&&s>=12)hit(S,"snare",0.45+0.14*(s-12)); // build into the next bar
+        if(s%4===2)bass(S,2,root(bar)+36,0.85); // off-beat bass, the classic hardstyle bounce
+      }else if(style==="hardcore"||style==="frenchcore"||style==="uptempo"){
+        if(beat)hit(S,"kick",0.95);
+        if(style==="uptempo"&&last&&s>=12&&!beat)hit(S,"kick",0.75+0.05*(s-12));
+        if(s%4===2)hit(S,"ohat",0.45);
+        if(style==="frenchcore"){if(s===4||s===12)hit(S,"snare",0.8);if(last&&s>=8)hit(S,"snare",0.35+0.06*(s-8))}
+        else if(s===4||s===12)hit(S,"clap",0.8);
+        if(style==="frenchcore"&&s%4===2)bass(S,2,root(bar)+36,0.8);
+      }else if(style==="hoodtrap"){
+        if(beat)hit(S,"kick",0.9);
+        hit(S,"hat",s%4===0?0.55:s%2?0.32:0.42);
+        if((bar%2===1)&&s>=13){hit(S+0.5,"hat",0.3);if(s===15){hit(S+0.25,"hat",0.25);hit(S+0.75,"hat",0.28)}} // hi-hat rolls
+        if(s===4||s===12)hit(S,"clap",0.9);
+        if(s===0)bass(S,6,root(bar)+33,0.9);
+        if(s===10)bass(S,5,root(bar)+33,0.8);
+      }else if(style==="trap"){
+        if(s===0||(s===10&&bar%2)||(s===7&&last))hit(S,"kick",0.85);
+        if(s===0||s===10)bass(S,6,root(bar)+33,0.9);
+        hit(S,"hat",s%4===0?0.5:s%2?0.28:0.38);
+        if(bar%2&&s>=14){hit(S+0.5,"hat",0.28)}
+        if(s===8)hit(S,"clap",0.9);
+      }else if(style==="house"){
+        if(beat)hit(S,"kick",0.9);
+        if(s%4===2)hit(S,"ohat",0.5);
+        if(s%2&&s%4!==3)hit(S,"hat",0.2);
+        if(s===4||s===12)hit(S,"clap",0.75);
+        if(s%4===2)bass(S,2,root(bar)+36,0.75);
+      }else{
+        if(s===0||s===8||(s===10&&bar%2))hit(S,"kick",0.9);
+        if(s===4||s===12)hit(S,"snare",0.85);
+        if(s===7||s===15)hit(S,"snare",0.18); // ghost notes
+        if(s%2===0)hit(S,"hat",s%4===0?0.45:0.3);
+        if(s===0||s===8)bass(S,6,root(bar)+36,0.75);
+      }
+    }
+  }
+  return ev;
+}
+
+// ---- built-in sounds ----
+function beatSounds(style,step){
+  var SR=BEAT_SR,rnd=beatRand(4242);
+  function kick(o){
     var n=Math.round(o.len*SR),b=new Float32Array(n),ph=0,ph2=0,lp=0,lp2=0,hp=0,prevx=0,svL=0,svB=0;
     for(var i=0;i<n;i++){var t=i/SR;
       var f=o.f1+(o.f0-o.f1)*Math.exp(-t/o.pitchDecay);ph+=2*Math.PI*f/SR;
-      var tf=(o.tail||o.f1)*(1-0.12*Math.min(1,t/o.len));ph2+=2*Math.PI*tf/SR; // tail sinks a little in pitch, like real hard kicks
+      var tf=(o.tail||o.f1)*(1-0.12*Math.min(1,t/o.len));ph2+=2*Math.PI*tf/SR;
       var env=t<o.hold?1:Math.exp(-(t-o.hold)/o.decay);
-      var punch=Math.sin(ph)*Math.exp(-t/0.045);
-      var body=Math.sin(ph2+0.6*Math.sin(ph2*2))*(1-Math.exp(-t/0.008)); // a bit of extra harmonics before distortion
-      var x=punch*1.2+body*0.9;
+      var x=Math.sin(ph)*Math.exp(-t/0.045)*1.2+Math.sin(ph2+0.6*Math.sin(ph2*2))*(1-Math.exp(-t/0.008))*0.9;
       if(t<0.003)x+=rnd()*o.click*(1-t/0.003);
       x=Math.tanh(x*o.drive)/Math.tanh(o.drive);
-      x=Math.tanh(x*1.5+Math.sin(x*3)*0.3)*env; // second, harsher stage for the "screech"
-      // growl: boost the distorted mids (200-1500 Hz) so the kick is loud on phone and laptop speakers too
+      x=Math.tanh(x*1.5+Math.sin(x*3)*0.3)*env;
       var fq=2*Math.sin(Math.PI*(o.mid||450)/SR);svL+=fq*svB;var svH=x-svL-0.7*svB;svB+=fq*svH;
       x=x*0.8+svB*(o.growl||0)+svH*(o.bite||0);
-      lp+=(x-lp)*o.tone;lp2+=(lp-lp2)*Math.min(1,o.tone*1.4); // tame the very top
-      var y=lp2;hp=0.995*(hp+y-prevx);prevx=y; // remove DC
-      var sub=Math.sin(ph)*Math.exp(-t/(o.hold+o.decay))*o.sub; // clean low end
-      b[i]=Math.tanh((hp+sub)*1.2)*(i>n-300?(n-i)/300:1)}
+      lp+=(x-lp)*o.tone;lp2+=(lp-lp2)*Math.min(1,o.tone*1.4);
+      var y=lp2;hp=0.995*(hp+y-prevx);prevx=y;
+      b[i]=Math.tanh((hp+Math.sin(ph)*Math.exp(-t/(o.hold+o.decay))*o.sub)*1.2)*(i>n-300?(n-i)/300:1)}
     return b;
   }
-  function noise(dur,decay,hp,lpk){var n=Math.round(dur*SR),b=new Float32Array(n),prev=0,h=0,l=0;
-    for(var i=0;i<n;i++){var x=rnd();h=hp*(h+x-prev);prev=x;l+=(h-l)*lpk;b[i]=l*Math.exp(-i/SR/decay)}return b}
-  function clap(){var n=Math.round(0.25*SR),b=new Float32Array(n),prev=0,h=0,l=0;
-    for(var i=0;i<n;i++){var t=i/SR,x=rnd();h=0.9*(h+x-prev);prev=x;l+=(h-l)*0.35;
-      var e=t<0.03?Math.exp(-((t%0.01)/0.004)):Math.exp(-(t-0.03)/0.11);b[i]=l*e}return b}
-  function snare(){var n=Math.round(0.22*SR),b=new Float32Array(n),nz=noise(0.22,0.06,0.85,0.5);
-    for(var i=0;i<n;i++){var t=i/SR;b[i]=nz[i]*0.8+Math.sin(2*Math.PI*185*t)*Math.exp(-t/0.04)*0.6}return b}
-  function sub(freq,dur,glideFrom){var n=Math.round(dur*SR),b=new Float32Array(n),ph=0;
-    for(var i=0;i<n;i++){var t=i/SR,f=glideFrom?freq+(glideFrom-freq)*Math.exp(-t/0.06):freq;ph+=2*Math.PI*f/SR;
-      var e=Math.min(1,t/0.005)*Math.exp(-t/(dur*0.6));b[i]=Math.tanh(Math.sin(ph)*1.6)*e*(i>n-300?(n-i)/300:1)}return b}
+  function noise(dur,decay,hpk,lpk){var n=Math.round(dur*SR),b=new Float32Array(n),prev=0,h=0,l=0;
+    for(var i=0;i<n;i++){var x=rnd();h=hpk*(h+x-prev);prev=x;l+=(h-l)*lpk;b[i]=l*Math.exp(-i/SR/decay)}return b}
+  function clap(){var n=Math.round(0.3*SR),b=new Float32Array(n),prev=0,h=0,l=0,bp=0,bl=0;
+    for(var i=0;i<n;i++){var t=i/SR,x=rnd();h=0.92*(h+x-prev);prev=x;l+=(h-l)*0.45;
+      var fq=2*Math.sin(Math.PI*1300/SR);bl+=fq*bp;var bh=l-bl-0.5*bp;bp+=fq*bh; // body around 1.3 kHz like a real clap
+      var e=t<0.024?(Math.exp(-((t%0.008)/0.0025))*(0.7+t*12)):Math.exp(-(t-0.024)/0.09);b[i]=(bp*1.6+l*0.4)*e}return b}
+  function snare(){var n=Math.round(0.25*SR),b=new Float32Array(n),nz=noise(0.25,0.08,0.8,0.55),ph=0;
+    for(var i=0;i<n;i++){var t=i/SR,f=180+60*Math.exp(-t/0.01);ph+=2*Math.PI*f/SR;b[i]=nz[i]*0.85+Math.sin(ph)*Math.exp(-t/0.05)*0.7}return b}
   var K={
-    hardstyle:kick({f0:900,f1:58,tail:62,pitchDecay:0.012,len:step*4*0.92,hold:0.16,decay:0.12,drive:9,tone:0.6,click:0.5,sub:0.22,mid:420,growl:1.6,bite:0.25}),
-    rawstyle:kick({f0:1000,f1:60,tail:66,pitchDecay:0.011,len:step*4*0.92,hold:0.17,decay:0.11,drive:16,tone:0.7,click:0.6,sub:0.2,mid:650,growl:2,bite:0.4}),
-    hardcore:kick({f0:1100,f1:62,tail:70,pitchDecay:0.01,len:step*4*0.9,hold:0.11,decay:0.09,drive:18,tone:0.72,click:0.7,sub:0.2,mid:550,growl:1.8,bite:0.35}),
-    frenchcore:kick({f0:1100,f1:64,tail:72,pitchDecay:0.009,len:step*4*0.9,hold:0.1,decay:0.08,drive:20,tone:0.72,click:0.7,sub:0.2,mid:600,growl:1.8,bite:0.35}),
-    uptempo:kick({f0:1200,f1:66,tail:76,pitchDecay:0.008,len:step*4*0.9,hold:0.08,decay:0.07,drive:24,tone:0.78,click:0.8,sub:0.18,mid:700,growl:2,bite:0.45}),
-    hoodtrap:kick({f0:900,f1:58,tail:64,pitchDecay:0.012,len:step*4*0.85,hold:0.1,decay:0.1,drive:10,tone:0.62,click:0.5,sub:0.3,mid:380,growl:1.4,bite:0.2}),
-    trap:kick({f0:220,f1:46,tail:46,pitchDecay:0.03,len:0.55,hold:0.02,decay:0.28,drive:1.6,tone:0.35,click:0.2,sub:0.6,mid:180,growl:0.6,bite:0}),
-    house:kick({f0:260,f1:50,tail:50,pitchDecay:0.025,len:0.4,hold:0.02,decay:0.12,drive:1.6,tone:0.35,click:0.3,sub:0.5,mid:200,growl:0.5,bite:0}),
-    pop:kick({f0:220,f1:52,tail:52,pitchDecay:0.025,len:0.35,hold:0.015,decay:0.1,drive:1.4,tone:0.35,click:0.2,sub:0.5,mid:200,growl:0.5,bite:0})
+    hardstyle:{f0:900,f1:58,tail:62,pitchDecay:0.012,len:step*4*0.92,hold:0.16,decay:0.12,drive:9,tone:0.6,click:0.5,sub:0.22,mid:420,growl:1.6,bite:0.25},
+    rawstyle:{f0:1000,f1:60,tail:66,pitchDecay:0.011,len:step*4*0.92,hold:0.17,decay:0.11,drive:16,tone:0.7,click:0.6,sub:0.2,mid:650,growl:2,bite:0.4},
+    hardcore:{f0:1100,f1:62,tail:70,pitchDecay:0.01,len:step*4*0.9,hold:0.11,decay:0.09,drive:18,tone:0.72,click:0.7,sub:0.2,mid:550,growl:1.8,bite:0.35},
+    frenchcore:{f0:1100,f1:64,tail:72,pitchDecay:0.009,len:step*4*0.9,hold:0.1,decay:0.08,drive:20,tone:0.72,click:0.7,sub:0.2,mid:600,growl:1.8,bite:0.35},
+    uptempo:{f0:1200,f1:66,tail:76,pitchDecay:0.008,len:step*4*0.9,hold:0.08,decay:0.07,drive:24,tone:0.78,click:0.8,sub:0.18,mid:700,growl:2,bite:0.45},
+    hoodtrap:{f0:900,f1:58,tail:64,pitchDecay:0.012,len:step*4*0.85,hold:0.1,decay:0.1,drive:10,tone:0.62,click:0.5,sub:0.3,mid:380,growl:1.4,bite:0.2},
+    trap:{f0:220,f1:46,tail:46,pitchDecay:0.03,len:0.55,hold:0.02,decay:0.28,drive:1.6,tone:0.35,click:0.2,sub:0.6,mid:180,growl:0.6,bite:0},
+    house:{f0:260,f1:50,tail:50,pitchDecay:0.025,len:0.4,hold:0.02,decay:0.12,drive:1.6,tone:0.35,click:0.3,sub:0.5,mid:200,growl:0.5,bite:0},
+    pop:{f0:220,f1:52,tail:52,pitchDecay:0.025,len:0.35,hold:0.015,decay:0.1,drive:1.4,tone:0.35,click:0.2,sub:0.5,mid:200,growl:0.5,bite:0}
   }[style];
-  var hatC=noise(0.05,0.012,0.97,0.9),hatO=noise(0.2,0.06,0.96,0.9),CL=clap(),SN=snare();
-  var bars4=[0,1,2,3];
-  bars4.forEach(function(bar){
-    var b0=bar*16*step;
-    for(var s=0;s<16;s++){var t=b0+s*step,beat=s%4===0;
-      if(style==="hardstyle"||style==="rawstyle"){
-        if(beat&&!(bar===3&&s===12))add(t,K,0.9);
-        if(s%4===2)add(t,hatO,0.22);
-        if(s===4||s===12)add(t,CL,0.45);
-        if(bar===3&&s>=12)add(t,SN,0.25+0.08*(s-12)); // little build into the loop
-      }else if(style==="hardcore"||style==="frenchcore"||style==="uptempo"){
-        if(beat)add(t,K,0.9);
-        if(style==="uptempo"&&bar===3&&s>=12&&!beat)add(t,K,0.8); // kick roll
-        if(s%4===2)add(t,hatO,0.2);
-        if(style==="frenchcore"){if(s===4||s===12)add(t,SN,0.35);if(bar===3&&s>=8)add(t,SN,0.18+0.03*(s-8))}
-        else if(s===4||s===12)add(t,CL,0.35);
-      }else if(style==="hoodtrap"){
-        if(beat)add(t,K,0.85);
-        add(t,hatC,s%2?0.12:0.18);
-        if((bar===1||bar===3)&&s>=13){add(t+step/2,hatC,0.12);add(t+step/3,hatC,0.1)} // hi-hat rolls
-        if(s===4||s===12)add(t,CL,0.5);
-        if(s===0)add(t,sub(55,step*6,82),0.45);
-        if(s===10)add(t,sub(bar%2?49:65.4,step*5,0),0.4);
-      }else if(style==="trap"){
-        if(s===0||(s===10&&bar%2)||(s===7&&bar===3))add(t,K,0.8);
-        if(s===0||s===10)add(t,sub(55,step*6,0),0.5);
-        add(t,hatC,s%2?0.1:0.16);
-        if(bar%2&&s>=14){add(t+step/2,hatC,0.1)}
-        if(s===8)add(t,CL,0.5);
-      }else if(style==="house"){
-        if(beat)add(t,K,0.85);
-        if(s%4===2)add(t,hatO,0.2);
-        if(s===4||s===12)add(t,CL,0.4);
-      }else{
-        if(s===0||s===8||(s===10&&bar%2))add(t,K,0.85);
-        if(s===4||s===12)add(t,SN,0.5);
-        if(s%2===0)add(t,hatC,0.16);
-      }
-    }
+  return{kick:kick(K),clap:clap(),snare:snare(),hat:noise(0.06,0.014,0.97,0.92),ohat:noise(0.25,0.07,0.96,0.92)};
+}
+function beatBassNote(midi,dur,style){ // 808 for trap styles, a short distorted pluck for the hard styles
+  var SR=BEAT_SR,f=440*Math.pow(2,(midi-69)/12),n=Math.round(dur*SR),b=new Float32Array(n),ph=0,ph2=0,lp=0,trap=style==="trap"||style==="hoodtrap";
+  for(var i=0;i<n;i++){var t=i/SR,ff=trap?f*(1+0.5*Math.exp(-t/0.04)):f;ph+=2*Math.PI*ff/SR;ph2+=2*Math.PI*ff*1.005/SR;
+    var e=Math.min(1,t/0.004)*(trap?Math.exp(-t/(dur*0.7)):Math.exp(-t/0.09));
+    var x=trap?Math.tanh(Math.sin(ph)*2):Math.tanh((Math.sin(ph)+0.5*Math.sin(2*ph2)+0.3*Math.sin(3*ph))*3);
+    lp+=(x-lp)*(trap?0.2:0.12);b[i]=lp*e*(i>n-200?(n-i)/200:1)}
+  return b;
+}
+// a small room reverb (claps, snares and open hats get a bit of space, so it sounds less dry and robotic)
+function beatReverb(x){
+  var SR=BEAT_SR,out=new Float32Array(x.length),combs=[1557,1617,1491,1422].map(function(d){return{d:Math.round(d*SR/44100),b:new Float32Array(Math.round(d*SR/44100)),i:0,f:0}});
+  var aps=[225,556].map(function(d){return{b:new Float32Array(d),i:0}});
+  for(var p=0;p<2;p++)for(var n=0;n<x.length;n++){var s=0;
+    combs.forEach(function(c){var y=c.b[c.i];c.f=y*0.8+c.f*0.2;c.b[c.i]=x[n]+c.f*0.78;c.i=(c.i+1)%c.d;s+=y});
+    s*=0.25;aps.forEach(function(a){var y=a.b[a.i];var v=s+y*-0.5;a.b[a.i]=s+y*0.5;a.i=(a.i+1)%a.b.length;s=y-s*0.5});
+    if(p===1)out[n]=s}
+  return out;
+}
+// your own drum sample (WAV): any sample rate, mono or stereo, 16/24/32-bit or float → mono samples at 44.1 kHz
+function parseWav(bytes){
+  var u=bytes instanceof Uint8Array?bytes:new Uint8Array(bytes),v=new DataView(u.buffer,u.byteOffset,u.byteLength);
+  function str(o,n){var s="";for(var i=0;i<n;i++)s+=String.fromCharCode(u[o+i]);return s}
+  if(u.length<44||str(0,4)!=="RIFF"||str(8,4)!=="WAVE")throw new Error("not a WAV file");
+  var o=12,fmt=null,data=null;
+  while(o+8<=u.length){var id=str(o,4),sz=v.getUint32(o+4,true);if(id==="fmt ")fmt={tag:v.getUint16(o+8,true),ch:v.getUint16(o+10,true),sr:v.getUint32(o+12,true),bits:v.getUint16(o+22,true)};
+    if(id==="data"){data={o:o+8,n:Math.min(sz,u.length-o-8)};break}o+=8+sz+(sz&1)}
+  if(!fmt||!data)throw new Error("this WAV file can't be read");
+  var bps=fmt.bits/8,frames=Math.floor(data.n/(bps*fmt.ch)),mono=new Float32Array(Math.min(frames,fmt.sr*4)); // up to 4 seconds
+  for(var f=0;f<mono.length;f++){var sum=0;for(var c=0;c<fmt.ch;c++){var p=data.o+(f*fmt.ch+c)*bps,s;
+      if(fmt.tag===3&&bps===4)s=v.getFloat32(p,true);else if(bps===2)s=v.getInt16(p,true)/32768;else if(bps===3){var x=u[p]|(u[p+1]<<8)|(u[p+2]<<16);if(x&0x800000)x|=~0xffffff;s=x/8388608}
+      else if(bps===4)s=v.getInt32(p,true)/2147483648;else s=(u[p]-128)/128;sum+=s}mono[f]=sum/fmt.ch}
+  if(fmt.sr===BEAT_SR)return mono;
+  var k=fmt.sr/BEAT_SR,out=new Float32Array(Math.floor(mono.length/k));
+  for(var i=0;i<out.length;i++){var pos=i*k,j=Math.floor(pos),fr=pos-j;out[i]=mono[j]*(1-fr)+(mono[j+1]||0)*fr}
+  return out;
+}
+
+function makeBeat(genre,bpm,opt){
+  opt=opt||{};var style=beatStyle(genre);bpm=beatBpm(style,bpm);
+  var SR=BEAT_SR,bars=4,step=60/bpm/4,len=Math.round(step*16*bars*SR),out=new Float32Array(len),wet=new Float32Array(len);
+  var snd=beatSounds(style,step),kit=opt.kit||{},r=beatRand(99),swing=(style==="trap"||style==="hoodtrap"||style==="pop")?0.12:0.04;
+  ["kick","clap","snare","hat","ohat"].forEach(function(k){if(kit[k]&&kit[k].length)snd[k]=kit[k]});
+  var chords=opt.chords?parseChords(opt.chords):null;
+  function add(buf,at,gain,send){var s=Math.round(at*SR);for(var i=0;i<buf.length;i++){var j=(s+i)%len;out[j]+=buf[i]*gain;if(send)wet[j]+=buf[i]*gain*send}}
+  var gains={kick:0.9,clap:0.55,snare:0.5,hat:0.28,ohat:0.3,bass:0.42},sends={clap:0.35,snare:0.3,ohat:0.15};
+  beatEvents(style,bars,chords).forEach(function(e){
+    var at=e.s*step;
+    if(Math.round(e.s)%2===1&&(e.i==="hat"||e.i==="ohat"))at+=step*swing; // swing: off 16ths a little late, like a drummer
+    if(e.i!=="kick")at+=r()*0.004; // tiny timing differences, a few milliseconds
+    if(at<0)at=0;
+    if(e.i==="bass")add(beatBassNote(e.n,e.d*step,style),at,gains.bass*e.v,0);
+    else add(snd[e.i],at,gains[e.i]*e.v,sends[e.i]||0);
   });
-  // loudness: gentle limiter, then normalise
-  var peak=0;for(var i=0;i<len;i++){out[i]=Math.tanh(out[i]*0.9);var a=Math.abs(out[i]);if(a>peak)peak=a}
+  var rv=beatReverb(wet);for(var i=0;i<len;i++)out[i]+=rv[i]*0.6;
+  var peak=0;for(i=0;i<len;i++){out[i]=Math.tanh(out[i]*0.9);var a=Math.abs(out[i]);if(a>peak)peak=a}
   var k=peak?0.89/peak:1,buf=new ArrayBuffer(44+len*2),v=new DataView(buf);
   function str(o,s){for(var c=0;c<s.length;c++)v.setUint8(o+c,s.charCodeAt(c))}
   str(0,"RIFF");v.setUint32(4,36+len*2,true);str(8,"WAVEfmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
@@ -1139,18 +1229,80 @@ function makeBeat(genre,bpm){
   return{wav:new Uint8Array(buf),seconds:len/SR,style:style,bpm:bpm};
 }
 
-var beatAudio=null,beatOn=-1,beatUrls={};
-function beatKey(b){return beatStyle(b.genre)+"|"+b.bpm}
-function beatUrl(b){var k=beatKey(b);if(!beatUrls[k])beatUrls[k]=URL.createObjectURL(new Blob([makeBeat(b.genre,b.bpm).wav],{type:"audio/wav"}));return beatUrls[k]}
-function beatCard(b,i){var ro=isRo(),on=beatOn===i&&beatAudio&&!beatAudio.paused;
-  return'<div class="beatcard'+(on?" on":"")+'"><div class="pads">'+new Array(9).join("<i></i>")+'</div><div class="grow"><b>'+esc(b.genre.charAt(0).toUpperCase()+b.genre.slice(1))+' · '+b.bpm+' BPM</b><span>'+(ro?"Ritm de tobe în buclă":"Drum loop")+'</span></div>'+
-  '<button class="main" data-act="beat" data-i="'+i+'">'+(on?(ro?"■ Stop":"■ Stop"):(ro?"▶ Ascultă ritmul":"▶ Play beat"))+'</button><button data-act="beatdl" data-i="'+i+'">'+(ro?"Descarcă .wav":"Download .wav")+'</button></div>'}
+// ---- MIDI: drums, bass, chords and melody for FL Studio or any music app ----
+function makeMidi(genre,bpm,chordText,melodyText){
+  var style=beatStyle(genre);bpm=beatBpm(style,bpm);
+  var PPQ=480,T16=PPQ/4,bars=8,chords=parseChords(chordText),mel=parseMelody(melodyText);
+  function vlq(n){var b=[n&0x7f];while(n>>=7)b.unshift((n&0x7f)|0x80);return b}
+  function track(name,evs,ch,prog){ // evs: [{t (ticks), n, v (1-127), d (ticks)}]
+    var list=[];evs.forEach(function(e){list.push({t:e.t,b:[0x90|ch,e.n,e.v]});list.push({t:e.t+e.d,b:[0x80|ch,e.n,0]})});
+    list.sort(function(a,b){return a.t-b.t||(a.b[0]&0xf0)-(b.b[0]&0xf0)});
+    var bytes=[0,0xff,0x03].concat(vlq(name.length),name.split("").map(function(c){return c.charCodeAt(0)&0x7f}));
+    if(prog!=null)bytes=bytes.concat([0,0xc0|ch,prog]);
+    var last=0;list.forEach(function(e){bytes=bytes.concat(vlq(Math.max(0,e.t-last)),e.b);last=e.t});
+    bytes=bytes.concat([0,0xff,0x2f,0]);return bytes;
+  }
+  var us=Math.round(60000000/bpm),head=[0,0xff,0x51,3,(us>>16)&255,(us>>8)&255,us&255,0,0xff,0x58,4,4,2,24,8,0,0xff,0x2f,0];
+  var ev=beatEvents(style,bars,chords),GM={kick:36,snare:38,clap:39,hat:42,ohat:46},drums=[],bass=[];
+  ev.forEach(function(e){var t=Math.round(e.s*T16),v=Math.max(1,Math.min(127,Math.round(e.v*120)));
+    if(e.i==="bass")bass.push({t:t,n:e.n,v:v,d:Math.round(e.d*T16*0.95)});else drums.push({t:t,n:GM[e.i],v:v,d:T16})});
+  var tracks=[head,track("Drums",drums,9,null),track("Bass",bass,0,38)];
+  if(chords.length){var pad=[];for(var bar=0;bar<bars;bar++){var c=chords[bar%chords.length],base=48+((c.pc+12-0)%12);if(base>55)base-=12;
+      c.iv.forEach(function(iv){pad.push({t:bar*16*T16,n:base+iv+12,v:80,d:16*T16-10})})}
+    tracks.push(track("Chords",pad,1,89))}
+  if(mel.length){var lead=[],t=0,total=bars*16;while(t<total){for(var i=0;i<mel.length&&t<total;i++){var m=mel[i];if(m.n>=0)lead.push({t:t*T16,n:m.n,v:100,d:Math.round(Math.min(m.d,total-t)*T16*0.92)});t+=m.d}}
+    tracks.push(track("Melody",lead,2,81))}
+  var out=[0x4d,0x54,0x68,0x64,0,0,0,6,0,1,0,tracks.length,(PPQ>>8)&255,PPQ&255];
+  tracks.forEach(function(tr){var n=tr.length;out=out.concat([0x4d,0x54,0x72,0x6b,(n>>>24)&255,(n>>16)&255,(n>>8)&255,n&255],tr)});
+  return new Uint8Array(out);
+}
+
+var beatAudio=null,beatOn=-1,beatUrls={},beatKit={},beatKitVer=0;
+function beatKey(b){return beatStyle(b.genre)+"|"+b.bpm+"|"+(b.chords||"")+"|"+beatKitVer}
+function beatMake(b){return makeBeat(b.genre,b.bpm,{kit:beatKit,chords:b.chords})}
+function beatUrl(b){var k=beatKey(b);if(!beatUrls[k])beatUrls[k]=URL.createObjectURL(new Blob([beatMake(b).wav],{type:"audio/wav"}));return beatUrls[k]}
+function beatCard(b,i){var ro=isRo(),on=beatOn===i&&beatAudio&&!beatAudio.paused,mine=Object.keys(beatKit).length;
+  return'<div class="beatcard'+(on?" on":"")+'"><div class="pads">'+new Array(9).join("<i></i>")+'</div><div class="grow"><b>'+esc(b.genre.charAt(0).toUpperCase()+b.genre.slice(1))+' · '+b.bpm+' BPM</b><span>'+
+  esc([ro?"Ritm de tobe":"Drum loop",mine?(ro?"cu sunetele tale":"with your sounds"):"",b.chords?b.chords:""].filter(Boolean).join(" · "))+'</span></div>'+
+  '<button class="main" data-act="beat" data-i="'+i+'">'+(on?"■ Stop":(ro?"▶ Ascultă ritmul":"▶ Play beat"))+'</button><button data-act="beatdl" data-i="'+i+'">.wav</button><button data-act="beatmidi" data-i="'+i+'">'+(ro?"MIDI pentru FL Studio":"MIDI for FL Studio")+'</button></div>'}
 function playBeat(b,i){
   if(beatAudio&&beatOn===i&&!beatAudio.paused){beatAudio.pause();beatOn=-1;render();return}
   stopSpeaking();if(!beatAudio){beatAudio=new Audio();beatAudio.loop=true;beatAudio.addEventListener("pause",function(){render()})}
   beatAudio.pause();beatAudio.src=beatUrl(b);beatOn=i;beatAudio.currentTime=0;beatAudio.play().then(render,function(){beatOn=-1;render()});
 }
-function saveBeat(b){var r=makeBeat(b.genre,b.bpm);saveBlob(new Blob([r.wav],{type:"audio/wav"}),safeName("Nova "+r.style+" "+r.bpm+" BPM loop")+".wav")}
+function saveBeat(b){var r=beatMake(b);saveBlob(new Blob([r.wav],{type:"audio/wav"}),safeName("Nova "+r.style+" "+r.bpm+" BPM loop")+".wav")}
+function saveMidi(b,title){var st=beatStyle(b.genre);saveBlob(new Blob([makeMidi(b.genre,b.bpm,b.chords,b.melody)],{type:"audio/midi"}),safeName((title||"Nova "+st)+" "+beatBpm(st,b.bpm)+" BPM")+".mid");
+  toast(isRo()?"Deschide fișierul .mid în FL Studio (sau trage-l în playlist)":"Open the .mid in FL Studio (or drag it into the playlist)")}
+// ---- My drum kit: your own samples, kept on this device ----
+var KIT_SLOTS=[["kick","Kick","Kick"],["clap","Clap","Clap"],["snare","Snare","Snare"],["hat","Hi-hat","Hi-hat"],["ohat","Open hat","Hi-hat deschis"]];
+function kitDb(){return kitDb.p||(kitDb.p=new Promise(function(res,rej){try{var r=indexedDB.open("nova-kit",1);r.onupgradeneeded=function(){r.result.createObjectStore("s")};r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}}catch(e){rej(e)}}))}
+function kitPut(k,v){return kitDb().then(function(db){return new Promise(function(res,rej){var t=db.transaction("s","readwrite");if(v)t.objectStore("s").put(v,k);else t.objectStore("s").delete(k);t.oncomplete=res;t.onerror=function(){rej(t.error)}})})}
+function kitLoad(){return kitDb().then(function(db){return new Promise(function(res){var out={},st=db.transaction("s").objectStore("s"),q=st.openCursor();
+  q.onsuccess=function(){var c=q.result;if(c){out[c.key]=c.value;c.continue()}else res(out)};q.onerror=function(){res(out)}})}).catch(function(){return{}})}
+var kitNames={};
+function kitApply(all){beatKit={};kitNames={};Object.keys(all).forEach(function(k){if(all[k]&&all[k].pcm){beatKit[k]=all[k].pcm;kitNames[k]=all[k].name}});beatKitVer++;renderKit()}
+function renderKit(){var el=$("kitSlots");if(!el)return;var ro=isRo();
+  el.innerHTML=KIT_SLOTS.map(function(sl){var n=kitNames[sl[0]];return'<div class="row"><div class="grow"><div class="label">'+esc(ro?sl[2]:sl[1])+'</div><div class="note">'+(n?esc(n):(ro?"Sunetul Nova":"Nova’s sound"))+'</div></div>'+
+    (n?'<button class="kb" data-kitdel="'+sl[0]+'">'+(ro?"Șterge":"Remove")+'</button>':"")+'<button class="kb main" data-kitpick="'+sl[0]+'">'+(ro?"Alege":"Choose")+'</button></div>'}).join("")}
+function decodeSample(file){
+  return file.arrayBuffer().then(function(buf){
+    try{return parseWav(new Uint8Array(buf))}catch(e){}
+    var AC=window.OfflineAudioContext||window.webkitOfflineAudioContext,ctx=new (window.AudioContext||window.webkitAudioContext)();
+    return ctx.decodeAudioData(buf.slice(0)).then(function(ab){ctx.close();
+      var n=Math.min(ab.length,ab.sampleRate*4),off=new AC(1,Math.ceil(n*BEAT_SR/ab.sampleRate),BEAT_SR),src=off.createBufferSource(),cut=off.createBuffer(ab.numberOfChannels,n,ab.sampleRate);
+      for(var c=0;c<ab.numberOfChannels;c++)cut.copyToChannel(ab.getChannelData(c).subarray(0,n),c);
+      src.buffer=cut;src.connect(off.destination);src.start();return off.startRendering().then(function(r){return new Float32Array(r.getChannelData(0))})});
+  });
+}
+function kitPick(slot){var inp=document.createElement("input");inp.type="file";inp.accept="audio/*,.wav,.mp3,.ogg,.flac,.aif,.aiff";
+  inp.onchange=function(){var f=inp.files[0];if(!f)return;if(f.size>15e6){toast(isRo()?"Fișierul e prea mare (max 15 MB)":"That file is too big (15 MB max)");return}
+    decodeSample(f).then(function(pcm){var peak=0;for(var i=0;i<pcm.length;i++)peak=Math.max(peak,Math.abs(pcm[i]));if(!peak)throw new Error("silent");
+      for(i=0;i<pcm.length;i++)pcm[i]/=peak; // same loudness for every sample
+      return kitPut(slot,{name:f.name.slice(0,60),pcm:pcm}).then(kitLoad).then(kitApply)}).then(function(){toast(isRo()?"Sunet salvat ✓":"Sound saved ✓")},
+      function(){toast(isRo()?"Nu pot citi acest fișier audio. Încearcă un WAV.":"Couldn’t read that audio file. Try a WAV.")})};
+  inp.click()}
+function kitTest(){var b={genre:"hardstyle",bpm:150},i=-2;playBeat(b,i)}
+kitLoad().then(kitApply);
 
 /* ---------- Quiz me ---------- */
 function parseQuiz(raw){
@@ -1726,6 +1878,9 @@ $("talkMode").addEventListener("click",function(){askNotify(true);startConvo()})
 $("remList").addEventListener("click",function(e){var b=e.target.closest("[data-unremind]");if(b)unremind(b.getAttribute("data-unremind"))});
 $("remPerm").addEventListener("click",function(){askNotify(true)});
 $("sShareNova").addEventListener("click",shareNova);
+$("kitSlots").addEventListener("click",function(e){var p=e.target.closest("[data-kitpick]"),d=e.target.closest("[data-kitdel]");
+  if(p)kitPick(p.getAttribute("data-kitpick"));if(d)kitPut(d.getAttribute("data-kitdel"),null).then(kitLoad).then(kitApply)});
+$("kitTest").addEventListener("click",function(){if(beatAudio&&beatOn===-2&&!beatAudio.paused){beatAudio.pause();beatOn=-1;this.textContent=isRo()?"▶ Testează":"▶ Test my kit";return}kitTest();this.textContent="■ Stop"});
 $("sWake").addEventListener("click",function(){S.wake=!S.wake;save();$("sWake").setAttribute("aria-checked",String(!!S.wake));if(S.wake)wakeStart();else wakeStop()});
 $("sBrief").addEventListener("click",function(){S.brief=!S.brief;save();syncSettings();if(S.brief){askNotify(true);toast(isRo()?"Rezumatul de dimineață e pornit":"Morning brief is on")}});
 $("sBriefAt").addEventListener("change",function(){if(/^\d\d:\d\d$/.test(this.value)){S.briefAt=this.value;save();store("nova.briefDay","")}});
@@ -1798,6 +1953,7 @@ $("inner").addEventListener("click",function(e){
   if(act==="report")openReport(i);
   if(act==="beat"&&msgs[i].beat)playBeat(msgs[i].beat,i);
   if(act==="beatdl"&&msgs[i].beat)saveBeat(msgs[i].beat);
+  if(act==="beatmidi"&&msgs[i].beat)saveMidi(msgs[i].beat,"");
   if(act==="qpick"&&msgs[i].quiz)quizPick(i,+a.getAttribute("data-o"));
   if(act==="qnext"&&msgs[i].quiz){msgs[i].quiz.cur++;persist();render()}
   if(act==="qagain"&&msgs[i].quiz){msgs[i].quiz.picks=[];msgs[i].quiz.cur=0;persist();render()}
