@@ -454,7 +454,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.29-c";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.29-d";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -1046,35 +1046,48 @@ function makeBeat(genre,bpm){
   var seed=12345;function rnd(){seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff*2-1}
   function add(at,buf,gain){var s=Math.round(at*SR);for(var i=0;i<buf.length;i++){var j=(s+i)%len;out[j]+=buf[i]*gain}} // wraps so tails loop smoothly
   // sounds
-  function kick(o){ // o: f0,f1,pitchDecay,len,drive,hold,click
-    var n=Math.round(o.len*SR),b=new Float32Array(n),ph=0,lp=0;
-    for(var i=0;i<n;i++){var t=i/SR,f=o.f1+(o.f0-o.f1)*Math.exp(-t/o.pitchDecay);ph+=2*Math.PI*f/SR;
-      var env=t<o.hold?1:Math.exp(-(t-o.hold)/o.decay),x=Math.sin(ph);
-      if(t<0.004)x+=rnd()*o.click*(1-t/0.004);
-      x=Math.tanh(x*o.drive)/Math.tanh(o.drive)*env; // distorted body that still fades out
-      lp+=(x-lp)*o.tone;b[i]=lp*(i>n-200?(n-i)/200:1)}
+  // a big kick in three layers: a sharp punch, a distorted pitched tail (the part you hear on small speakers) and a clean sub (the part you feel)
+  function kick(o){ // o: f0,f1,pitchDecay,len,drive,hold,decay,tone,click,sub,tail
+    var n=Math.round(o.len*SR),b=new Float32Array(n),ph=0,ph2=0,lp=0,lp2=0,hp=0,prevx=0,svL=0,svB=0;
+    for(var i=0;i<n;i++){var t=i/SR;
+      var f=o.f1+(o.f0-o.f1)*Math.exp(-t/o.pitchDecay);ph+=2*Math.PI*f/SR;
+      var tf=(o.tail||o.f1)*(1-0.12*Math.min(1,t/o.len));ph2+=2*Math.PI*tf/SR; // tail sinks a little in pitch, like real hard kicks
+      var env=t<o.hold?1:Math.exp(-(t-o.hold)/o.decay);
+      var punch=Math.sin(ph)*Math.exp(-t/0.045);
+      var body=Math.sin(ph2+0.6*Math.sin(ph2*2))*(1-Math.exp(-t/0.008)); // a bit of extra harmonics before distortion
+      var x=punch*1.2+body*0.9;
+      if(t<0.003)x+=rnd()*o.click*(1-t/0.003);
+      x=Math.tanh(x*o.drive)/Math.tanh(o.drive);
+      x=Math.tanh(x*1.5+Math.sin(x*3)*0.3)*env; // second, harsher stage for the "screech"
+      // growl: boost the distorted mids (200-1500 Hz) so the kick is loud on phone and laptop speakers too
+      var fq=2*Math.sin(Math.PI*(o.mid||450)/SR);svL+=fq*svB;var svH=x-svL-0.7*svB;svB+=fq*svH;
+      x=x*0.8+svB*(o.growl||0)+svH*(o.bite||0);
+      lp+=(x-lp)*o.tone;lp2+=(lp-lp2)*Math.min(1,o.tone*1.4); // tame the very top
+      var y=lp2;hp=0.995*(hp+y-prevx);prevx=y; // remove DC
+      var sub=Math.sin(ph)*Math.exp(-t/(o.hold+o.decay))*o.sub; // clean low end
+      b[i]=Math.tanh((hp+sub)*1.2)*(i>n-300?(n-i)/300:1)}
     return b;
   }
   function noise(dur,decay,hp,lpk){var n=Math.round(dur*SR),b=new Float32Array(n),prev=0,h=0,l=0;
     for(var i=0;i<n;i++){var x=rnd();h=hp*(h+x-prev);prev=x;l+=(h-l)*lpk;b[i]=l*Math.exp(-i/SR/decay)}return b}
   function clap(){var n=Math.round(0.25*SR),b=new Float32Array(n),prev=0,h=0,l=0;
     for(var i=0;i<n;i++){var t=i/SR,x=rnd();h=0.9*(h+x-prev);prev=x;l+=(h-l)*0.35;
-      var e=t<0.03?Math.exp(-((t%0.01)/0.003)):Math.exp(-(t-0.03)/0.07);b[i]=l*e}return b}
+      var e=t<0.03?Math.exp(-((t%0.01)/0.004)):Math.exp(-(t-0.03)/0.11);b[i]=l*e}return b}
   function snare(){var n=Math.round(0.22*SR),b=new Float32Array(n),nz=noise(0.22,0.06,0.85,0.5);
     for(var i=0;i<n;i++){var t=i/SR;b[i]=nz[i]*0.8+Math.sin(2*Math.PI*185*t)*Math.exp(-t/0.04)*0.6}return b}
   function sub(freq,dur,glideFrom){var n=Math.round(dur*SR),b=new Float32Array(n),ph=0;
     for(var i=0;i<n;i++){var t=i/SR,f=glideFrom?freq+(glideFrom-freq)*Math.exp(-t/0.06):freq;ph+=2*Math.PI*f/SR;
       var e=Math.min(1,t/0.005)*Math.exp(-t/(dur*0.6));b[i]=Math.tanh(Math.sin(ph)*1.6)*e*(i>n-300?(n-i)/300:1)}return b}
   var K={
-    hardstyle:kick({f0:420,f1:52,pitchDecay:0.02,len:step*4*0.9,hold:0.05,decay:0.1,drive:4,tone:0.3,click:0.6}),
-    rawstyle:kick({f0:520,f1:55,pitchDecay:0.016,len:step*4*0.9,hold:0.06,decay:0.09,drive:8,tone:0.4,click:0.8}),
-    hardcore:kick({f0:600,f1:60,pitchDecay:0.013,len:step*4*0.85,hold:0.04,decay:0.07,drive:10,tone:0.45,click:0.9}),
-    frenchcore:kick({f0:650,f1:62,pitchDecay:0.012,len:step*4*0.85,hold:0.035,decay:0.06,drive:12,tone:0.5,click:1}),
-    uptempo:kick({f0:700,f1:65,pitchDecay:0.01,len:step*4*0.85,hold:0.03,decay:0.05,drive:14,tone:0.55,click:1}),
-    hoodtrap:kick({f0:480,f1:58,pitchDecay:0.014,len:step*4*0.8,hold:0.03,decay:0.07,drive:6,tone:0.38,click:0.7}),
-    trap:kick({f0:180,f1:48,pitchDecay:0.03,len:0.5,hold:0.02,decay:0.25,drive:1.5,tone:0.25,click:0.3}),
-    house:kick({f0:160,f1:50,pitchDecay:0.03,len:0.4,hold:0.01,decay:0.12,drive:1.4,tone:0.25,click:0.4}),
-    pop:kick({f0:150,f1:50,pitchDecay:0.03,len:0.35,hold:0.01,decay:0.1,drive:1.3,tone:0.25,click:0.3})
+    hardstyle:kick({f0:900,f1:58,tail:62,pitchDecay:0.012,len:step*4*0.92,hold:0.16,decay:0.12,drive:9,tone:0.6,click:0.5,sub:0.22,mid:420,growl:1.6,bite:0.25}),
+    rawstyle:kick({f0:1000,f1:60,tail:66,pitchDecay:0.011,len:step*4*0.92,hold:0.17,decay:0.11,drive:16,tone:0.7,click:0.6,sub:0.2,mid:650,growl:2,bite:0.4}),
+    hardcore:kick({f0:1100,f1:62,tail:70,pitchDecay:0.01,len:step*4*0.9,hold:0.11,decay:0.09,drive:18,tone:0.72,click:0.7,sub:0.2,mid:550,growl:1.8,bite:0.35}),
+    frenchcore:kick({f0:1100,f1:64,tail:72,pitchDecay:0.009,len:step*4*0.9,hold:0.1,decay:0.08,drive:20,tone:0.72,click:0.7,sub:0.2,mid:600,growl:1.8,bite:0.35}),
+    uptempo:kick({f0:1200,f1:66,tail:76,pitchDecay:0.008,len:step*4*0.9,hold:0.08,decay:0.07,drive:24,tone:0.78,click:0.8,sub:0.18,mid:700,growl:2,bite:0.45}),
+    hoodtrap:kick({f0:900,f1:58,tail:64,pitchDecay:0.012,len:step*4*0.85,hold:0.1,decay:0.1,drive:10,tone:0.62,click:0.5,sub:0.3,mid:380,growl:1.4,bite:0.2}),
+    trap:kick({f0:220,f1:46,tail:46,pitchDecay:0.03,len:0.55,hold:0.02,decay:0.28,drive:1.6,tone:0.35,click:0.2,sub:0.6,mid:180,growl:0.6,bite:0}),
+    house:kick({f0:260,f1:50,tail:50,pitchDecay:0.025,len:0.4,hold:0.02,decay:0.12,drive:1.6,tone:0.35,click:0.3,sub:0.5,mid:200,growl:0.5,bite:0}),
+    pop:kick({f0:220,f1:52,tail:52,pitchDecay:0.025,len:0.35,hold:0.015,decay:0.1,drive:1.4,tone:0.35,click:0.2,sub:0.5,mid:200,growl:0.5,bite:0})
   }[style];
   var hatC=noise(0.05,0.012,0.97,0.9),hatO=noise(0.2,0.06,0.96,0.9),CL=clap(),SN=snare();
   var bars4=[0,1,2,3];
