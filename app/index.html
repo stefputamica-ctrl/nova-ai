@@ -429,7 +429,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.29-a";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.29-b";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -944,7 +944,7 @@ function wakeStart(){
   (window.Vosk?Promise.resolve():loadScript(abs+"vosk.js")).then(function(){return wake.model||Vosk.createModel(abs+"model-en.tar.gz")}).then(function(model){
     wake.model=model;
     return navigator.mediaDevices.getUserMedia({video:false,audio:{echoCancellation:true,noiseSuppression:true,channelCount:1}}).then(function(stream){
-      if(!S.wake){stream.getTracks().forEach(function(t){t.stop()});return}
+      if(!S.wake||wake.paused){stream.getTracks().forEach(function(t){t.stop()});return}
       var ctx=new (window.AudioContext||window.webkitAudioContext)(),ch=new MessageChannel();
       model.registerPort(ch.port1);
       var rec=new model.KaldiRecognizer(ctx.sampleRate,JSON.stringify(["hey nova","nova","hey","[unk]"]));
@@ -968,6 +968,14 @@ function wakeStop(){
   if(wake.ctx)wake.ctx.close().catch(function(){});
   wake.stream=wake.ctx=wake.rec=null;showWakeState();
 }
+// the talk buttons need the microphone: "Hey Nova" lets go of it while you talk, and listens again when you're done
+function wakePause(){if(wake.on||wake.starting){wake.paused=true;wakeStop()}}
+setInterval(function(){
+  if(!wake.paused||!S.wake)return;
+  if(convo||busy||recog||(recorder&&recorder.state==="recording")){wake.idleSince=0;return}
+  if(!wake.idleSince){wake.idleSince=Date.now();return}
+  if(Date.now()-wake.idleSince>2500){wake.paused=false;wake.idleSince=0;wakeStart()}
+},1000);
 function wakeHeard(){
   var now=Date.now();if(now-wake.last<4000||convo||busy||!S.key)return;wake.last=now;
   try{if(window.novaDesktop&&window.novaDesktop.show)window.novaDesktop.show()}catch(e){}
@@ -1228,6 +1236,7 @@ function unremind(id){reminders=reminders.filter(function(r){return r.id!==id});
 // The desktop app (Electron) has no working speech recognizer, so there Nova records audio and Gemini listens.
 var SR=/Electron/i.test(navigator.userAgent)?null:(window.SpeechRecognition||window.webkitSpeechRecognition);
 function startTalking(){
+  wakePause();
   if(busy||needKey())return;
   stopSpeaking();vibrate();render.error="";
   if(SR){
