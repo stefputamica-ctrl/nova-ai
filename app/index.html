@@ -104,6 +104,31 @@ header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:1
 .srcs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .srcs a{font-size:12px;font-weight:600;padding:5px 10px;border-radius:12px;background:var(--glass);border:1px solid var(--edge);color:var(--dim);text-decoration:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .memo{font-size:12px;font-weight:600;color:var(--dim);margin-top:6px}
+.beatcard,.quiz{margin-top:10px;padding:12px;border-radius:18px;background:var(--glass);border:1px solid var(--edge);max-width:520px}
+.beatcard{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.beatcard .pads{flex:none;display:grid;grid-template-columns:repeat(4,9px);gap:3px}
+.beatcard .pads i{width:9px;height:9px;border-radius:3px;background:var(--edge)}
+.beatcard.on .pads i{animation:pad .5s infinite alternate}
+.beatcard.on .pads i:nth-child(odd){background:var(--sun)}
+.beatcard.on .pads i:nth-child(3n){animation-delay:.12s}.beatcard.on .pads i:nth-child(4n){animation-delay:.25s}
+@keyframes pad{to{opacity:.25}}
+.beatcard .grow{flex:1;min-width:120px}
+.beatcard b{display:block;font-size:14.5px}.beatcard span{font-size:12.5px;color:var(--dim)}
+.beatcard button,.quiz .row button{padding:8px 14px;border-radius:999px;font-weight:700;font-size:13.5px;background:var(--glass);border:1px solid var(--edge)}
+.beatcard button.main,.quiz .row button.main{background:var(--sun);color:#15181f;border-color:transparent}
+.quiz .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.quiz .top b{font-size:15px}.quiz .top span{font-size:12.5px;color:var(--dim);flex:none}
+.quiz .bar{height:4px;border-radius:4px;background:var(--edge);margin-bottom:12px;overflow:hidden}.quiz .bar i{display:block;height:100%;background:var(--sun)}
+.quiz .q{font-size:15.5px;font-weight:600;margin-bottom:10px}
+.quiz .opts{display:flex;flex-direction:column;gap:8px}
+.quiz .opts button{text-align:left;padding:10px 12px;border-radius:14px;border:1px solid var(--edge);background:var(--glass);font-size:14.5px;line-height:1.35}
+.quiz .opts button:disabled{cursor:default}
+.quiz .opts button.right{border-color:#46c46a;background:rgba(70,196,106,.18)}
+.quiz .opts button.wrong{border-color:#ff7a6b;background:rgba(255,122,107,.16)}
+.quiz .why{margin-top:10px;font-size:13.5px;color:var(--dim);line-height:1.45}.quiz .why b{color:var(--ink)}
+.quiz .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.quiz .score{font-size:28px;font-weight:800;margin:4px 0}
+.quiz .missed{margin-top:8px;font-size:13.5px;color:var(--dim)}.quiz .missed li{margin:4px 0}
 #report{position:fixed;inset:0;z-index:25;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);padding:16px}
 #report[hidden]{display:none}
 #report .box{width:100%;max-width:440px;border-radius:24px;padding:18px;background:var(--bg);border:1px solid var(--edge);box-shadow:0 20px 60px rgba(0,0,0,.4)}
@@ -274,7 +299,7 @@ a{color:inherit}
   <div id="bottom">
     <div id="photoChip" class="glass" hidden><img alt=""><i class="ficon" hidden></i><span>Photo attached</span><button id="rmPhoto">Remove</button></div>
     <div id="picActs" hidden></div>
-    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo or file</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button></div>
+    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo or file</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button></div>
     <div id="composer" class="composer glass">
       <button class="round" id="plus" aria-label="Attach a photo or file">+</button>
       <textarea id="input" rows="1" placeholder="Message Nova" aria-label="Message Nova"></textarea>
@@ -429,7 +454,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.29-b";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.29-c";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -445,8 +470,9 @@ var WEB_RULES=" You can search the web and read links the user sends. For news, 
 var MEMORY_RULES=" Memory: you can remember lasting facts about the user between chats. When the user shares something lasting about themselves (their name, where they live, their job, hobbies or music, people in their life, projects, likes, how they want you to talk) or asks you to remember something, end your reply with an extra line that starts with REMEMBER: followed by one short fact about the user, like 'REMEMBER: Their name is Stef.' At most two REMEMBER lines, and only for facts you don't already know. Never remember passwords, keys, money details, health details or anything they ask you not to keep. If the user asks you to forget something, end with a line FORGET: followed by a few words naming it. Never talk about these lines in the rest of your reply.";
 var NEXT_RULES=" At the very end of your answer, add one line that starts with NEXT: followed by 2 or 3 short follow-up questions or requests the user might want to send you next, separated by |, written the way the user would type them, in the user's language, each under 8 words. Leave out the NEXT line for pictures, opened websites, or when a follow-up makes no sense (like after a simple thanks).";
 var REMIND_RULES=" Reminders: you can set reminders for the user, and Nova will notify them at that time. When they ask you to remind them about something (or to set an alarm or a timer), reply with one short sentence that confirms what and when, and then a new line that starts with REMIND: followed by the date and time as YYYY-MM-DD HH:MM (24-hour clock, the user's local time), then | and what to remind them about, short, in the user's language. Example: 'REMIND: 2026-10-26 18:00 | Practise guitar'. Work out times like 'in 20 minutes', 'at 6' (the next 6 o'clock that hasn't passed, usually 18:00 unless they mean morning) or 'tomorrow morning' (09:00) from the current time below. If they don't say when, ask them instead of guessing. To cancel a reminder, write a line CANCEL: followed by the words of that reminder. Never say you can't set reminders.";
-var MUSIC_RULES=" Music: you are also a skilled music producer and songwriter, an expert in hard dance and any other genre: hardstyle (150-155 BPM: euphoric with big supersaw leads, reverse bass and emotional breaks, or raw with distorted screech leads), rawstyle, hardcore and gabber (160-200 BPM, hard distorted kicks), frenchcore (180-200 BPM), uptempo (200-250 BPM), and the internet styles hoodtrap and mylancore (sped-up, pitched-up pop-style vocals over hard, distorted, bouncy kicks with trap hi-hats and 808s, about 150-170 BPM, short catchy TikTok-ready hooks). For track ideas give concrete production help: BPM, key, chord progression, structure with bar counts, kick, bass, lead and vocal tips. When the user asks you to make, create or write a song, beat or track, write the whole song as text they can build in their music app: title, genre, BPM, key, mood, chord progression, the structure with bar counts and what happens in each part (kick, bass, leads, build-ups, drops, breaks, vocal chops), the full original lyrics under section tags like [Intro] [Verse] [Build-up] [Drop] [Break] [Outro], and a few production tips for that genre. Never name real artists in place of describing the sound, and never copy existing lyrics: if they ask for a remix or cover of an existing song, write an original song in that style instead. Write the lyrics in the language the user wants. You can't make audio files, so never offer to make the audio.";
+var MUSIC_RULES=" Music: you are also a skilled music producer and songwriter, an expert in hard dance and any other genre: hardstyle (150-155 BPM: euphoric with big supersaw leads, reverse bass and emotional breaks, or raw with distorted screech leads), rawstyle, hardcore and gabber (160-200 BPM, hard distorted kicks), frenchcore (180-200 BPM), uptempo (200-250 BPM), and the internet styles hoodtrap and mylancore (sped-up, pitched-up pop-style vocals over hard, distorted, bouncy kicks with trap hi-hats and 808s, about 150-170 BPM, short catchy TikTok-ready hooks). For track ideas give concrete production help: BPM, key, chord progression, structure with bar counts, kick, bass, lead and vocal tips. When the user asks you to make, create or write a song, beat or track, write the whole song as text they can build in their music app: title, genre, BPM, key, mood, chord progression, the structure with bar counts and what happens in each part (kick, bass, leads, build-ups, drops, breaks, vocal chops), the full original lyrics under section tags like [Intro] [Verse] [Build-up] [Drop] [Break] [Outro], and a few production tips for that genre. Never name real artists in place of describing the sound, and never copy existing lyrics: if they ask for a remix or cover of an existing song, write an original song in that style instead. Write the lyrics in the language the user wants. You can't make audio files or full songs as audio, but the app plays a drum loop for you: whenever you write a song or beat, or the user asks to hear a beat or drum pattern, add one line at the very end: BEAT: <genre> | <BPM> (for example BEAT: hardstyle | 150). Never offer to make full audio.";
 var PY_RULES=" Python lessons: you are also a patient, encouraging Python teacher for beginners. When the user asks for a Python lesson (or picks one), teach just that one small topic: a short friendly explanation in plain words, one or two tiny examples in ```python code blocks (the app shows a Run button on them), then one small exercise. Never use input() in examples or exercises (the app can't type into a running program): use variables with example values instead. Tell them to write their answer in the message box (Shift+Enter makes a new line on a computer) and send it. When the user sends code, the app runs it and adds the real output or error to their message: use that to check their work. Say clearly what's right, explain any error in simple words and give a hint, not the full solution, unless they ask for it or have tried twice. When they solve the exercise, praise them briefly, then add a line LESSON DONE: <lesson number> on its own (the app ticks the lesson off) and offer the next lesson. Keep code beginner-friendly and use music, games and everyday examples.";
+var QUIZ_RULES=" Quizzes: when the user asks you to quiz or test them, make practice questions, or sends notes, a lesson, a photo of a page or a file and asks for a quiz, make a multiple-choice quiz. Use only the material they gave you (or the topic they name), in their language, at their level. Write one short friendly sentence, then the quiz in exactly this form: a line QUIZ: then one line of JSON {\"title\":\"...\",\"questions\":[{\"q\":\"question\",\"options\":[\"...\",\"...\",\"...\",\"...\"],\"answer\":0,\"why\":\"one or two sentences explaining the right answer\"}]} then a line ENDQUIZ. answer is the index (0-3) of the right option. Make 6 questions unless they ask for another number (up to 15), with 4 short plausible options each, only one right; mix easy and harder ones and vary which position is right. The app shows the quiz one question at a time and tells you the score afterwards.";
 var HOMEWORK_RULES=" Homework and exercises: when the user sends a photo or screenshot of homework, an exercise, a test question or a problem (math, physics, chemistry, languages, anything), read it carefully first, then explain the solution step by step with numbered steps, showing the working, and give the final answer clearly at the end. Match the school level of the exercise. If they ask you to check their answer, say clearly what is right and what is wrong and why. If part of the photo is unreadable, say which part.";
 var FILE_RULES=" Files: you can make files the user can download: Word documents (docx), Excel spreadsheets (xlsx), PDFs (pdf), text files (txt) and CSV files (csv). When the user asks you to make, create, write, turn, convert or export something into a document, file, Word, Excel, spreadsheet, PDF or text file, reply with one short sentence about the file, then a line FILE: <type> | <file name without extension>, then the whole content of the file written in Markdown (# headings, **bold**, - lists, | tables |), then a line ENDFILE. For Excel and CSV put the data in Markdown tables, first row = column names; you may use Excel formulas like =SUM(B2:B5) in cells. Inside the file you may use Markdown. Write the file in the user's language. One file per reply. Only use FILE when they ask for a file or document. Never say you can't make files.";
 var BRIEF_RULES=" The user asked for their morning brief. Reply in their language with: a one-line greeting with today's day and date; the weather today where they live (use what you remember about where they live; if you don't know their city, say so in one line and ask them which city); 3 short top news headlines from today, one line each; their reminders for today (from the reminders listed here, or say there are none); and one short encouraging line to start the day. Plain short lines, no markdown.";
@@ -529,6 +555,8 @@ function render(){
           (m.sources?'<div class="srcs">'+m.sources.map(function(x){return'<a href="'+esc(x.u)+'" target="_blank" rel="noopener">'+esc(x.t)+'</a>'}).join("")+'</div>':"")+
           (m.doc?'<div class="doccard"><i class="ficon">'+esc(m.doc.type.toUpperCase())+'</i><div class="grow"><b>'+esc(m.doc.name)+"."+esc(m.doc.type)+'</b><span>'+esc(FILE_TYPES[m.doc.type]||"File")+'</span></div><button data-act="dl" data-i="'+i+'">'+(m.doc.type==="pdf"?(isRo()?"Salvează PDF":"Save PDF"):(isRo()?"Descarcă":"Download"))+'</button></div>':"")+
           
+          (m.beat?beatCard(m.beat,i):"")+
+          (m.quiz?quizCard(m.quiz,i):"")+
           (m.reminders?m.reminders.map(function(r){var on=reminders.some(function(x){return x.id===r.id});return'<div class="remind'+(on||r.at>Date.now()?"":" off")+'">⏰ '+esc(r.text)+' · '+esc(fmtWhen(r.at))+(on?' <button data-unremind="'+esc(r.id)+'">Cancel</button>':"")+'</div>'}).join(""):"")+
           (m.saved?m.saved.map(function(x){return'<div class="memo">'+esc(x)+'</div>'}).join(""):"")+
           '<div class="acts"><button data-act="listen" data-i="'+i+'">Listen</button><button data-act="copy" data-i="'+i+'">Copy</button><button data-act="share" data-i="'+i+'">Share</button>'+
@@ -614,7 +642,7 @@ function system(voice){
   var t=SYSTEM+OPEN_RULES+LENGTH[S.length]+(S.web&&webOk&&!voice?WEB_RULES:"");
   if(S.memory){t+=MEMORY_RULES;if(mem.length)t+=" Things you remember about the user from earlier chats (use them naturally, only when they matter): "+mem.map(function(m){return m.t}).join(" | ")}
   t+=REMIND_RULES+" The user's local date and time right now: "+nowText()+".";
-  if(!convo&&!voice)t+=FILE_RULES+HOMEWORK_RULES+MUSIC_RULES+PY_RULES;
+  if(!convo&&!voice)t+=FILE_RULES+HOMEWORK_RULES+MUSIC_RULES+PY_RULES+QUIZ_RULES;
   if(briefMode)t+=BRIEF_RULES;
   var up=reminders.filter(function(r){return r.at>Date.now()});
   if(up.length)t+=" Reminders already set: "+up.map(function(r){return fmtWhen(r.at)+" – "+r.text}).join(" | ")+".";
@@ -635,7 +663,7 @@ function contents(list){
     if(m.role==="user"&&m.file){var a=ATT[m.file.id];
       if(a&&files.indexOf(m.file.id)>=0)parts.push(a.text!=null?{text:"[File: "+m.file.name+"]\n"+a.text+"\n[End of file]"}:{inlineData:{mimeType:a.mime,data:a.b64}});
       else parts.push({text:"[File: "+m.file.name+"]"+(a?"":FILE_GONE)})}
-    parts.push({text:(m.text||" ")+(m.run&&m.run.state!=="running"?"\n\n[The app ran this code. "+(m.run.err?"It stopped with an error":"Output")+":\n"+String(m.run.out||"(no output)").slice(0,3000)+"\n]":"")+(m.doc?"\n\n[The file you made: "+m.doc.name+"."+m.doc.type+"]\nFILE: "+m.doc.type+" | "+m.doc.name+"\n"+m.doc.content.slice(0,12000)+"\nENDFILE":"")+(m.song?"\n\nSONG: "+m.song.title+" | "+m.song.genre+" | "+m.song.bpm+"\n"+m.song.prompt.slice(0,6000)+"\nENDSONG":"")});
+    parts.push({text:(m.text||" ")+(m.run&&m.run.state!=="running"?"\n\n[The app ran this code. "+(m.run.err?"It stopped with an error":"Output")+":\n"+String(m.run.out||"(no output)").slice(0,3000)+"\n]":"")+(m.doc?"\n\n[The file you made: "+m.doc.name+"."+m.doc.type+"]\nFILE: "+m.doc.type+" | "+m.doc.name+"\n"+m.doc.content.slice(0,12000)+"\nENDFILE":"")+(m.quiz?"\n\n[Quiz you made: "+m.quiz.title+". "+m.quiz.qs.map(function(q,k){return(k+1)+") "+q.q+" — right answer: "+q.o[q.a]+(m.quiz.picks[k]!=null?(m.quiz.picks[k]===q.a?" (user got it right)":" (user picked: "+q.o[m.quiz.picks[k]]+")"):"")}).join(" ")+"]":"")+(m.song?"\n\nSONG: "+m.song.title+" | "+m.song.genre+" | "+m.song.bpm+"\n"+m.song.prompt.slice(0,6000)+"\nENDSONG":"")});
     return{role:m.role,parts:parts};
   });
 }
@@ -773,6 +801,14 @@ function toReply(answer){
     if(sp.length>20)song={id:newId(),title:(bits[0]||"Nova song").slice(0,80),genre:(bits[1]||"").slice(0,40),bpm:(bits[2]||"").replace(/\s*bpm$/i,"").slice(0,12),prompt:sp.slice(0,9000)};
     answer=(answer.slice(0,sm.index)+(send_>=0?srest.slice(send_).replace(/^[ \t>*]*ENDSONG[ \t]*$/im,""):"")).trim();
   }
+  var quiz=null,qm=answer.match(/^[ \t>*]*QUIZ:[ \t]*/im);
+  if(qm){
+    var qrest=answer.slice(qm.index+qm[0].length),qend=qrest.search(/^[ \t>*]*ENDQUIZ[ \t]*$/im),qraw=(qend>=0?qrest.slice(0,qend):qrest).replace(/```(?:json)?/gi,"").trim();
+    quiz=parseQuiz(qraw);
+    if(quiz)answer=(answer.slice(0,qm.index)+(qend>=0?qrest.slice(qend).replace(/^[ \t>*]*ENDQUIZ[ \t]*$/im,""):"")).trim();
+  }
+  var beatOut=null;
+  answer=answer.replace(/^[ \t>*-]*BEAT:[ \t]*([^|\n]+?)[ \t]*\|[ \t]*(\d{2,3})(?:[ \t]*bpm)?[ \t.]*$/gim,function(all,g,b){if(!beatOut)beatOut={genre:g.trim().replace(/^\*+|\*+$/g,"").slice(0,30),bpm:+b};return""}).trim();
   answer=answer.replace(/^[ \t>*-]*LESSON DONE:[ \t]*(\d+)[ \t.]*$/gim,function(all,n){lessonDone(+n);return""}).trim();
   var setNow=[];
   answer=answer.replace(/^[ \t>*-]*REMIND:[ \t]*(\d{4})-(\d{1,2})-(\d{1,2})[ T,]+(\d{1,2})[:.](\d{2})[ \t]*(?:\||-|–)?[ \t]*(.*)$/gim,function(all,y,mo,d,h,mi,what){
@@ -793,6 +829,8 @@ function toReply(answer){
   if(ask.suggest&&!reply.gen)reply.suggest=ask.suggest;
   if(saved.length)reply.saved=saved;
   if(doc&&!reply.gen){reply.doc=doc;if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Poftim fișierul.":"Here’s your file."}
+  if(quiz&&!reply.gen){reply.quiz=quiz;if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Hai să vedem ce știi!":"Let’s see what you know!"}
+  if(beatOut&&!reply.gen){reply.beat=beatOut;if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Poftim ritmul.":"Here’s your beat."}
   if(setNow.length){reply.reminders=setNow.map(function(r){return{id:r.id,at:r.at,text:r.text}});if(!reply.text||reply.text==="Got it.")reply.text="Okay, I’ll remind you."}
   if(next.length&&!reply.gen&&!open)reply.next=next;
   if(open){reply.open=open;if(!reply.text||reply.text==="Got it.")reply.text="Opening "+open.h+".";
@@ -985,6 +1023,146 @@ function chime(){try{var c=new (window.AudioContext||window.webkitAudioContext)(
   g.gain.setValueAtTime(.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(.18,c.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.32);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.35);setTimeout(function(){c.close()},600)}catch(e){}}
 if(IS_PC_APP&&S.wake)setTimeout(wakeStart,1500);
 window.novaWake={heard:wakeHeard,state:function(){return{on:wake.on,mic:!!wake.stream}}}; // for testing
+
+/* ---------- beats: a drum loop for the song's genre and BPM, made right here (no service, free) ---------- */
+// makeBeat("hardstyle",150) → {wav: Uint8Array (16-bit mono WAV), seconds, style}
+function beatStyle(genre){
+  var g=String(genre||"").toLowerCase();
+  if(/hoodtrap|mylan|hood/.test(g))return"hoodtrap";
+  if(/uptempo/.test(g))return"uptempo";
+  if(/frenchcore/.test(g))return"frenchcore";
+  if(/gabber|hardcore|terror|speedcore/.test(g))return"hardcore";
+  if(/rawstyle|raw/.test(g))return"rawstyle";
+  if(/hardstyle|hard dance|euphoric/.test(g))return"hardstyle";
+  if(/trap|drill|phonk|hip.?hop|rap/.test(g))return"trap";
+  if(/techno|house|edm|dance|trance|disco/.test(g))return"house";
+  return"pop";
+}
+function makeBeat(genre,bpm){
+  var style=beatStyle(genre);
+  bpm=Math.round(+String(bpm||"").replace(/[^\d.]/g,""))||{hardstyle:150,rawstyle:155,hardcore:175,frenchcore:195,uptempo:220,hoodtrap:160,trap:140,house:126,pop:110}[style];
+  bpm=Math.max(60,Math.min(260,bpm));
+  var SR=44100,bars=4,step=60/bpm/4,len=Math.round(step*16*bars*SR),out=new Float32Array(len);
+  var seed=12345;function rnd(){seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff*2-1}
+  function add(at,buf,gain){var s=Math.round(at*SR);for(var i=0;i<buf.length;i++){var j=(s+i)%len;out[j]+=buf[i]*gain}} // wraps so tails loop smoothly
+  // sounds
+  function kick(o){ // o: f0,f1,pitchDecay,len,drive,hold,click
+    var n=Math.round(o.len*SR),b=new Float32Array(n),ph=0,lp=0;
+    for(var i=0;i<n;i++){var t=i/SR,f=o.f1+(o.f0-o.f1)*Math.exp(-t/o.pitchDecay);ph+=2*Math.PI*f/SR;
+      var env=t<o.hold?1:Math.exp(-(t-o.hold)/o.decay),x=Math.sin(ph);
+      if(t<0.004)x+=rnd()*o.click*(1-t/0.004);
+      x=Math.tanh(x*o.drive)/Math.tanh(o.drive)*env; // distorted body that still fades out
+      lp+=(x-lp)*o.tone;b[i]=lp*(i>n-200?(n-i)/200:1)}
+    return b;
+  }
+  function noise(dur,decay,hp,lpk){var n=Math.round(dur*SR),b=new Float32Array(n),prev=0,h=0,l=0;
+    for(var i=0;i<n;i++){var x=rnd();h=hp*(h+x-prev);prev=x;l+=(h-l)*lpk;b[i]=l*Math.exp(-i/SR/decay)}return b}
+  function clap(){var n=Math.round(0.25*SR),b=new Float32Array(n),prev=0,h=0,l=0;
+    for(var i=0;i<n;i++){var t=i/SR,x=rnd();h=0.9*(h+x-prev);prev=x;l+=(h-l)*0.35;
+      var e=t<0.03?Math.exp(-((t%0.01)/0.003)):Math.exp(-(t-0.03)/0.07);b[i]=l*e}return b}
+  function snare(){var n=Math.round(0.22*SR),b=new Float32Array(n),nz=noise(0.22,0.06,0.85,0.5);
+    for(var i=0;i<n;i++){var t=i/SR;b[i]=nz[i]*0.8+Math.sin(2*Math.PI*185*t)*Math.exp(-t/0.04)*0.6}return b}
+  function sub(freq,dur,glideFrom){var n=Math.round(dur*SR),b=new Float32Array(n),ph=0;
+    for(var i=0;i<n;i++){var t=i/SR,f=glideFrom?freq+(glideFrom-freq)*Math.exp(-t/0.06):freq;ph+=2*Math.PI*f/SR;
+      var e=Math.min(1,t/0.005)*Math.exp(-t/(dur*0.6));b[i]=Math.tanh(Math.sin(ph)*1.6)*e*(i>n-300?(n-i)/300:1)}return b}
+  var K={
+    hardstyle:kick({f0:420,f1:52,pitchDecay:0.02,len:step*4*0.9,hold:0.05,decay:0.1,drive:4,tone:0.3,click:0.6}),
+    rawstyle:kick({f0:520,f1:55,pitchDecay:0.016,len:step*4*0.9,hold:0.06,decay:0.09,drive:8,tone:0.4,click:0.8}),
+    hardcore:kick({f0:600,f1:60,pitchDecay:0.013,len:step*4*0.85,hold:0.04,decay:0.07,drive:10,tone:0.45,click:0.9}),
+    frenchcore:kick({f0:650,f1:62,pitchDecay:0.012,len:step*4*0.85,hold:0.035,decay:0.06,drive:12,tone:0.5,click:1}),
+    uptempo:kick({f0:700,f1:65,pitchDecay:0.01,len:step*4*0.85,hold:0.03,decay:0.05,drive:14,tone:0.55,click:1}),
+    hoodtrap:kick({f0:480,f1:58,pitchDecay:0.014,len:step*4*0.8,hold:0.03,decay:0.07,drive:6,tone:0.38,click:0.7}),
+    trap:kick({f0:180,f1:48,pitchDecay:0.03,len:0.5,hold:0.02,decay:0.25,drive:1.5,tone:0.25,click:0.3}),
+    house:kick({f0:160,f1:50,pitchDecay:0.03,len:0.4,hold:0.01,decay:0.12,drive:1.4,tone:0.25,click:0.4}),
+    pop:kick({f0:150,f1:50,pitchDecay:0.03,len:0.35,hold:0.01,decay:0.1,drive:1.3,tone:0.25,click:0.3})
+  }[style];
+  var hatC=noise(0.05,0.012,0.97,0.9),hatO=noise(0.2,0.06,0.96,0.9),CL=clap(),SN=snare();
+  var bars4=[0,1,2,3];
+  bars4.forEach(function(bar){
+    var b0=bar*16*step;
+    for(var s=0;s<16;s++){var t=b0+s*step,beat=s%4===0;
+      if(style==="hardstyle"||style==="rawstyle"){
+        if(beat&&!(bar===3&&s===12))add(t,K,0.9);
+        if(s%4===2)add(t,hatO,0.22);
+        if(s===4||s===12)add(t,CL,0.45);
+        if(bar===3&&s>=12)add(t,SN,0.25+0.08*(s-12)); // little build into the loop
+      }else if(style==="hardcore"||style==="frenchcore"||style==="uptempo"){
+        if(beat)add(t,K,0.9);
+        if(style==="uptempo"&&bar===3&&s>=12&&!beat)add(t,K,0.8); // kick roll
+        if(s%4===2)add(t,hatO,0.2);
+        if(style==="frenchcore"){if(s===4||s===12)add(t,SN,0.35);if(bar===3&&s>=8)add(t,SN,0.18+0.03*(s-8))}
+        else if(s===4||s===12)add(t,CL,0.35);
+      }else if(style==="hoodtrap"){
+        if(beat)add(t,K,0.85);
+        add(t,hatC,s%2?0.12:0.18);
+        if((bar===1||bar===3)&&s>=13){add(t+step/2,hatC,0.12);add(t+step/3,hatC,0.1)} // hi-hat rolls
+        if(s===4||s===12)add(t,CL,0.5);
+        if(s===0)add(t,sub(55,step*6,82),0.45);
+        if(s===10)add(t,sub(bar%2?49:65.4,step*5,0),0.4);
+      }else if(style==="trap"){
+        if(s===0||(s===10&&bar%2)||(s===7&&bar===3))add(t,K,0.8);
+        if(s===0||s===10)add(t,sub(55,step*6,0),0.5);
+        add(t,hatC,s%2?0.1:0.16);
+        if(bar%2&&s>=14){add(t+step/2,hatC,0.1)}
+        if(s===8)add(t,CL,0.5);
+      }else if(style==="house"){
+        if(beat)add(t,K,0.85);
+        if(s%4===2)add(t,hatO,0.2);
+        if(s===4||s===12)add(t,CL,0.4);
+      }else{
+        if(s===0||s===8||(s===10&&bar%2))add(t,K,0.85);
+        if(s===4||s===12)add(t,SN,0.5);
+        if(s%2===0)add(t,hatC,0.16);
+      }
+    }
+  });
+  // loudness: gentle limiter, then normalise
+  var peak=0;for(var i=0;i<len;i++){out[i]=Math.tanh(out[i]*0.9);var a=Math.abs(out[i]);if(a>peak)peak=a}
+  var k=peak?0.89/peak:1,buf=new ArrayBuffer(44+len*2),v=new DataView(buf);
+  function str(o,s){for(var c=0;c<s.length;c++)v.setUint8(o+c,s.charCodeAt(c))}
+  str(0,"RIFF");v.setUint32(4,36+len*2,true);str(8,"WAVEfmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,SR,true);v.setUint32(28,SR*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);str(36,"data");v.setUint32(40,len*2,true);
+  for(i=0;i<len;i++)v.setInt16(44+i*2,Math.max(-32767,Math.min(32767,Math.round(out[i]*k*32767))),true);
+  return{wav:new Uint8Array(buf),seconds:len/SR,style:style,bpm:bpm};
+}
+
+var beatAudio=null,beatOn=-1,beatUrls={};
+function beatKey(b){return beatStyle(b.genre)+"|"+b.bpm}
+function beatUrl(b){var k=beatKey(b);if(!beatUrls[k])beatUrls[k]=URL.createObjectURL(new Blob([makeBeat(b.genre,b.bpm).wav],{type:"audio/wav"}));return beatUrls[k]}
+function beatCard(b,i){var ro=isRo(),on=beatOn===i&&beatAudio&&!beatAudio.paused;
+  return'<div class="beatcard'+(on?" on":"")+'"><div class="pads">'+new Array(9).join("<i></i>")+'</div><div class="grow"><b>'+esc(b.genre.charAt(0).toUpperCase()+b.genre.slice(1))+' · '+b.bpm+' BPM</b><span>'+(ro?"Ritm de tobe în buclă":"Drum loop")+'</span></div>'+
+  '<button class="main" data-act="beat" data-i="'+i+'">'+(on?(ro?"■ Stop":"■ Stop"):(ro?"▶ Ascultă ritmul":"▶ Play beat"))+'</button><button data-act="beatdl" data-i="'+i+'">'+(ro?"Descarcă .wav":"Download .wav")+'</button></div>'}
+function playBeat(b,i){
+  if(beatAudio&&beatOn===i&&!beatAudio.paused){beatAudio.pause();beatOn=-1;render();return}
+  stopSpeaking();if(!beatAudio){beatAudio=new Audio();beatAudio.loop=true;beatAudio.addEventListener("pause",function(){render()})}
+  beatAudio.pause();beatAudio.src=beatUrl(b);beatOn=i;beatAudio.currentTime=0;beatAudio.play().then(render,function(){beatOn=-1;render()});
+}
+function saveBeat(b){var r=makeBeat(b.genre,b.bpm);saveBlob(new Blob([r.wav],{type:"audio/wav"}),safeName("Nova "+r.style+" "+r.bpm+" BPM loop")+".wav")}
+
+/* ---------- Quiz me ---------- */
+function parseQuiz(raw){
+  try{var j=raw.indexOf("{"),k=raw.lastIndexOf("}");if(j<0||k<j)return null;var d=JSON.parse(raw.slice(j,k+1));
+    var qs=(d.questions||[]).map(function(q){var o=(q.options||[]).map(String).slice(0,6),a=+q.answer;
+      if(typeof q.answer==="string"&&isNaN(a)){a=o.indexOf(q.answer)}
+      return{q:String(q.q||q.question||"").slice(0,400),o:o,a:a,why:String(q.why||q.explanation||"").slice(0,500)}}).filter(function(q){return q.q&&q.o.length>=2&&q.a>=0&&q.a<q.o.length}).slice(0,15);
+    return qs.length?{title:String(d.title||"Quiz").slice(0,80),qs:qs,picks:[],cur:0}:null}catch(e){return null}
+}
+function quizStart(){var ro=isRo();$("input").value=ro?"Fă-mi un quiz despre ":"Quiz me on ";autoGrow();updateAct();$("input").focus();
+  toast(ro?"Scrie un subiect sau atașează o poză cu notițele tale (+)":"Type a topic, or attach a photo of your notes with +")}
+function quizPick(i,o){var z=msgs[i].quiz;if(z.picks[z.cur]!=null)return;z.picks[z.cur]=o;vibrate();persist();render()}
+function quizCard(z,i){
+  var ro=isRo(),n=z.qs.length,h='<div class="quiz"><div class="top"><b>'+esc(z.title)+'</b><span>';
+  if(z.cur>=n){var right=z.qs.filter(function(q,k){return z.picks[k]===q.a}).length;
+    h+=(ro?"Gata":"Done")+'</span></div><div class="score">'+right+" / "+n+'</div><div>'+esc(right===n?(ro?"Perfect! 🎉":"Perfect! 🎉"):right>=n*0.7?(ro?"Foarte bine!":"Great job!"):right>=n*0.4?(ro?"Nu e rău, mai exersează puțin.":"Not bad, a bit more practice."):(ro?"Hai să mai încercăm.":"Let’s practise some more."))+'</div>';
+    var miss=z.qs.map(function(q,k){return z.picks[k]===q.a?"":'<li>'+esc(q.q)+' → <b>'+esc(q.o[q.a])+'</b></li>'}).join("");
+    if(miss)h+='<ul class="missed">'+miss+'</ul>';
+    return h+'<div class="row"><button class="main" data-act="qagain" data-i="'+i+'">'+(ro?"Încearcă din nou":"Try again")+'</button><button data-act="qnew" data-i="'+i+'">'+(ro?"Întrebări noi":"New questions")+'</button></div></div>'}
+  var q=z.qs[z.cur],p=z.picks[z.cur];
+  h+=(ro?"Întrebarea ":"Question ")+(z.cur+1)+(ro?" din ":" of ")+n+'</span></div><div class="bar"><i style="width:'+(100*z.cur/n)+'%"></i></div><div class="q">'+esc(q.q)+'</div><div class="opts">'+
+    q.o.map(function(t,k){var c=p==null?"":k===q.a?"right":k===p?"wrong":"";return'<button data-act="qpick" data-i="'+i+'" data-o="'+k+'"'+(c?' class="'+c+'"':"")+(p!=null?" disabled":"")+'>'+"ABCDEF"[k]+") "+esc(t)+'</button>'}).join("")+'</div>';
+  if(p!=null)h+='<div class="why"><b>'+(p===q.a?(ro?"Corect! ":"Correct! "):(ro?"Nu chiar. ":"Not quite. "))+'</b>'+esc(q.why)+'</div><div class="row"><button class="main" data-act="qnext" data-i="'+i+'">'+(z.cur+1<n?(ro?"Următoarea →":"Next →"):(ro?"Vezi scorul":"See my score"))+'</button></div>';
+  return h+'</div>';
+}
 
 /* ---------- files Nova makes: Word, Excel, PDF, text ---------- */
 var FILE_TYPES={docx:"Word document",xlsx:"Excel spreadsheet",pdf:"PDF",txt:"Text file",md:"Text file",csv:"CSV spreadsheet"};
@@ -1404,9 +1582,10 @@ function setPhoto(p){photo=p;var c=$("photoChip");c.hidden=!p;
   if(p){var f=!!p.file;c.querySelector("img").hidden=f;c.querySelector(".ficon").hidden=!f;
     if(f){c.querySelector(".ficon").textContent=p.kind;c.querySelector("span").textContent=p.name}
     else{c.querySelector("img").src=p.url;c.querySelector("span").textContent=p.screen?(isRo()?"Ecranul tău":"Your screen"):"Photo attached"}}
-  var acts=$("picActs"),ro=isRo();acts.hidden=!p||!!p.file;
-  if(p&&!p.file)acts.innerHTML=(p.screen?[ro?"Ce e pe ecranul meu?":"What’s on my screen?",ro?"Explică eroarea asta":"Explain this error",ro?"Rezolvă pas cu pas":"Solve this step by step"]
-      :[ro?"Rezolvă pas cu pas":"Solve this step by step",ro?"Explică-mi asta":"Explain this to me",ro?"Verifică-mi răspunsul":"Check my answer"]).map(function(q){return'<button data-picq="'+esc(q)+'">'+esc(q)+'</button>'}).join("");
+  var acts=$("picActs"),ro=isRo();acts.hidden=!p;
+  if(p&&p.file){acts.innerHTML=[ro?"Rezumă fișierul":"Summarize this file",ro?"Fă-mi un quiz din asta":"Quiz me on this"].map(function(q){return'<button data-picq="'+esc(q)+'">'+esc(q)+'</button>'}).join("")}
+  else if(p)acts.innerHTML=(p.screen?[ro?"Ce e pe ecranul meu?":"What’s on my screen?",ro?"Explică eroarea asta":"Explain this error",ro?"Rezolvă pas cu pas":"Solve this step by step"]
+      :[ro?"Rezolvă pas cu pas":"Solve this step by step",ro?"Explică-mi asta":"Explain this to me",ro?"Verifică-mi răspunsul":"Check my answer",ro?"Fă-mi un quiz din asta":"Quiz me on this"]).map(function(q){return'<button data-picq="'+esc(q)+'">'+esc(q)+'</button>'}).join("");
   updateAct()}
 // "My screen": one picture of your screen (computers only)
 var canScreen=!!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia)&&matchMedia("(pointer:fine)").matches;
@@ -1548,7 +1727,7 @@ document.addEventListener("visibilitychange",function(){if(document.visibilitySt
   try{history.replaceState(null,"",location.pathname)}catch(e){}
 })();
 $("plus").addEventListener("click",function(e){if(busy)return;e.stopPropagation();$("plusMenu").querySelector("[data-plus=screen]").hidden=!canScreen;$("plusMenu").hidden=!$("plusMenu").hidden});
-$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else if(w==="python")showLessons();else $("file").click()});
+$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else if(w==="python")showLessons();else if(w==="quiz")quizStart();else $("file").click()});
 document.addEventListener("click",function(e){if(!$("plusMenu").hidden&&!e.target.closest("#plusMenu"))$("plusMenu").hidden=true});
 $("picActs").addEventListener("click",function(e){var ls=e.target.closest("[data-lesson]");if(ls){startLesson(+ls.getAttribute("data-lesson"));return}
   var g=e.target.closest("[data-genre]");if(g){var ro=isRo(),x=g.getAttribute("data-genre");$("input").value=(ro?"Scrie-mi o piesă completă "+x+" despre ":"Write me a full "+x+" song about ");$("picActs").hidden=true;autoGrow();updateAct();$("input").focus();return}
@@ -1604,6 +1783,12 @@ $("inner").addEventListener("click",function(e){
   if(act==="dl"&&msgs[i].doc)downloadFile(msgs[i].doc);
 
   if(act==="report")openReport(i);
+  if(act==="beat"&&msgs[i].beat)playBeat(msgs[i].beat,i);
+  if(act==="beatdl"&&msgs[i].beat)saveBeat(msgs[i].beat);
+  if(act==="qpick"&&msgs[i].quiz)quizPick(i,+a.getAttribute("data-o"));
+  if(act==="qnext"&&msgs[i].quiz){msgs[i].quiz.cur++;persist();render()}
+  if(act==="qagain"&&msgs[i].quiz){msgs[i].quiz.picks=[];msgs[i].quiz.cur=0;persist();render()}
+  if(act==="qnew"&&msgs[i].quiz&&!busy)send(isRo()?"Fă-mi un alt quiz cu întrebări noi pe aceeași temă.":"Give me another quiz with new questions on the same topic.");
   if(act==="sharenova"){render.askShare=false;shareNova();render()}
   if(act==="noshare"){render.askShare=false;store("nova.askedShare",true);render()}
   if(act==="retry")retry();
