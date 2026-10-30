@@ -504,7 +504,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.30-a";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.30-b";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -889,7 +889,7 @@ function toReply(answer){
   if(quiz&&!reply.gen){reply.quiz=quiz;if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Hai să vedem ce știi!":"Let’s see what you know!"}
   if(cardsB.data&&!reply.gen){var dk=deckFromJson(cardsB.data);if(dk){reply.deck={id:dk.id,title:dk.title,n:dk.cards.length};if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Am făcut cartonașele.":"Your flashcards are ready."}}
   if(planB.data&&!reply.gen){var pl=planFromJson(planB.data);if(pl){reply.plan=pl;if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Poftim planul tău.":"Here’s your plan."}}
-  if(arrB.data&&!reply.gen){var ar=arrFromJson(arrB.data);if(ar){reply.arr=ar;if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Poftim aranjamentul.":"Here’s your arrangement."}}
+  if(arrB.data&&!reply.gen){var ar=arrFromJson(arrB.data);if(!ar)console.log("[Nova] arrangement not readable:",JSON.stringify(arrB.data).slice(0,400));if(ar){reply.arr=ar;if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Poftim aranjamentul.":"Here’s your arrangement."}}
   if(beatOut&&!reply.gen){reply.beat=beatOut;if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Poftim ritmul.":"Here’s your beat."}
   if(setNow.length){reply.reminders=setNow.map(function(r){return{id:r.id,at:r.at,text:r.text}});if(!reply.text||reply.text==="Got it.")reply.text="Okay, I’ll remind you."}
   if(next.length&&!reply.gen&&!open)reply.next=next;
@@ -1480,8 +1480,15 @@ function planStart(){$("input").value=isRo()?"Planifică-mi ziua: ":"Plan my day
 
 /* ---------- Song arranger ---------- */
 var ENERGY_COL={none:"#5b6070",light:"#7fb3ff",build:"#ffb627",drop:"#ff5fa2",full:"#ff5fa2",break:"#9b8cff",outro:"#7fb3ff"};
-function arrFromJson(d){var secs=(d.sections||[]).map(function(x){return{name:String(x.name||"Part").slice(0,30),bars:Math.max(1,Math.min(64,Math.round(+x.bars)||8)),energy:String(x.energy||"drop").toLowerCase().slice(0,12),chords:String(x.chords||d.chords||"").slice(0,120),melody:String(x.melody||"").slice(0,600)}}).slice(0,24);
-  if(!secs.length)return null;return{title:String(d.title||"Nova song").slice(0,60),genre:String(d.genre||"hardstyle").slice(0,30),bpm:beatBpm(beatStyle(d.genre),d.bpm),key:String(d.key||"").slice(0,20),melody:String(d.melody||"").slice(0,800),sections:secs}}
+// finds the list of sections whatever Nova called it (sections, structure, parts, arrangement.sections…)
+function findSections(d,depth){if(!d||typeof d!=="object"||depth>3)return null;if(Array.isArray(d))return d.length&&typeof d[0]==="object"&&d[0]&&!Array.isArray(d[0])?d:null;
+  var keys=["sections","structure","parts","arrangement","song","track","form","layout"];for(var i=0;i<keys.length;i++){var r=findSections(d[keys[i]],depth+1);if(r)return r}
+  for(var k in d){var r2=findSections(d[k],depth+1);if(r2)return r2}return null}
+function arrFromJson(d){var top=d&&(d.arrangement&&!Array.isArray(d.arrangement)?Object.assign({},d,d.arrangement):d)||{};
+  var secs=(findSections(d,0)||[]).map(function(x){return{name:String(x.name||x.section||x.part||x.title||x.type||"Part").slice(0,30),bars:Math.max(1,Math.min(64,Math.round(parseFloat(x.bars||x.length||x.measures||x.bar_count))||8)),energy:energyOf(x),chords:(Array.isArray(x.chords)?x.chords.join(" "):String(x.chords||x.progression||top.chords||"")).slice(0,120),melody:String(x.melody||"").slice(0,600)}}).slice(0,24);
+  if(!secs.length)return null;return{title:String(top.title||top.name||"Nova song").slice(0,60),genre:String(top.genre||"hardstyle").slice(0,30),bpm:beatBpm(beatStyle(top.genre),top.bpm||top.tempo),key:String(top.key||"").slice(0,20),melody:(Array.isArray(top.melody)?top.melody.join(" "):String(top.melody||top.hook||"")).slice(0,800),sections:secs}}
+function energyOf(x){var e=String(x.energy||x.intensity||x.type||x.name||x.section||"").toLowerCase();
+  return /break|bridge|calm|quiet/.test(e)?"break":/build|rise|riser|pre/.test(e)?"build":/drop|chorus|climax|main|hook|full|high/.test(e)?"drop":/outro|end/.test(e)?"outro":/intro|light|low|verse/.test(e)?"light":/none|silent/.test(e)?"none":"drop"}
 function arrCard(a,i){var ro=isRo(),bars=a.sections.reduce(function(s,x){return s+x.bars},0),sec=Math.round(bars*4*60/a.bpm),on=beatOn===i&&beatAudio&&!beatAudio.paused;
   var h='<div class="arr"><div class="top"><b>🎛️ '+esc(a.title)+'</b><span>'+esc([a.genre,a.bpm+" BPM",a.key,bars+(ro?" măsuri":" bars"),Math.floor(sec/60)+":"+("0"+sec%60).slice(-2)].filter(Boolean).join(" · "))+'</span></div><div class="secs">';
   a.sections.forEach(function(x){var col=ENERGY_COL[(x.energy.match(/none|light|build|drop|full|break|outro/)||["drop"])[0]];h+='<i style="flex:'+x.bars+';background:'+col+'" title="'+esc(x.name+" · "+x.bars)+'">'+esc(x.name)+'</i>'});

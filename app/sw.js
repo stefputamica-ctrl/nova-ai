@@ -1,6 +1,6 @@
 // Nova keeps its own files on the device so it opens fast and works as an installed app.
 // Answers and pictures always come fresh from the internet.
-const CACHE = "nova-v33";
+const CACHE = "nova-v34";
 const FILES = ["./", "index.html", "config.js", "manifest.webmanifest", "wp-space.jpg", "wp-space-light.jpg", "wp-space-wide.jpg", "wp-space-light-wide.jpg", "wp-sky.jpg","wp-sky-wide.jpg",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "icons/favicon.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES))); self.skipWaiting(); });
