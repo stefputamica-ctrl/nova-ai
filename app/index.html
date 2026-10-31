@@ -373,7 +373,7 @@ a{color:inherit}
     <div class="card glass">
       <div class="row"><div class="grow"><div class="label">Read replies aloud</div><div class="note">Nova speaks every answer.</div></div><button class="switch" role="switch" id="sSpeak" aria-label="Read replies aloud"></button></div>
       <div class="stack"><div class="label">I speak</div><div class="note">Pick Română so Nova understands you when you talk in Romanian. Nova answers in the language you use.</div><div class="seg glass" data-key="lang"><button data-v="auto">Automatic</button><button data-v="en">English</button><button data-v="ro">Română</button></div></div>
-      <div class="stack"><div class="label">Nova’s voice</div><div class="seg glass" data-key="nvoice"><button data-v="Neno">Neno</button><button data-v="Kira">Kira</button><button data-v="Sami">Sami</button><button data-v="off">Built-in</button></div><div class="note" id="nvNote">Neno is deep and velvety, Kira is cool and confident, Sami is calm and low. They’re free Google voices on your Gemini key: 10 spoken answers a day, then Nova uses the built-in voice until tomorrow.</div></div>
+      <div class="stack"><div class="label">Nova’s voice</div><div class="seg glass" data-key="nvoice"><button data-v="Neno">Neno</button><button data-v="Kira">Kira</button><button data-v="Sami">Sami</button><button data-v="off">Built-in</button></div><div class="note" id="nvNote">Neno is deep and velvety, Kira is cool and confident, Sami is calm and low. They’re free Google voices on your Gemini key: 10 spoken answers a day, then Nova switches to the free voice that sounds closest (in Microsoft Edge: Christopher, Brian or Ava) until tomorrow.</div></div>
       <div class="stack"><div class="label">Built-in voice</div><select class="field" id="sVoice"></select><div class="note">Automatic picks the most natural voice for each language. Edge on PC has the best Romanian voices.</div></div>
       <div class="stack"><div class="label">Speed</div><div class="seg glass" data-key="rate"><button data-v="0.85">Slow</button><button data-v="1">Normal</button><button data-v="1.2">Fast</button></div></div>
       <div class="stack"><div class="label">Pitch</div><div class="seg glass" data-key="pitch"><button data-v="0.85">Lower</button><button data-v="1">Normal</button><button data-v="1.15">Higher</button></div></div>
@@ -518,7 +518,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.31-d";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.31-e";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -1969,9 +1969,19 @@ function langOf(t){
   var marks=(t.match(/[ăâîșțşţ]/gi)||[]).length,words=(" "+t.toLowerCase().replace(/[.,!?;:()"“”]/g," ")+" ").match(/ (și|si|este|sunt|pentru|că|nu|cu|pe|în|eu|tu|ce|mai|foarte|bună|buna|salut|mulțumesc|poți|vreau|despre|acest|această) /g)||[];
   return marks>=2||words.length>=3?"ro":"en";
 }
+// when Google's voices are used up for the day, the free voice that sounds closest to the one picked
+// (Microsoft's natural voices exist in Edge; elsewhere this finds nothing and the best built-in voice is used)
+var NEAR={Neno:{en:["Christopher","Andrew","Guy","Davis"],ro:["Emil"]},Sami:{en:["Brian","Eric","Roger","Steffan"],ro:["Emil"]},Kira:{en:["Ava","Emma","Jenny","Aria","Michelle"],ro:["Alina"]}};
+function nearVoice(lang){
+  var m=NEAR[S.nvoice];if(!m)return null;var re=lang==="ro"?/^ro/i:/^en/i;
+  var human=voices.filter(function(v){return re.test(v.lang)&&/natural|neural/i.test(v.name)});
+  for(var i=0;i<m[lang].length;i++){var nm=new RegExp("\\b"+m[lang][i]+"\\b","i"),f=human.filter(function(v){return nm.test(v.name)})[0];if(f)return f}
+  return null;
+}
 function pickVoice(lang){
   var re=lang==="ro"?/^ro/i:/^en/i;
   if(S.voice){var f=voices.filter(function(v){return v.voiceURI===S.voice})[0];if(f&&re.test(f.lang))return f}
+  var nv=nearVoice(lang);if(nv)return nv;
   return voices.filter(function(v){return re.test(v.lang)}).sort(function(a,b){return score(b)-score(a)})[0]||null;
 }
 function forSpeech(t){return t.replace(/```[\s\S]*?```/g," ").replace(/[*_#`>|]/g,"").replace(/https?:\/\/\S+/g,"link").replace(/\s+/g," ").trim()}
