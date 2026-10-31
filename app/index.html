@@ -289,6 +289,14 @@ a{color:inherit}
 .welcome{border-radius:24px;padding:20px;display:grid;gap:12px;margin-bottom:16px}
 .welcome h3{margin:0;font-size:20px}
 .welcome p{margin:0;color:var(--dim);font-size:15px}
+.ksteps{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.ksteps li{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;padding:8px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.ksteps svg{width:96px;height:60px;display:block;border-radius:10px}
+.ksteps b{display:block;font-size:14.5px}
+.ksteps span{color:var(--dim);font-size:13.5px}
+.kout{font-size:14px;min-height:1.2em}
+.kout.ok{color:#5fd38d}.kout.bad{color:#ff8a7a}
+.krow{display:flex;gap:8px;flex-wrap:wrap}.krow .btn{flex:1}
 .updbar{position:fixed;z-index:45;left:50%;top:calc(var(--top) + 76px);transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:8px 8px 8px 16px;border-radius:999px;font-weight:600;font-size:14px;white-space:nowrap;max-width:calc(100% - 24px)}
 .updbar span{overflow:hidden;text-overflow:ellipsis}
 .updbar .btn{padding:8px 16px;border-radius:999px;background:var(--sun);color:#1b1f2a;font-weight:700;border:0}
@@ -351,6 +359,8 @@ a{color:inherit}
       <div class="stack">
         <div class="note">Nova uses Google Gemini to answer. Get a free key at <b>aistudio.google.com</b> → Get API key, and paste it here. It stays only on this device.</div>
         <input class="field" id="sKey" type="password" placeholder="Paste your Gemini key" autocomplete="off">
+        <div class="krow"><button class="btn" type="button" id="sKeyCheck">Check key</button><button class="btn ghost" type="button" id="sKeyHelp">How to get a key</button></div>
+        <div class="kout" id="sKeyOut" role="status"></div>
       </div>
       <div class="stack">
         <div class="label">Pollinations key (optional)</div>
@@ -507,7 +517,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.31-a";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.31-b";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -580,13 +590,42 @@ function applyLook(){
   $("segCustom").hidden=!S.customWall;
 }
 
+/* ---------- Gemini key guide + check ---------- */
+var KEY_URL="https://aistudio.google.com/apikey";
+function kpic(inner){return '<svg viewBox="0 0 96 60" aria-hidden="true"><rect width="96" height="60" rx="10" fill="#f4f5f8"/><rect x="0" y="0" width="96" height="11" rx="10" fill="#dfe2ea"/><rect x="0" y="6" width="96" height="5" fill="#dfe2ea"/><circle cx="7" cy="5.5" r="1.8" fill="#ff6b5e"/><circle cx="13" cy="5.5" r="1.8" fill="#ffc23d"/><circle cx="19" cy="5.5" r="1.8" fill="#3fcf6a"/>'+inner+'</svg>'}
+var KEY_STEPS='<ol class="ksteps">'+
+ '<li>'+kpic('<rect x="25" y="2.5" width="64" height="6" rx="3" fill="#fff"/><text x="29" y="7.4" font-size="4.6" fill="#555" font-family="sans-serif">aistudio.google.com</text><rect x="10" y="20" width="76" height="8" rx="2" fill="#e6e8ee"/><rect x="10" y="33" width="50" height="5" rx="2" fill="#e6e8ee"/><rect x="10" y="42" width="60" height="5" rx="2" fill="#e6e8ee"/>')+'<div><b>1. Open Google AI Studio</b><span>Tap the button below and sign in with your Google account.</span></div></li>'+
+ '<li>'+kpic('<rect x="4" y="15" width="26" height="41" rx="3" fill="#e9ebf1"/><rect x="7" y="20" width="20" height="4" rx="2" fill="#cfd3dc"/><rect x="6" y="28" width="22" height="7" rx="3.5" fill="#2d6cdf"/><text x="8" y="33" font-size="4" fill="#fff" font-family="sans-serif">Get API key</text><rect x="7" y="40" width="20" height="4" rx="2" fill="#cfd3dc"/><rect x="36" y="18" width="54" height="34" rx="3" fill="#fff" stroke="#e1e4ea"/><path d="M24 36l8 5-3.6.6 2 4-1.6.8-2-4-2.8 2.4z" fill="#111"/>')+'<div><b>2. Click “Get API key”</b><span>It’s in the menu on the left (or at the top on a phone).</span></div></li>'+
+ '<li>'+kpic('<rect x="8" y="17" width="80" height="37" rx="3" fill="#fff" stroke="#e1e4ea"/><text x="13" y="26" font-size="5" fill="#333" font-family="sans-serif" font-weight="bold">API keys</text><rect x="52" y="20" width="32" height="9" rx="4.5" fill="#2d6cdf"/><text x="55.5" y="26" font-size="4.2" fill="#fff" font-family="sans-serif">Create API key</text><rect x="13" y="35" width="70" height="5" rx="2" fill="#eef0f4"/><rect x="13" y="44" width="54" height="5" rx="2" fill="#eef0f4"/><path d="M70 30l8 5-3.6.6 2 4-1.6.8-2-4-2.8 2.4z" fill="#111"/>')+'<div><b>3. Click “Create API key”</b><span>If it asks for a project, pick the one it suggests.</span></div></li>'+
+ '<li>'+kpic('<rect x="8" y="20" width="80" height="14" rx="3" fill="#fff" stroke="#2d6cdf"/><text x="12" y="29" font-size="5" fill="#333" font-family="monospace">AIzaSy••••••••••</text><rect x="70" y="22.5" width="15" height="9" rx="2" fill="#2d6cdf"/><rect x="74" y="24.5" width="5" height="5.5" rx="1" fill="none" stroke="#fff" stroke-width=".9"/><rect x="76" y="23.5" width="5" height="5.5" rx="1" fill="#2d6cdf" stroke="#fff" stroke-width=".9"/><path d="M48 39v10m-4-4l4 4 4-4" stroke="#2d6cdf" stroke-width="1.6" fill="none"/><text x="30" y="57" font-size="4.6" fill="#555" font-family="sans-serif">paste it into Nova</text>')+'<div><b>4. Copy the key and paste it here</b><span>It starts with “AIza”. Then tap “Check key and start”.</span></div></li>'+
+ '</ol>';
+function openKeyPage(){window.open(KEY_URL,"_blank")}
+// asks Google about the model (no answer is generated, so it uses none of the daily allowance)
+function checkKey(k){
+  k=String(k||"").trim();
+  if(!k)return Promise.resolve({ok:false,msg:"Paste your key first."});
+  if(/\s/.test(k))return Promise.resolve({ok:false,msg:"The key has a space in it. Copy it again with the copy button in AI Studio."});
+  return fetch("https://generativelanguage.googleapis.com/v1beta/models/"+MODEL,{headers:{"x-goog-api-key":k}})
+  .then(function(r){return r.json().catch(function(){return{}}).then(function(d){
+    var m=(d.error&&d.error.message)||"";
+    if(r.ok)return{ok:true,msg:"Key works ✓"};
+    if(r.status===429)return{ok:true,msg:"Key works ✓ (it used up today’s free allowance, so answers start again later)"};
+    if(BADKEY.test(m)||r.status===400)return{ok:false,msg:"Google says this key isn’t valid."+(/^AIza/.test(k)?" Copy it again and paste the whole thing.":" Gemini keys start with “AIza”: make sure you copied the key, not the project name.")};
+    if(r.status===403)return{ok:false,msg:"Google blocked this key ("+(m.slice(0,140)||"permission denied")+"). Make a new key in AI Studio."};
+    return{ok:false,msg:"Google said ("+r.status+"): "+(m.slice(0,160)||"no details")};
+  })},function(){return{ok:null,msg:"Couldn’t reach Google. Check your internet and try again."}});
+}
+function showKeyResult(el,res){el.textContent=res.msg;el.className="kout"+(res.ok?" ok":res.ok===false?" bad":"")}
+
 /* ---------- rendering ---------- */
 function lowLayout(){return S.wallpaper==="space"||S.wallpaper==="custom"}
 function render(){
   var h="";
   if(!S.key){
-    h+='<div class="welcome glass"><h3>Welcome to Nova</h3><p>To start, paste your free Google Gemini key. Get one at aistudio.google.com → Get API key. It stays only on this device.</p>'+
-       '<input class="field" id="wKey" type="password" placeholder="Paste your Gemini key" autocomplete="off"><button class="btn" id="wSave">Start chatting</button></div>';
+    h+='<div class="welcome glass"><h3>Welcome to Nova</h3><p>Nova runs on Google Gemini. Your own free key takes about a minute to get:</p>'+KEY_STEPS+
+       '<button class="btn ghost" type="button" id="wOpen">Open Google AI Studio <span aria-hidden="true">↗</span></button>'+
+       '<input class="field" id="wKey" type="password" placeholder="Paste your Gemini key (starts with AIza)" autocomplete="off"><button class="btn" id="wSave">Check key and start</button>'+
+       '<div class="kout" id="wOut" role="status"></div><p style="font-size:13px">The key stays only on this device. It’s free; Google gives a daily allowance.</p></div>';
   }
   if(!msgs.length&&S.key){
     var low=lowLayout();
@@ -2162,7 +2201,13 @@ $("inner").addEventListener("click",function(e){
   var ur=e.target.closest("[data-unremind]");if(ur){unremind(ur.getAttribute("data-unremind"));return}
   var s=e.target.closest(".starter,.next button");if(s){send(s.getAttribute("data-q"));return}
   var v=e.target.closest("[data-view]");if(v){openViewer(v.getAttribute("data-view"));return}
-  if(e.target.id==="wSave"){var k=$("wKey").value.trim();if(k){S.key=k;save();render.error="";render();toast("Key saved on this device")}return}
+  if(e.target.closest("#wOpen")){openKeyPage();return}
+  if(e.target.id==="wSave"){var k=$("wKey").value.trim(),out=$("wOut"),b=e.target;if(b.disabled)return;
+    if(!k){showKeyResult(out,{ok:false,msg:"Paste your key first."});return}
+    b.disabled=true;out.className="kout";out.textContent="Checking your key with Google…";
+    checkKey(k).then(function(res){b.disabled=false;
+      if(res.ok===false){showKeyResult(out,res);return}
+      S.key=k;save();render.error="";render();toast(res.ok?"Key works ✓ saved on this device":"Key saved. Couldn’t check it right now")});return}
   var a=e.target.closest("[data-act]");if(!a)return;var act=a.getAttribute("data-act"),i=+a.getAttribute("data-i");
   if(act==="listen")say(msgs[i].text);
   if(act==="runcode"){runBlock(a);return}
@@ -2207,7 +2252,11 @@ $("vWall").addEventListener("click",function(){
   if(viewing.indexOf("data:")===0){setCustomWall(viewing)}else setWallFromUrl(viewing);
 });
 // settings inputs
-$("sKey").addEventListener("change",function(){S.key=this.value.trim();save();render()});
+$("sKey").addEventListener("change",function(){S.key=this.value.trim();save();render();$("sKeyOut").textContent=""});
+$("sKeyCheck").addEventListener("click",function(){var b=this,out=$("sKeyOut"),k=$("sKey").value.trim();
+  if(k!==S.key){S.key=k;save();render()}
+  b.disabled=true;out.className="kout";out.textContent="Checking…";checkKey(k).then(function(res){b.disabled=false;showKeyResult(out,res)})});
+$("sKeyHelp").addEventListener("click",function(){var out=$("sKeyOut");out.className="kout";out.innerHTML=KEY_STEPS;openKeyPage()});
 $("sPicKey").addEventListener("change",function(){S.picKey=this.value.trim();save()});
 $("sCustom").addEventListener("input",function(){S.custom=this.value;save()});
 $("sVoice").addEventListener("change",function(){S.voice=this.value;save()});
