@@ -373,7 +373,8 @@ a{color:inherit}
     <div class="card glass">
       <div class="row"><div class="grow"><div class="label">Read replies aloud</div><div class="note">Nova speaks every answer.</div></div><button class="switch" role="switch" id="sSpeak" aria-label="Read replies aloud"></button></div>
       <div class="stack"><div class="label">I speak</div><div class="note">Pick Română so Nova understands you when you talk in Romanian. Nova answers in the language you use.</div><div class="seg glass" data-key="lang"><button data-v="auto">Automatic</button><button data-v="en">English</button><button data-v="ro">Română</button></div></div>
-      <div class="stack"><div class="label">Voice</div><select class="field" id="sVoice"></select><div class="note">Automatic picks the most natural voice for each language. Edge on PC has the best Romanian voices.</div></div>
+      <div class="stack"><div class="label">Nova’s voice</div><div class="seg glass" data-key="nvoice"><button data-v="Neno">Neno</button><button data-v="Kira">Kira</button><button data-v="Sami">Sami</button><button data-v="off">Built-in</button></div><div class="note" id="nvNote">Neno is deep and velvety, Kira is cool and confident, Sami is calm and low. They’re free Google voices on your Gemini key: 10 spoken answers a day, then Nova uses the built-in voice until tomorrow.</div></div>
+      <div class="stack"><div class="label">Built-in voice</div><select class="field" id="sVoice"></select><div class="note">Automatic picks the most natural voice for each language. Edge on PC has the best Romanian voices.</div></div>
       <div class="stack"><div class="label">Speed</div><div class="seg glass" data-key="rate"><button data-v="0.85">Slow</button><button data-v="1">Normal</button><button data-v="1.2">Fast</button></div></div>
       <div class="stack"><div class="label">Pitch</div><div class="seg glass" data-key="pitch"><button data-v="0.85">Lower</button><button data-v="1">Normal</button><button data-v="1.15">Higher</button></div></div>
       <div class="stack"><button class="btn" id="sTest">Play sample</button></div>
@@ -517,7 +518,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.31-c";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.31-d";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -548,7 +549,7 @@ var VOICE_RULES=" The user's last message is a voice recording. In 'heard', writ
 var PIC={photo:", candid photograph taken on a 35mm film camera, natural daylight, soft film grain, muted true-to-life colors, slightly imperfect framing, realistic proportions, no glow, no fantasy lighting",
  art:", hand-made illustration, gouache and colored pencil on textured paper, visible brush strokes, limited muted palette, flat light, imperfect lines",free:""};
 var STARTERS=["Write me a hardstyle song about the night","Search the web: what happened in tech news today?","Give me a fun fact about space","Write a Python script that renames my photos by date","Draw a cozy cabin in the snow at sunset"];
-var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true,memory:true,web:true,lang:"auto",sync:true,next:true,brief:false,briefAt:"08:00",wake:false};
+var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true,memory:true,web:true,lang:"auto",sync:true,next:true,brief:false,briefAt:"08:00",wake:false,nvoice:"Neno"};
 
 var $=function(id){return document.getElementById(id)};
 function load(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
@@ -1974,7 +1975,53 @@ function pickVoice(lang){
   return voices.filter(function(v){return re.test(v.lang)}).sort(function(a,b){return score(b)-score(a)})[0]||null;
 }
 function forSpeech(t){return t.replace(/```[\s\S]*?```/g," ").replace(/[*_#`>|]/g,"").replace(/https?:\/\/\S+/g,"link").replace(/\s+/g," ").trim()}
+/* Nova's voice: Google's free Gemini voices (Neno, Kira, Sami) on the user's key, 10 answers a day on the free tier,
+   then (or on any error) the built-in voice of this device */
+var TTS_MODEL="gemini-3.8-flash-tts",TTS_DAY_MAX=10;
+function today(){var d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+function ttsUse(){var u=load("nova.tts",{});if(u.d!==today())u={d:today(),n:0,out:false};return u}
+function ttsLeft(){var u=ttsUse();return u.out?0:Math.max(0,TTS_DAY_MAX-u.n)}
+function ttsMark(out){var u=ttsUse();if(out)u.out=true;else u.n++;store("nova.tts",u);showTtsLeft()}
+function showTtsLeft(){var el=$("nvNote");if(!el)return;var base=el.getAttribute("data-base")||el.textContent;el.setAttribute("data-base",base);
+  el.textContent=base+(S.nvoice!=="off"&&S.key?" Left today: "+ttsLeft()+" of "+TTS_DAY_MAX+".":"")}
+function pcmToWav(b64,rate){
+  var bin=atob(b64),n=bin.length,buf=new ArrayBuffer(44+n),v=new DataView(buf),u8=new Uint8Array(buf);
+  function w(o,t){for(var i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))}
+  w(0,"RIFF");v.setUint32(4,36+n,true);w(8,"WAVE");w(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,n,true);
+  for(var i=0;i<n;i++)u8[44+i]=bin.charCodeAt(i);
+  return new Blob([buf],{type:"audio/wav"});
+}
+function ttsText(text){var t=forSpeech(text);if(t.length>1400){var cut=t.slice(0,1400),k=Math.max(cut.lastIndexOf(". "),cut.lastIndexOf("! "),cut.lastIndexOf("? "));t=k>400?cut.slice(0,k+1):cut}return t}
 function say(text,done){
+  var t=ttsText(text);
+  if(S.nvoice==="off"||!S.key||!t||ttsLeft()<=0||!window.fetch)return sayLocal(text,done);
+  stopSpeaking();
+  var fin=false,my={};function finish(){if(fin||say.finish!==finish)return;fin=true;$("stopTalk").hidden=true;if(done)done()}
+  say.finish=finish;say.cur=my;$("stopTalk").hidden=false;
+  var c=new AbortController();my.ctl=c;var to=setTimeout(function(){c.abort()},20000);
+  fetch("https://generativelanguage.googleapis.com/v1beta/models/"+TTS_MODEL+":generateContent",{method:"POST",signal:c.signal,
+    headers:{"Content-Type":"application/json","x-goog-api-key":S.key},
+    body:JSON.stringify({contents:[{role:"user",parts:[{text:t}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:S.nvoice}}}}})})
+  .then(function(r){return r.json().catch(function(){return{}}).then(function(d){
+    clearTimeout(to);
+    if(!r.ok){var e=new Error("tts "+r.status);e.status=r.status;throw e}
+    var parts=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[],b64="",rate=24000;
+    parts.forEach(function(p){if(p.inlineData&&p.inlineData.data){b64+=p.inlineData.data;var m=/rate=(\d+)/.exec(p.inlineData.mimeType||"");if(m)rate=+m[1]}});
+    if(!b64)throw new Error("no audio");
+    return pcmToWav(b64,rate);
+  })})
+  .then(function(blob){
+    if(say.cur!==my)return;ttsMark(false);
+    var url=URL.createObjectURL(blob),a=new Audio(url);my.audio=a;a.playbackRate=Math.max(.8,Math.min(1.25,+S.rate||1));
+    a.onended=a.onerror=function(){URL.revokeObjectURL(url);finish()};
+    a.play().catch(function(){URL.revokeObjectURL(url);if(say.cur===my){say.cur=null;sayLocal(text,done)}});
+  })
+  .catch(function(e){clearTimeout(to);if(say.cur!==my)return;
+    if(e&&e.status===429)ttsMark(true);
+    say.cur=null;say.finish=null;sayLocal(text,done)});
+}
+function sayLocal(text,done){
   if(!synth){if(done)done();return}stopSpeaking();
   var fin=false;function finish(){if(fin||say.finish!==finish)return;fin=true;clearTimeout(say.guard);$("stopTalk").hidden=true;if(done)done()}
   say.finish=finish;
@@ -1990,7 +2037,7 @@ function say(text,done){
   if(!chunks.length)finish();
   else if(done){var words=forSpeech(text).split(/\s+/).length;say.guard=setTimeout(function(){if(!synth.speaking)finish()},Math.max(4000,words*600/(+S.rate||1)))}
 }
-function stopSpeaking(){say.finish=null;clearTimeout(say.guard);try{synth&&synth.cancel()}catch(e){}$("stopTalk").hidden=true}
+function stopSpeaking(){say.finish=null;clearTimeout(say.guard);var c=say.cur;say.cur=null;if(c){try{c.ctl&&c.ctl.abort()}catch(e){}if(c.audio){try{c.audio.pause()}catch(e){}}}try{synth&&synth.cancel()}catch(e){}$("stopTalk").hidden=true}
 
 /* ---------- photos ---------- */
 function shrink(file,max,quality){
@@ -2078,7 +2125,7 @@ function setWallFromUrl(u){
 function setCustomWall(data){S.customWall=data;S.wallpaper="custom";if(!save()){S.customWall="";S.wallpaper="space"}applyLook();syncSettings();render();toast("Wallpaper set")}
 
 /* ---------- settings ---------- */
-function syncSettings(){
+function syncSettings(){showTtsLeft();
   $("sKey").value=S.key;$("sPicKey").value=S.picKey;$("sCustom").value=S.custom;
   $("sSpeak").setAttribute("aria-checked",String(!!S.speak));$("sRemember").setAttribute("aria-checked",String(!!S.remember));
   $("sWeb").setAttribute("aria-checked",String(!!S.web));$("sSync").setAttribute("aria-checked",String(!!S.sync));showSyncState();$("sMemory").setAttribute("aria-checked",String(!!S.memory));$("sNext").setAttribute("aria-checked",String(!!S.next));renderMemory();renderReminders();$("sBrief").setAttribute("aria-checked",String(!!S.brief));$("sBriefAt").value=S.briefAt;$("briefTimeRow").hidden=!S.brief;
