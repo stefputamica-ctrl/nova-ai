@@ -7,6 +7,8 @@
 <meta name="description" content="Nova, an AI you can talk to.">
 <meta name="theme-color" content="#070a14">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="config.js"></script>
 <link rel="icon" type="image/png" href="icons/favicon.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -318,18 +320,169 @@ a{color:inherit}
 .linkbtn{justify-self:center;color:var(--dim);font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .btn[disabled]{opacity:.55}
 @media (prefers-reduced-motion:reduce){.spin,.listen .rec{animation:none}}
+
+/* ================= the space look (dark theme): Nova is the sunrise on the planet's horizon ================= */
+html.sp{--bg:#060716;--ink:#f3f5fd;--dim:#979dbf;--faint:#5d638a;--line:rgba(195,205,255,.10);--glass:rgba(22,26,60,.55);--edge:rgba(195,205,255,.13);--pill:rgba(236,239,255,.95);
+ --bubble:#e6eaff;--bubbleText:#0b0d20;--sun:#e3e8ff;--rim:#c3cdff;--veil:transparent;--talkveil:transparent;--code:rgba(5,6,16,.85);
+ --sans:"Inter Tight",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+html.sp body{letter-spacing:-.01em}
+html.sp .glass{background:linear-gradient(180deg,rgba(28,33,74,.62),rgba(12,14,36,.72));border:1px solid var(--edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 18px 44px -22px rgba(0,0,0,.8);-webkit-backdrop-filter:blur(20px) saturate(140%);backdrop-filter:blur(20px) saturate(140%)}
+html.sp #wall{background-color:#060716;background-position:center top;background-size:cover}
+html.sp #wall::after{background:linear-gradient(180deg,rgba(6,7,22,0) 30%,#060716 70%)}
+html.sp #wall.twilight{background-image:url("sky.jpg"),linear-gradient(180deg,#0b1238,#1f2a78 45%,#5a56b8 62%,#9a83d6 75%)!important;background-blend-mode:screen,normal;background-size:cover,cover}
+html.sp #wall.colours{background-image:url("sky.jpg")!important}
+html.sp #wall.colours::before{background:radial-gradient(60% 34% at 85% 16%,rgba(199,84,170,.45),transparent 70%),radial-gradient(70% 40% at 8% 42%,rgba(70,120,255,.42),transparent 70%),radial-gradient(55% 30% at 70% 60%,rgba(255,170,90,.22),transparent 70%)}
+html.sp #wall.photo::after{background:linear-gradient(180deg,rgba(6,7,22,.35),rgba(6,7,22,.6))}
+#hzw{position:fixed;inset:0;pointer-events:none;display:none}
+html.sp #hzw{display:block;transition:transform .9s cubic-bezier(.3,.7,.2,1)}
+html.sp.talking #hzw{transform:translateY(var(--hzUp,-300px))}
+#hzw svg{position:absolute;left:0;top:0;overflow:visible}
+#hzw .atmo,#hzw .flare,#hzw .vs{transform-box:view-box}
+html.sp body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;background:radial-gradient(130% 95% at 50% 42%,transparent 62%,rgba(0,0,0,.3))}
+@keyframes hzRise{0%{opacity:0;transform:scale(.55)}100%{opacity:1;transform:scale(1)}}
+@keyframes hzGlint{0%,100%{transform:scale(.94)}50%{transform:scale(1.07)}}
+@keyframes hzSwell{0%,100%{opacity:.75;transform:scale(1,1)}50%{opacity:1;transform:scale(1.15,1.3)}}
+@keyframes hzReach{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.6)}}
+@keyframes hzTalk{0%,100%{transform:scaleY(.55)}25%{transform:scaleY(1.6)}55%{transform:scaleY(.9)}80%{transform:scaleY(1.35)}}
+html.sp #hzw .atmo{animation:hzRise 2.6s cubic-bezier(.2,.7,.2,1) both}
+html.sp #hzw .flare{animation:hzRise 1.8s .5s cubic-bezier(.2,.7,.2,1) both,hzGlint 6s 2.4s ease-in-out infinite}
+html.sp.listening #hzw .atmo{animation:hzSwell 1.5s ease-in-out infinite}
+html.sp.listening #hzw .vs{animation:hzReach 1.5s ease-in-out infinite}
+html.sp.speaking #hzw .vs{animation:hzTalk .9s ease-in-out infinite}
+/* header */
+html.sp header{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0 2px 0 12px}
+html.sp header .brand{font-weight:800;font-size:23px;letter-spacing:-.045em}
+html.sp header .brand .dot{display:none}
+html.sp .tools{gap:8px}
+html.sp .chip{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:600;background:rgba(195,205,255,.07);border:1px solid var(--edge);color:#e3e7f8;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+html.sp .chip.sun{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20;border-color:transparent}
+.chip .ic{display:none}
+html.sp .chip .ic{display:block;flex:none}
+@media (max-width:600px){html.sp .chip.ico{width:40px;padding:0;justify-content:center}html.sp .chip.ico .lb{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
+/* home */
+html.sp .hero{justify-content:space-between;padding:0 6px 4px}
+html.sp .hero .top{padding-top:clamp(40px,11vh,110px)}
+html.sp .hero .date{font-size:15px;font-weight:500;color:#8f96bd;margin-bottom:8px}
+html.sp .hero h1{font-size:clamp(40px,10.5vw,68px);font-weight:800;line-height:1;letter-spacing:-.055em;margin:0}
+html.sp .hero .sub{font-size:clamp(17px,2.2vw,19px);color:#a8aed0;margin:14px 0 0}
+html.sp .hero .below{display:flex;flex-direction:column;gap:4px}
+html.sp .starter{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:500;font-size:16px;padding:11px 10px;border-radius:14px;color:#dfe3f4}
+html.sp .starter::before{content:"";width:11px;height:11px;flex:none;background:#8a95e6;clip-path:polygon(50% 0,59% 41%,100% 50%,59% 59%,50% 100%,41% 59%,0 50%,41% 41%)}
+html.sp .starter:hover{background:rgba(195,205,255,.06)}
+html.sp .hint{display:none}
+@media (min-width:900px){html.sp .hero .below{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}html.sp .hero .below.has-song{grid-template-columns:1.4fr 1fr 1fr}html.sp .hero .below .starter{border:1px solid var(--edge);background:rgba(195,205,255,.04);border-radius:20px;padding:16px;align-items:flex-start;flex-direction:column}}
+/* song art + energy */
+.art{width:52px;height:52px;border-radius:14px;flex:none;position:relative;overflow:hidden;
+ background:radial-gradient(circle at 34% 58%,#fff 0 1.6px,rgba(220,228,255,.9) 2.4px,rgba(150,165,255,.35) 6px,transparent 12px),radial-gradient(150% 80% at 60% 140%,#05060f 57%,#e3e8ff 58.2%,#7584ff 60%,rgba(80,95,230,.35) 66%,transparent 76%),linear-gradient(180deg,#141a4e,#2c3497 70%,#4a54d0);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.art.v{background:radial-gradient(circle at 66% 58%,#fff 0 1.6px,rgba(240,220,255,.9) 2.4px,rgba(200,150,255,.35) 6px,transparent 12px),radial-gradient(150% 80% at 40% 140%,#07040f 57%,#f1e3ff 58.2%,#a875ff 60%,rgba(150,80,230,.35) 66%,transparent 76%),linear-gradient(180deg,#1d0f45,#4b2390 70%,#7a3fd0)}
+.song{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr) 44px;align-items:center;column-gap:14px;padding:12px 12px 0;border-radius:24px;overflow:hidden;text-align:left;width:100%}
+.song .t{min-width:0}.song b{display:block;font-size:16.5px;font-weight:700;letter-spacing:-.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song small{display:block;font-size:13.5px;color:var(--dim);margin-top:3px}
+.pbtn{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20;box-shadow:0 8px 20px -8px rgba(150,165,255,.7);border:0;flex:none}
+.energy{grid-column:1/-1;display:block;width:calc(100% + 24px);height:36px;margin:10px -12px 0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* messages */
+html.sp #log{padding-top:calc(var(--top) + 76px)}
+html.sp #log{-webkit-mask-image:linear-gradient(transparent calc(var(--top) + 58px),#000 calc(var(--top) + 96px));mask-image:linear-gradient(transparent calc(var(--top) + 58px),#000 calc(var(--top) + 96px))}
+html.sp.talking #log{padding-top:calc(var(--top) + 150px)}
+html.sp .ub{background:linear-gradient(180deg,rgba(236,239,255,.97),rgba(214,220,250,.95));color:#0b0d20;border-radius:22px 22px 7px 22px;padding:11px 16px;font-weight:500;box-shadow:0 10px 26px -12px rgba(140,155,255,.6)}
+html.sp .msg.n{grid-template-columns:14px minmax(0,1fr)}
+html.sp .msg.n .dot{width:14px;height:14px;margin-top:6px;background:#eef1ff;clip-path:polygon(50% 0,58% 42%,100% 50%,58% 58%,50% 100%,42% 58%,0 50%,42% 42%);filter:drop-shadow(0 0 5px rgba(170,185,255,.9))}
+html.sp .txt{font-size:16px;line-height:1.55;color:#e3e6f6}
+html.sp .acts{gap:14px;flex-wrap:wrap}html.sp .acts button{color:#7d84aa;font-weight:500;font-size:13px}
+html.sp .next{flex-direction:row;flex-wrap:wrap;gap:8px}
+html.sp .next button{border-radius:999px;padding:9px 14px;font-weight:500;background:rgba(195,205,255,.06);border:1px solid var(--edge)}
+html.sp .next button::before{content:none}
+html.sp .code{border-radius:20px;border:1px solid var(--edge);background:var(--code)}
+html.sp .code .bar{padding:8px 10px 8px 16px;font-size:13px}
+html.sp .code .bar button{color:#0b0d20;background:linear-gradient(180deg,#fbfcff,#dfe4f7);padding:5px 12px;border-radius:10px;font-weight:600;font-size:13px}
+html.sp .code .bar button[data-act=copycode]{background:rgba(195,205,255,.08);color:var(--ink)}
+html.sp .code pre{font-size:14px;padding:14px 16px}
+html.sp .pyout{background:none;color:#cfd5f0;padding:12px 16px}html.sp .pyout .h{color:#9fe3c0;text-transform:none;letter-spacing:0;font:600 12px var(--sans)}
+html.sp .beatcard,html.sp .quiz,html.sp .plan,html.sp .deck,html.sp .arr,html.sp .doccard,html.sp .remind{border-radius:24px;border:1px solid var(--edge);background:linear-gradient(180deg,rgba(30,35,78,.70),rgba(13,15,38,.82));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 22px 50px -24px rgba(0,0,0,.8);max-width:540px}
+html.sp .remind{border-radius:16px}
+html.sp .plan .top b,html.sp .deck .top b,html.sp .arr .top b,html.sp .quiz .top b{font-size:16.5px;letter-spacing:-.025em}
+html.sp .plan .row button,html.sp .deck .row button,html.sp .arr .row button,html.sp .quiz .row button,html.sp .beatcard button{border-radius:999px;background:rgba(195,205,255,.08);border:0;font-weight:600}
+html.sp .plan .row button.main,html.sp .deck .row button.main,html.sp .arr .row button.main,html.sp .quiz .row button.main{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20}
+html.sp .plan .it.ok button{background:#c3cdff;border-color:#c3cdff;color:#0b0d22}
+html.sp .quiz .bar i,html.sp #study .bar i{background:linear-gradient(90deg,#9aa8ff,#e6eaff)}
+/* beat player */
+.beatcard.bp{display:block;padding:14px}
+.bp .r{display:flex;align-items:center;gap:14px}.bp .t{flex:1;min-width:0}
+.bp .t b{display:block;font-size:16.5px;font-weight:700;letter-spacing:-.025em}.bp .t span{display:block;font-size:13.5px;color:var(--dim);margin-top:3px}
+html.sp .beatcard.bp .pbtn{padding:0;background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20}
+.scrub{position:relative;height:44px;margin:16px 2px 4px}.scrub svg{display:block;width:100%;height:100%}
+.scrub .head{position:absolute;top:50%;left:0;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(170,182,255,.25),0 0 14px #aab6ff;opacity:0}
+.beatcard.on .scrub .head{opacity:1;animation:scrub linear infinite}
+@keyframes scrub{from{left:0}to{left:100%}}
+.beatcard.on .scrub .lit{animation:lit linear infinite}
+@keyframes lit{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.scrub .lit{clip-path:inset(0 100% 0 0)}
+.acts2{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+html.sp .beatcard .acts2 button,.acts2 button{display:inline-flex;align-items:center;gap:7px;border:0;background:rgba(195,205,255,.08);color:var(--ink);font-weight:600;font-size:13.5px;padding:9px 13px;border-radius:999px}
+.acts2 svg{color:#b9c3ff}
+/* arranger */
+.arr.ap .r{display:flex;align-items:center;gap:14px;margin-bottom:6px}.arr.ap .r .t{flex:1;min-width:0}
+.arr.ap .r b{display:block;font-size:16.5px;font-weight:700;letter-spacing:-.025em}.arr.ap .r span{display:block;font-size:13.5px;color:var(--dim);margin-top:3px}
+.arr.ap .energy{width:100%;margin:8px 0 0;height:44px}
+html.sp .arr .secs{height:auto;gap:2px;margin:6px 0 0;border-radius:0;background:none}
+html.sp .arr .secs i{font-size:11px;font-weight:600;color:var(--faint);background:none!important;justify-content:start;place-items:start;padding-left:2px;border-left:1px solid rgba(195,205,255,.12)}
+html.sp .arr .legend{display:none}
+/* composer */
+html.sp .composer{border-radius:30px;padding:6px}
+html.sp #plus{background:none;border:0;color:var(--dim)}
+html.sp #talkMode{background:none;border:0;color:var(--dim)}
+html.sp #act{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0a0c1e;box-shadow:0 6px 18px rgba(120,140,255,.25)}
+html.sp #act.send{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0a0c1e}
+html.sp #input::placeholder{color:#6f759c}
+html.sp .listen{border-radius:30px}
+html.sp .listen .rec{background:var(--rim);box-shadow:0 0 10px var(--rim)}
+html.sp #endConvo{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20}
+html.sp #picActs button,html.sp #plusMenu{border-radius:18px}
+html.sp #picActs button::before{content:none}
+html.sp #plusMenu button:hover{background:rgba(195,205,255,.08)}
+/* sheets: settings, chats, decks */
+html.sp .sheet{background:radial-gradient(120% 40% at 50% -6%,rgba(84,102,224,.35),transparent 60%),#060716}
+html.sp .sheet .bg{display:none}
+html.sp .sheet-head h2{font-size:clamp(36px,8vw,44px);font-weight:800;letter-spacing:-.055em}
+html.sp .done,html.sp .btn{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20}
+html.sp .btn.ghost{background:rgba(195,205,255,.07);color:var(--ink);border:1px solid var(--edge)}
+html.sp .done{border-radius:999px;padding:8px 18px}
+html.sp .sec{font-weight:600;color:#8f96bd;margin:24px 8px 9px}
+html.sp .row+.row,html.sp .stack+.row,html.sp .row+.stack,html.sp .stack+.stack{border-top-color:rgba(195,205,255,.08)}
+html.sp .seg{background:rgba(195,205,255,.07)!important;border:0!important;border-radius:14px;padding:3px;box-shadow:none!important}
+html.sp .seg button{border-radius:11px;font-weight:500}
+html.sp .seg button[aria-pressed="true"]{background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(225,230,248,.96));color:#0b0d20;border-color:transparent;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+html.sp .switch{background:rgba(195,205,255,.14)}
+html.sp .switch[aria-checked="true"]{background:linear-gradient(180deg,#a7b4ff,#6f7fea);box-shadow:0 0 14px rgba(140,155,255,.35)}
+html.sp .field{background:rgba(3,4,12,.55);border-color:rgba(195,205,255,.1)}
+html.sp .chat{border-radius:20px}
+html.sp .chat .pin{color:var(--rim)}
+html.sp .ficon{background:linear-gradient(180deg,#c9d1ff,#8e9cff);color:#0b0d20}
+html.sp .welcome{border-radius:26px}
+html.sp .welcome h3{font-size:24px;font-weight:800;letter-spacing:-.04em}
+html.sp #study{background:radial-gradient(120% 40% at 50% -6%,rgba(84,102,224,.35),transparent 60%),#060716}
+html.sp #study .card{background:linear-gradient(180deg,#232a66,#141a46);border-color:rgba(195,205,255,.14);box-shadow:0 30px 60px -30px rgba(0,0,0,.9)}
+html.sp #study .btns .good{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20}
+html.sp #study .btns .bad{background:rgba(195,205,255,.08);border-color:var(--edge)}
+html.sp #auth{background-color:#060716}
+html.sp .word{font-weight:800;letter-spacing:-.045em;font-size:40px;padding-left:0}
+html.sp .toast,html.sp .updbar{border-radius:999px}
+html.sp .updbar .btn{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20}
+@media (prefers-reduced-motion:reduce){html.sp #hzw *{animation:none!important}html.sp #hzw{transition:none}}
 </style>
 </head>
 <body>
 <div id="wall"></div>
+<div id="hzw" aria-hidden="true"></div>
 <div id="app">
   <header class="glass">
     <div class="brand"><span class="dot"></span>Nova</div>
     <div class="tools">
       <button class="chip sun" id="stopTalk" hidden>Stop</button>
-      <button class="chip" id="openChats">Chats</button>
-      <button class="chip" id="newChat">New chat</button>
-      <button class="chip" id="openSettings">Settings</button>
+      <button class="chip ico" id="openChats" aria-label="Chats"><svg class="ic" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 4.5A2.5 2.5 0 0 1 5.5 2h7A2.5 2.5 0 0 1 15 4.5v4A2.5 2.5 0 0 1 12.5 11H8l-3.5 3v-3A2.5 2.5 0 0 1 3 8.5z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg><span class="lb">Chats</span></button>
+      <button class="chip ico" id="newChat" aria-label="New chat"><svg class="ic" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 3.5v11M3.5 9h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="lb">New chat</span></button>
+      <button class="chip ico" id="openSettings" aria-label="Settings"><svg class="ic" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5h7M14 5h1M3 13h1M8 13h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="5" r="2" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="6" cy="13" r="2" stroke="currentColor" stroke-width="1.5" fill="none"/></svg><span class="lb">Settings</span></button>
     </div>
   </header>
   <main id="log"><div class="inner" id="inner"></div></main>
@@ -518,7 +671,7 @@ a{color:inherit}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.31-e";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-a";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -574,6 +727,7 @@ function vibrate(){try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}}
 function wallUrl(){
   // wide screens (PC) get a landscape cut of the same picture so the name and the planet both show
   var wide=window.innerWidth>window.innerHeight*1.1?"-wide":"";
+  if(S.theme!=="light"){if(S.wallpaper==="space"||S.wallpaper==="colours")return wide?"skywide.jpg":"sky.jpg";if(S.wallpaper==="sky")return "";}
   if(S.wallpaper==="space")return (S.theme==="light"?"wp-space-light":"wp-space")+wide+".jpg";
   if(S.wallpaper==="sky")return "wp-sky"+wide+".jpg";
   if(S.wallpaper==="custom"&&S.customWall)return S.customWall;
@@ -581,8 +735,10 @@ function wallUrl(){
 }
 function applyLook(){
   document.documentElement.setAttribute("data-theme",S.theme);
+  document.documentElement.classList.toggle("sp",S.theme!=="light");
   var u=wallUrl(), w=$("wall");
-  w.className=(S.wallpaper==="colours"?"colours":"")+(msgs.length||busy?" talking":"");
+  w.className=(S.wallpaper==="colours"?"colours":"")+(S.theme!=="light"&&S.wallpaper==="sky"?" twilight":"")+(S.wallpaper==="custom"?" photo":"")+(msgs.length||busy?" talking":"");
+  drawHz();
   w.style.backgroundImage=u?"url(\""+u+"\")":"none";
   document.documentElement.style.setProperty("--veil",S.wallpaper==="space"?(S.theme==="light"?"rgba(255,255,255,.06)":"rgba(0,0,0,.1)"):(S.theme==="light"?"rgba(255,255,255,.4)":"rgba(0,0,0,.35)"));
   var bgs=document.querySelectorAll(".wallbg");
@@ -618,6 +774,42 @@ function checkKey(k){
 }
 function showKeyResult(el,res){el.textContent=res.msg;el.className="kout"+(res.ok?" ok":res.ok===false?" bad":"")}
 
+
+/* ---------- the horizon (space look): Nova is the sunrise on the planet's edge ---------- */
+function hzSvg(W,H,fy,fx,R,cx){
+  var cy=fy+Math.sqrt(R*R-(fx-cx)*(fx-cx)),a=(fx/W).toFixed(3),f=function(n){return n.toFixed(1)};
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><defs>'+
+  '<radialGradient id="hzPl" cx="'+fx+'" cy="'+fy+'" r="'+f(R*.9)+'" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#151a44"/><stop offset=".12" stop-color="#0b0e28"/><stop offset=".5" stop-color="#05060f"/><stop offset="1" stop-color="#030409"/></radialGradient>'+
+  '<linearGradient id="hzRim" x1="0" x2="1"><stop offset="0" stop-color="#6c78e8" stop-opacity="0"/><stop offset="'+Math.max(0,fx/W-.28).toFixed(3)+'" stop-color="#8d9bff" stop-opacity=".55"/><stop offset="'+a+'" stop-color="#fff"/><stop offset="'+Math.min(1,fx/W+.35).toFixed(3)+'" stop-color="#9aa6ff" stop-opacity=".6"/><stop offset="1" stop-color="#6c78e8" stop-opacity=".08"/></linearGradient>'+
+  '<linearGradient id="hzSh" x1="0" x2="1"><stop offset="0" stop-color="#9fb0ff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#9fb0ff" stop-opacity="0"/></linearGradient>'+
+  '<linearGradient id="hzAn" x1="0" x2="1"><stop offset="0" stop-color="#6f86ff" stop-opacity="0"/><stop offset=".5" stop-color="#8fa4ff" stop-opacity=".35"/><stop offset="1" stop-color="#6f86ff" stop-opacity="0"/></linearGradient>'+
+  '<linearGradient id="hzSv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'+
+  '<radialGradient id="hzFl"><stop offset="0" stop-color="#fff"/><stop offset=".18" stop-color="#f2f5ff"/><stop offset=".45" stop-color="#a9b8ff" stop-opacity=".45"/><stop offset="1" stop-color="#7d8fff" stop-opacity="0"/></radialGradient>'+
+  '<filter id="hzB1" x="-60%" y="-300%" width="220%" height="700%"><feGaussianBlur stdDeviation="34"/></filter><filter id="hzB2" x="-60%" y="-300%" width="220%" height="700%"><feGaussianBlur stdDeviation="12"/></filter><filter id="hzB3" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>'+
+  '<g class="atmo" style="transform-origin:'+fx+'px '+f(fy)+'px"><ellipse cx="'+f(fx+W*.12)+'" cy="'+f(fy+10)+'" rx="'+f(W*.85)+'" ry="70" fill="#3a3fb0" opacity=".55" filter="url(#hzB1)"/><ellipse cx="'+f(fx+20)+'" cy="'+f(fy+4)+'" rx="'+f(Math.min(W*.42,520))+'" ry="26" fill="#7b8cff" opacity=".75" filter="url(#hzB2)"/></g>'+
+  '<circle cx="'+f(cx)+'" cy="'+f(cy)+'" r="'+R+'" fill="url(#hzPl)"/><circle cx="'+f(cx)+'" cy="'+f(cy)+'" r="'+(R-1.5)+'" fill="none" stroke="#8c9bff" stroke-opacity=".35" stroke-width="5" filter="url(#hzB3)"/>'+
+  '<circle cx="'+f(cx)+'" cy="'+f(cy)+'" r="'+R+'" fill="none" stroke="url(#hzRim)" stroke-width="1.4"/>'+
+  '<g class="flare" style="transform-origin:'+fx+'px '+f(fy)+'px"><rect x="'+f(fx-W*.6)+'" y="'+f(fy-1.5)+'" width="'+f(W*1.2)+'" height="3" fill="url(#hzAn)"/>'+
+  '<rect x="'+f(fx-Math.min(W*.45,320))+'" y="'+f(fy-.6)+'" width="'+f(Math.min(W*.9,640))+'" height="1.2" fill="url(#hzSh)"/>'+
+  '<rect class="vs" x="'+f(fx-.6)+'" y="'+f(fy-80)+'" width="1.2" height="160" fill="url(#hzSv)" style="transform-origin:'+fx+'px '+f(fy)+'px"/>'+
+  '<circle cx="'+fx+'" cy="'+f(fy)+'" r="26" fill="url(#hzFl)" opacity=".55"/><circle cx="'+fx+'" cy="'+f(fy)+'" r="9" fill="url(#hzFl)"/></g></svg>';
+}
+function drawHz(at){
+  var el=$("hzw");if(!el||!document.documentElement.classList.contains("sp"))return;
+  if(at!=null)drawHz.at=at;
+  var W=window.innerWidth,H=window.innerHeight,wide=W>=700,fy=Math.round(Math.max(H*.4,Math.min(H*.72,drawHz.at||H*(wide?.6:.57)))),fx=Math.round(W*(wide?.32:.38)),R=wide?Math.max(1500,W*1.25):Math.max(560,W*1.45),cx=W*(wide?.55:.6);
+  if(drawHz.k===[W,H,fy].join()&&el.firstChild)return;drawHz.k=[W,H,fy].join();
+  el.innerHTML=hzSvg(W,H,fy,fx,R,cx);
+  var topSafe=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topPx"))||0;
+  document.documentElement.style.setProperty("--hzUp",(-(fy-(wide?96:118)-topSafe))+"px");
+}
+window.addEventListener("resize",function(){clearTimeout(drawHz.t);drawHz.t=setTimeout(function(){drawHz.at=null;drawHz();placeHz()},120)});
+// on the home screen the horizon sits just above the cards, so they rest on the planet
+function placeHz(){var b=document.querySelector(".hero .below");if(b&&document.documentElement.classList.contains("sp")&&!document.documentElement.classList.contains("talking"))drawHz(b.getBoundingClientRect().top-30)}
+// the flare "talks" while Nova speaks
+(function(){var st=document.getElementById("stopTalk");if(!st||!window.MutationObserver)return;
+  new MutationObserver(function(){document.documentElement.classList.toggle("speaking",!st.hidden)}).observe(st,{attributes:true,attributeFilter:["hidden"]})})();
+
 /* ---------- rendering ---------- */
 function lowLayout(){return S.wallpaper==="space"||S.wallpaper==="custom"}
 function render(){
@@ -628,7 +820,13 @@ function render(){
        '<input class="field" id="wKey" type="password" placeholder="Paste your Gemini key (starts with AIza)" autocomplete="off"><button class="btn" id="wSave">Check key and start</button>'+
        '<div class="kout" id="wOut" role="status"></div><p style="font-size:13px">The key stays only on this device. It’s free; Google gives a daily allowance.</p></div>';
   }
-  if(!msgs.length&&S.key){
+  if(!msgs.length&&S.key&&document.documentElement.classList.contains("sp")){
+    var ro=isRo(),now=new Date(),st2=STARTERS.slice(0,3),hr2=now.getHours();if(hr2>=4&&hr2<12)st2=[briefText()].concat(STARTERS.slice(0,2));
+    var song=songResume();if(song)st2=st2.slice(0,2);
+    h+='<div class="hero"><div class="top"><div class="date">'+esc(now.toLocaleDateString(ro?"ro-RO":"en-GB",{weekday:"long",day:"numeric",month:"long"}))+'</div><h1>'+esc(greeting())+'</h1><p class="sub">'+(ro?"Ce facem azi?":"What are we making today?")+'</p></div><div class="below'+(song?" has-song":"")+'">'+song;
+    st2.forEach(function(q){h+='<button class="starter" data-q="'+esc(q)+'">'+esc(q)+'</button>'});
+    h+='</div></div>';
+  }else if(!msgs.length&&S.key){
     var low=lowLayout();
     h+='<div class="hero'+(low?" low":"")+'">';
     if(!low)h+='<h1>'+greeting()+'</h1><p class="sub">What’s on your mind?</p>';
@@ -668,12 +866,41 @@ function render(){
     '<div class="row2"><button class="yes" data-act="sharenova">'+(ro?"Trimite Nova":"Share Nova")+'</button><button class="no" data-act="noshare">'+(ro?"Nu acum":"Not now")+'</button></div></div>'}
   if(render.error)h+='<p class="err">'+esc(render.error)+'</p>';
   $("inner").innerHTML=h;
-  $("wall").classList.toggle("talking",msgs.length>0||busy);
+  $("wall").classList.toggle("talking",msgs.length>0||busy);document.documentElement.classList.toggle("talking",msgs.length>0||busy||!S.key);
   // load generated pictures
   var gens=$("inner").querySelectorAll(".gen");
   for(var g=0;g<gens.length;g++)loadGen(gens[g]);
   updateAct();
   var log=$("log");log.scrollTop=log.scrollHeight;
+  if(window.requestAnimationFrame)requestAnimationFrame(placeHz);
+}
+
+/* ---------- space look: song cards ---------- */
+var I_PLAY='<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4c0 .5.5.8.9.5l8.2-5.2a.6.6 0 0 0 0-1L5.4 2.3c-.4-.3-.9 0-.9.5z" fill="currentColor"/></svg>';
+var I_PAUSE='<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="2.5" y="2" width="3" height="10" rx="1.2" fill="currentColor"/><rect x="8.5" y="2" width="3" height="10" rx="1.2" fill="currentColor"/></svg>';
+var I_DL='<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v8M4.5 7.5 8 11l3.5-3.5M3 13.5h10" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var I_KEYS='<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6 3v6M10 3v6M6 9v4M10 9v4" stroke="currentColor" stroke-width="1.5"/></svg>';
+var ENERGY_LV={none:.1,light:.3,build:.62,drop:.95,full:1,break:.32,outro:.12};
+function smoothPath(pts,H,top){var y=function(v){return (H-v*(H-top)).toFixed(1)},d="M0 "+y(pts[0][1]);
+  for(var i=1;i<pts.length;i++){var x0=pts[i-1][0],x1=pts[i][0],mx=((x0+x1)/2).toFixed(1);d+=" C"+mx+" "+y(pts[i-1][1])+" "+mx+" "+y(pts[i][1])+" "+x1.toFixed(1)+" "+y(pts[i][1])}return d}
+var energyN=0;
+function energySvg(sections){
+  var tot=sections.reduce(function(s,x){return s+(+x.bars||8)},0)||1,x=0,pts=[[0,.1]];
+  sections.forEach(function(sc){var b=+sc.bars||8,lv=ENERGY_LV[((sc.energy||"").match(/none|light|build|drop|full|break|outro/)||["drop"])[0]];pts.push([(x+b*.5)/tot*300,lv]);x+=b});
+  pts.push([300,.08]);var line=smoothPath(pts,36,4),id="en"+(++energyN);
+  return '<svg class="energy" viewBox="0 0 300 36" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="'+id+'a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8d9bff" stop-opacity=".45"/><stop offset="1" stop-color="#8d9bff" stop-opacity="0"/></linearGradient><linearGradient id="'+id+'l" x1="0" x2="1"><stop offset="0" stop-color="#7d8cff"/><stop offset=".55" stop-color="#fff"/><stop offset="1" stop-color="#9aa6ff"/></linearGradient></defs>'+
+    '<path d="'+line+' L300 36 L0 36 Z" fill="url(#'+id+'a)"/><path d="'+line+'" fill="none" stroke="url(#'+id+'l)" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>'}
+function waveSvg(seed){var r=0;for(var k=0;k<seed.length;k++)r=(r*31+seed.charCodeAt(k))%9973;
+  var N=120,W=300,H=44,m=H/2,v=[];for(var i=0;i<N;i++){var t=i/N;v.push(Math.max(.12,Math.min(1,.38+.22*Math.sin(t*Math.PI*(5+r%4)+r)+.14*Math.sin(t*Math.PI*(17+r%7))+.08*Math.sin(t*Math.PI*41+r%3))))}
+  var d="M0 "+m;for(i=0;i<N;i++)d+=" L"+(i/(N-1)*W).toFixed(1)+" "+(m-v[i]*m*.95).toFixed(1);for(i=N-1;i>=0;i--)d+=" L"+(i/(N-1)*W).toFixed(1)+" "+(m+v[i]*m*.95).toFixed(1);d+=" Z";
+  return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true"><path d="'+d+'" fill="rgba(160,172,255,.22)"/><path class="lit" d="'+d+'" fill="#e3e8ff"/></svg>'}
+// the newest song from your chats, to pick up where you left off
+function songResume(){
+  for(var c of chats.slice().sort(function(a,b){return b.updated-a.updated})){
+    for(var j=c.msgs.length-1;j>=0;j--){var a=c.msgs[j].arr;if(a&&a.sections&&a.sections.length)
+      return '<button class="song glass" data-openchat="'+esc(c.id)+'"><span class="art"></span><span class="t"><b>'+esc(a.title||"Your song")+'</b><small>'+esc([a.genre?a.genre.charAt(0).toUpperCase()+a.genre.slice(1):"",a.bpm?a.bpm+" BPM":"",a.key||""].filter(Boolean).join(", "))+'</small></span><span class="pbtn" aria-hidden="true">'+I_PLAY+'</span>'+energySvg(a.sections)+'</button>'}
+  }
+  return "";
 }
 function greeting(){var h=new Date().getHours();return h<5?"Still up?":h<12?"Good morning.":h<18?"Good afternoon.":"Good evening."}
 function formatAnswer(t){
@@ -1412,6 +1639,12 @@ function beatKey(b){return beatStyle(b.genre)+"|"+b.bpm+"|"+(b.chords||"")+"|"+b
 function beatMake(b){return makeBeat(b.genre,b.bpm,{kit:beatKit,chords:b.chords})}
 function beatUrl(b){var k=beatKey(b);if(!beatUrls[k])beatUrls[k]=URL.createObjectURL(new Blob([beatMake(b).wav],{type:"audio/wav"}));return beatUrls[k]}
 function beatCard(b,i){var ro=isRo(),on=beatOn===i&&beatAudio&&!beatAudio.paused,mine=Object.keys(beatKit).length;
+  if(document.documentElement.classList.contains("sp")){var st=beatStyle(b.genre),bpm=beatBpm(st,b.bpm),loop=(8*4*60/bpm).toFixed(2)+"s",g=b.genre.charAt(0).toUpperCase()+b.genre.slice(1);
+    return'<div class="beatcard bp'+(on?" on":"")+'"><div class="r"><span class="art'+(/trap|phonk|drill/i.test(b.genre)?" v":"")+'"></span><div class="t"><b>'+esc(g)+', '+b.bpm+' BPM</b><span>'+
+    esc([ro?"Ritm de tobe":"Drum loop",mine?(ro?"cu sunetele tale":"with your sounds"):"",b.chords?b.chords:""].filter(Boolean).join(", "))+'</span></div>'+
+    '<button class="pbtn" data-act="beat" data-i="'+i+'" aria-label="'+(on?"Stop":(ro?"Ascultă ritmul":"Play beat"))+'">'+(on?I_PAUSE:I_PLAY)+'<span class="sr">'+(on?"Stop":(ro?"Ascultă ritmul":"Play beat"))+'</span></button></div>'+
+    '<div class="scrub" style="--loop:'+loop+'">'+waveSvg(b.genre+b.bpm+(b.chords||""))+'<span class="head" style="animation-duration:'+loop+'"></span></div>'+
+    '<div class="acts2"><button data-act="beatdl" data-i="'+i+'">'+I_DL+(ro?"Salvează WAV":"Save WAV")+'</button><button data-act="beatmidi" data-i="'+i+'">'+I_KEYS+(ro?"MIDI pentru FL Studio":"MIDI for FL Studio")+'</button></div></div>'}
   return'<div class="beatcard'+(on?" on":"")+'"><div class="pads">'+new Array(9).join("<i></i>")+'</div><div class="grow"><b>'+esc(b.genre.charAt(0).toUpperCase()+b.genre.slice(1))+' · '+b.bpm+' BPM</b><span>'+
   esc([ro?"Ritm de tobe":"Drum loop",mine?(ro?"cu sunetele tale":"with your sounds"):"",b.chords?b.chords:""].filter(Boolean).join(" · "))+'</span></div>'+
   '<button class="main" data-act="beat" data-i="'+i+'">'+(on?"■ Stop":(ro?"▶ Ascultă ritmul":"▶ Play beat"))+'</button><button data-act="beatdl" data-i="'+i+'">.wav</button><button data-act="beatmidi" data-i="'+i+'">'+(ro?"MIDI pentru FL Studio":"MIDI for FL Studio")+'</button></div>'}
@@ -1541,7 +1774,12 @@ function arrFromJson(d){var top=d&&(d.arrangement&&!Array.isArray(d.arrangement)
 function energyOf(x){var e=String(x.energy||x.intensity||x.type||x.name||x.section||"").toLowerCase();
   return /break|bridge|calm|quiet/.test(e)?"break":/build|rise|riser|pre/.test(e)?"build":/drop|chorus|climax|main|hook|full|high/.test(e)?"drop":/outro|end/.test(e)?"outro":/intro|light|low|verse/.test(e)?"light":/none|silent/.test(e)?"none":"drop"}
 function arrCard(a,i){var ro=isRo(),bars=a.sections.reduce(function(s,x){return s+x.bars},0),sec=Math.round(bars*4*60/a.bpm),on=beatOn===i&&beatAudio&&!beatAudio.paused;
-  var h='<div class="arr"><div class="top"><b>🎛️ '+esc(a.title)+'</b><span>'+esc([a.genre,a.bpm+" BPM",a.key,bars+(ro?" măsuri":" bars"),Math.floor(sec/60)+":"+("0"+sec%60).slice(-2)].filter(Boolean).join(" · "))+'</span></div><div class="secs">';
+  if(document.documentElement.classList.contains("sp")){
+    var hh='<div class="arr ap"><div class="r"><span class="art"></span><div class="t"><b>'+esc(a.title)+'</b><span>'+esc([a.genre?a.genre.charAt(0).toUpperCase()+a.genre.slice(1):"",a.bpm+" BPM",a.key,bars+(ro?" măsuri":" bars"),Math.floor(sec/60)+":"+("0"+sec%60).slice(-2)].filter(Boolean).join(", "))+'</span></div>'+
+      '<button class="pbtn" data-act="arrplay" data-i="'+i+'" aria-label="'+(on?"Stop":(ro?"Ritmul din drop":"Drop beat"))+'">'+(on?I_PAUSE:I_PLAY)+'<span class="sr">'+(on?"Stop":(ro?"Ritmul din drop":"Drop beat"))+'</span></button></div>'+energySvg(a.sections)+'<div class="secs">';
+    a.sections.forEach(function(x){hh+='<i style="flex:'+x.bars+'" title="'+esc(x.name+", "+x.bars)+'">'+esc(x.name)+'</i>'});
+    return hh+'</div><div class="acts2"><button data-act="arrmidi" data-i="'+i+'">'+I_DL+(ro?"Descarcă MIDI complet":"Download full MIDI")+'</button></div></div>'}
+  var h='<div class="arr"><div class="top"><b>🎛️ '+esc(a.title)+'</b><span>'+esc([a.genre?a.genre.charAt(0).toUpperCase()+a.genre.slice(1):"",a.bpm+" BPM",a.key,bars+(ro?" măsuri":" bars"),Math.floor(sec/60)+":"+("0"+sec%60).slice(-2)].filter(Boolean).join(" · "))+'</span></div><div class="secs">';
   a.sections.forEach(function(x){var col=ENERGY_COL[(x.energy.match(/none|light|build|drop|full|break|outro/)||["drop"])[0]];h+='<i style="flex:'+x.bars+';background:'+col+'" title="'+esc(x.name+" · "+x.bars)+'">'+esc(x.name)+'</i>'});
   h+='</div><div class="legend">'+a.sections.map(function(x){return esc(x.name)+" "+x.bars}).join(" · ")+'</div>';
   return h+'<div class="row"><button class="main" data-act="arrmidi" data-i="'+i+'">'+(ro?"Descarcă MIDI complet":"Download full MIDI")+'</button><button data-act="arrplay" data-i="'+i+'">'+(on?"■ Stop":(ro?"▶ Ritmul din drop":"▶ Drop beat"))+'</button></div></div>'}
@@ -1874,7 +2112,7 @@ function startTalking(){
     if(convo)watchSilence(stream,recorder);
   },function(){if(convo)endConvo();render.error="Nova needs the microphone. Allow it in your browser’s settings for this site.";render()});
 }
-function showListening(on){on=on||convo;$("listening").hidden=!on;$("composer").hidden=on}
+function showListening(on){on=on||convo;$("listening").hidden=!on;$("composer").hidden=on;document.documentElement.classList.toggle("listening",!!on)}
 function stopTalking(){
   if(convo&&!recog&&!(recorder&&recorder.state!=="inactive")){ // tap while Nova talks: interrupt and listen
     if(!busy){stopSpeaking();startTalking()}return}
@@ -2260,6 +2498,7 @@ $("chatList").addEventListener("click",function(e){
 });
 $("inner").addEventListener("click",function(e){
   var ur=e.target.closest("[data-unremind]");if(ur){unremind(ur.getAttribute("data-unremind"));return}
+  var oc=e.target.closest("[data-openchat]");if(oc&&!busy){var c=chats.filter(function(x){return x.id===oc.getAttribute("data-openchat")})[0];if(c){stopSpeaking();chatId=c.id;msgs=c.msgs.slice();store("nova.current",chatId);render.error="";render()}return}
   var s=e.target.closest(".starter,.next button");if(s){send(s.getAttribute("data-q"));return}
   var v=e.target.closest("[data-view]");if(v){openViewer(v.getAttribute("data-view"));return}
   if(e.target.closest("#wOpen")){openKeyPage();return}
