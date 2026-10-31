@@ -306,6 +306,7 @@ a{color:inherit}
 .authcard .msg{margin:0;font-size:14px;line-height:1.45;color:var(--dim)}
 .authcard .msg.bad{color:var(--danger)}
 .authcard .msg.good{color:var(--ink)}
+.guest{display:grid;gap:8px;margin-top:4px;padding-top:14px;border-top:1px solid var(--line)}.guest .note{margin:0;font-size:12.5px;color:var(--dim);text-align:center;line-height:1.45}.btn.ghost{background:var(--glass);color:var(--ink);border:1px solid var(--edge)}
 .linkbtn{justify-self:center;color:var(--dim);font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .btn[disabled]{opacity:.55}
 @media (prefers-reduced-motion:reduce){.spin,.listen .rec{animation:none}}
@@ -498,13 +499,15 @@ a{color:inherit}
     <p class="msg" id="aMsg" role="status"></p>
     <button class="btn" id="aGo" type="submit">Log in</button>
     <button class="linkbtn" type="button" id="aForgot">Forgot password?</button>
+    <div class="guest"><button class="btn ghost" type="button" id="aGuest">Continue without an account</button>
+    <p class="note">No account needed: your chats stay on this device. A free account (Sign up above, just an email and a password) only syncs your chats between your devices.</p></div>
   </form>
 </section>
 
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.30-c";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.10.31-a";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -2323,7 +2326,7 @@ function keep(d){
   session={access_token:d.access_token,refresh_token:d.refresh_token,expires_at:d.expires_at||Math.floor(Date.now()/1000)+(+d.expires_in||3600),email:(d.user&&d.user.email)||(session&&session.email)||""};
   store("nova.session",session);
 }
-function showAuth(on){$("auth").hidden=!on;if(on){var u=wallUrl();$("auth").style.backgroundImage=u?"url(\""+u+"\")":"none"}$("sEmail").textContent=session?session.email:"Not logged in"}
+function showAuth(on){$("sLogout").textContent=session?(isRo()?"Deconectare":"Log out"):(isRo()?"Conectare / cont nou":"Log in / Sign up");$("auth").hidden=!on;if(on){var u=wallUrl();$("auth").style.backgroundImage=u?"url(\""+u+"\")":"none"}$("sEmail").textContent=session?session.email:"Not logged in"}
 function setMode(m){
   mode=m;var tabs=$("authTabs").querySelectorAll("button");
   for(var i=0;i<tabs.length;i++)tabs[i].setAttribute("aria-selected",String(tabs[i].getAttribute("data-mode")===m));
@@ -2334,7 +2337,7 @@ function setMode(m){
   $("aForgot").hidden=(m!=="login");
   $("aPass").setAttribute("autocomplete",m==="login"?"current-password":"new-password");
   $("aGo").textContent={login:"Log in",signup:"Create account",forgot:"Send reset link",newpass:"Save new password"}[m];
-  $("authLead").textContent={login:"Log in to talk to Nova.",signup:"Make your Nova account.",forgot:"We’ll email you a link to choose a new password.",newpass:"Choose a new password."}[m];
+  $("authLead").textContent={login:"Log in to sync your chats, or continue without an account below.",signup:"Make a free Nova account: just your email and a password.",forgot:"We’ll email you a link to choose a new password.",newpass:"Choose a new password."}[m];
   msg("");
 }
 function msg(t,kind){var el=$("aMsg");el.textContent=t;el.className="msg"+(kind?" "+kind:"")}
@@ -2359,7 +2362,9 @@ $("authForm").addEventListener("submit",function(e){
   if(mode==="newpass")p=authCall("/user",{password:pass},"PUT",session&&session.access_token).then(function(){showAuth(false);toast("New password saved")});
   p.catch(function(err){msg(err.message,"bad")}).finally(function(){go.disabled=false});
 });
+$("aGuest").addEventListener("click",function(){store("nova.guest",true);showAuth(false);render();toast(isRo()?"Folosești Nova fără cont. Poți crea unul oricând din Setări.":"Using Nova without an account. You can make one anytime in Settings.")});
 $("sLogout").addEventListener("click",function(){
+  if(!session){$("settings").hidden=true;setMode("signup");showAuth(true);return}
   var t=session&&session.access_token;
   if(t&&CFG.supabaseUrl)authCall("/logout",null,"POST",t).catch(function(){});
   session=null;try{localStorage.removeItem("nova.session")}catch(e){}
@@ -2376,7 +2381,7 @@ function startAuth(){
     showAuth(false);toast(type==="signup"?"Email confirmed. Welcome to Nova!":"You’re logged in");return;
   }
   if(h.get("error_description")){history.replaceState(null,"",location.pathname);showAuth(true);setMode("login");msg(h.get("error_description").replace(/\+/g," ")+". Try again.","bad");return}
-  if(!session){showAuth(true);setMode("login");return}
+  if(!session){if(load("nova.guest",false)){showAuth(false);return}showAuth(true);setMode("login");return}
   showAuth(false);
   // refresh the login quietly when it is about to run out
   if(session.expires_at-60<Date.now()/1000&&CFG.supabaseUrl){
