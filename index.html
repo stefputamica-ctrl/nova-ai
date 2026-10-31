@@ -25,12 +25,12 @@
 <meta name="twitter:image" content="https://stefputamica-ctrl.github.io/nova-ai/share.jpg">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Nova","applicationCategory":"UtilitiesApplication","operatingSystem":"Android, Windows, iOS","description":"A free AI assistant you can talk to: voice chat, photo questions, picture making and code help.","url":"https://stefputamica-ctrl.github.io/nova-ai/","image":"https://stefputamica-ctrl.github.io/nova-ai/share.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "inLanguage": "en", "mainEntity": [{"@type": "Question", "name": "Is Nova free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Nova is free on Android, Windows, iPhone and the web, with no ads. It uses your own free Google Gemini key, which you get at aistudio.google.com in about a minute."}}, {"@type": "Question", "name": "Does Nova speak Romanian?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Talk or type in Romanian or English and Nova answers in the same language, with a natural voice for that language."}}, {"@type": "Question", "name": "Can I talk to Nova without typing?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Tap the microphone to say one thing, or switch on conversation mode to talk back and forth hands-free. Nova answers out loud and then listens again."}}, {"@type": "Question", "name": "Can Nova set reminders?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Say “remind me at 6 to practise guitar”. On Android the reminder pops up even when Nova is closed."}}, {"@type": "Question", "name": "Is my data private?", "acceptedAnswer": {"@type": "Answer", "text": "Your Gemini key stays on your device. Chats stay on your device unless you log in and turn on sync. There are no ads and no tracking."}}, {"@type": "Question", "name": "How do I install Nova on iPhone?", "acceptedAnswer": {"@type": "Answer", "text": "Open the Nova web app in Safari, tap Share, then Add to Home Screen. It opens full screen like a normal app."}}]}</script>
-<meta name="theme-color" content="#070a14">
+<meta name="theme-color" content="#060716">
 <link rel="icon" type="image/png" href="app/icons/favicon.png">
 <link rel="apple-touch-icon" href="app/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: one deep-space column. The horizon photo opens the page, a phone shows the app,
    then what Nova does, then where to get it. Single dark look on purpose, like the app's wallpaper. */
@@ -150,6 +150,65 @@ footer .mark{font-family:var(--display);font-weight:300;letter-spacing:.5em;colo
 .faq summary::after{content:"+";color:var(--sun);font-weight:400;font-size:22px;line-height:1}
 .faq details[open] summary::after{content:"–"}
 .faq p{margin:10px 0 0;color:var(--haze)}
+
+/* ===== matches the app: Inter Tight, the sunrise on the planet's horizon, white-lavender accents ===== */
+:root{--void:#060716;--deep:#0f1334;--glass:rgba(195,205,255,.06);--edge:rgba(195,205,255,.12);--star:#f3f5fd;--haze:#979dbf;--rim:#c3cdff;--sun:#c3cdff;
+ --display:"Inter Tight",system-ui,sans-serif;--body:"Inter Tight",system-ui,sans-serif}
+body{letter-spacing:-.01em}
+.pill{background:rgba(10,12,32,.5)!important}
+.brand{font-family:var(--display);font-weight:800!important;letter-spacing:-.045em!important;font-size:22px!important}
+.navlinks a.get,.btn.primary{background:linear-gradient(180deg,#fbfcff,#dfe4f7)!important;color:#0b0d20!important;border-color:transparent!important;box-shadow:0 8px 24px -10px rgba(150,165,255,.7)}
+.hero{position:relative;margin-top:-72px;height:min(92vh,880px);min-height:560px;overflow:hidden;background:var(--void)}
+.hero .sky{position:absolute;inset:0;background:url("app/skywide.jpg") center top/cover no-repeat}
+.hero .sky::after{content:"";position:absolute;inset:auto 0 0;height:55%;background:linear-gradient(rgba(6,7,22,0),var(--void) 85%)}
+.hero .hz{position:absolute;inset:0}
+.hero .hz svg{position:absolute;left:0;top:0;overflow:visible}
+.hero .hh{position:relative;z-index:2;height:100%;display:flex;align-items:flex-start;padding-top:clamp(120px,22vh,220px)}
+.hero h1{margin:0;font:800 clamp(88px,19vw,240px)/.86 var(--display);letter-spacing:-.065em;color:#f3f5fd}
+.hero::after{display:none}
+.lede{margin-top:clamp(-200px,-18vh,-110px)!important;justify-items:start!important;text-align:left!important}
+.lede p{max-width:36ch;color:#a8aed0}
+.lede strong{display:block;font-size:clamp(26px,3.6vw,38px);font-weight:800;letter-spacing:-.045em;line-height:1.08;color:var(--star);margin-bottom:10px}
+.cta{justify-content:flex-start!important}
+@keyframes hzRise{0%{opacity:0;transform:scale(.55)}100%{opacity:1;transform:scale(1)}}
+@keyframes hzGlint{0%,100%{transform:scale(.94)}50%{transform:scale(1.07)}}
+.hz .atmo{transform-box:view-box;animation:hzRise 2.6s cubic-bezier(.2,.7,.2,1) both}
+.hz .flare{transform-box:view-box;animation:hzRise 1.8s .5s cubic-bezier(.2,.7,.2,1) both,hzGlint 6s 2.4s ease-in-out infinite}
+.showtext h2,.section h2{font-family:var(--display)!important;font-weight:800!important;letter-spacing:-.05em!important;line-height:1.02!important}
+/* phone shows the app's home screen */
+.phone{background:#0b0d1e!important;border-color:#262b4d!important;box-shadow:0 40px 120px -30px rgba(120,140,255,.45),0 0 0 6px #070818!important}
+.screen{background:#060716!important}
+.screen .psky{position:absolute;inset:0 0 auto;height:62%;background:url("app/sky.jpg") center top/cover}
+.screen .psky::after{content:"";position:absolute;inset:auto 0 0;height:50%;background:linear-gradient(rgba(6,7,22,0),#060716)}
+.screen .phz{position:absolute;inset:0}.screen .phz svg{position:absolute;left:0;top:0}
+.screen .top{background:none!important;border:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0 2px 0 6px!important}
+.screen .top b{font:800 16px var(--display)!important;letter-spacing:-.045em}
+.screen .top b i{display:none}
+.screen .ics{display:flex;gap:5px}.screen .ics i{width:26px;height:26px;border-radius:50%;background:rgba(195,205,255,.08);border:1px solid rgba(195,205,255,.14)}
+.screen .greet{position:absolute;left:16px;right:16px;top:96px;display:grid;gap:6px}
+.screen .greet b{font:800 30px/1 var(--display);letter-spacing:-.055em}
+.screen .greet span{font-size:12px;color:#a8aed0}
+.starters{bottom:70px!important;gap:6px!important}
+.starters span{display:flex!important;gap:8px;align-items:flex-start;text-decoration:none!important;font:500 11.5px/1.35 var(--body)!important;color:#dfe3f4}
+.starters span::before{content:"";flex:none;width:8px;height:8px;margin-top:3px;background:#8a95e6;clip-path:polygon(50% 0,59% 41%,100% 50%,59% 59%,50% 100%,41% 59%,0 50%,41% 41%)}
+.composer{background:linear-gradient(180deg,rgba(26,30,66,.7),rgba(12,14,36,.78))!important;border-color:rgba(195,205,255,.13)!important}
+.composer .plus{border:0!important;color:#979dbf!important}
+.composer .mic{background:linear-gradient(180deg,#fbfcff,#dfe4f7)!important}
+.q.you{background:linear-gradient(180deg,rgba(236,239,255,.97),rgba(214,220,250,.95))!important;border-radius:22px 22px 7px 22px!important;box-shadow:0 10px 26px -12px rgba(140,155,255,.6)}
+.q.nova{background:none!important;border:0!important;padding-left:0!important}
+.q.nova::before{width:12px!important;height:12px!important;margin-top:6px!important;border-radius:0!important;background:#eef1ff!important;clip-path:polygon(50% 0,58% 42%,100% 50%,58% 58%,50% 100%,42% 58%,0 50%,42% 42%);filter:drop-shadow(0 0 5px rgba(170,185,255,.9))}
+/* cards */
+.features{background:none!important;border:0!important;gap:12px!important;border-radius:0!important;overflow:visible!important}
+.f{border-radius:24px;border:1px solid var(--edge);background:linear-gradient(180deg,rgba(30,35,78,.62),rgba(13,15,38,.72))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 22px 50px -24px rgba(0,0,0,.8)}
+.f svg{color:#b3beff!important}
+.f h3{font-weight:700!important;letter-spacing:-.025em}
+.card{border-radius:24px!important;background:linear-gradient(180deg,rgba(30,35,78,.62),rgba(13,15,38,.72))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 22px 50px -24px rgba(0,0,0,.8)}
+.card h3{font-weight:700!important;letter-spacing:-.025em}
+.status{border-color:rgba(195,205,255,.35)!important;color:var(--rim)!important;background:rgba(195,205,255,.08)!important}
+.faq summary::after{color:var(--rim)!important}
+footer .mark{font-family:var(--display)!important;font-weight:800!important;letter-spacing:-.045em!important;font-size:20px}
+@media (max-width:860px){.hero{height:86vh}.lede{margin-top:clamp(-170px,-17vh,-100px)!important}}
+@media (prefers-reduced-motion:reduce){.hz *{animation:none!important}}
 </style>
 </head>
 <body>
@@ -157,7 +216,7 @@ footer .mark{font-family:var(--display);font-weight:300;letter-spacing:.5em;colo
 <header class="bar">
   <div class="wrap">
     <nav class="pill" aria-label="Main">
-      <a class="brand" href="#top"><span class="dot"></span>NOVA</a>
+      <a class="brand" href="#top">Nova</a>
       <div class="navlinks">
         <a href="ro/" hreflang="ro" lang="ro">RO</a>
         <a href="#features">What it does</a>
@@ -168,9 +227,7 @@ footer .mark{font-family:var(--display);font-weight:300;letter-spacing:.5em;colo
 </header>
 
 <main id="top">
-  <section class="hero" aria-label="Nova">
-    <img src="horizon.jpg" alt="The word NOVA above a dark planet, with a bright star rising over its blue edge" width="1440" height="1000">
-  </section>
+  <section class="hero" aria-label="Nova"><div class="sky"></div><div class="hz" id="hz" aria-hidden="true"></div><div class="wrap hh"><h1>Nova</h1></div></section>
 
   <div class="wrap lede">
     <p><strong>An AI you can talk to.</strong> It listens, answers out loud, looks at your photos, paints pictures and helps you code.</p>
@@ -183,15 +240,7 @@ footer .mark{font-family:var(--display);font-weight:300;letter-spacing:.5em;colo
 
   <div class="wrap show">
     <div class="phone" aria-hidden="true">
-      <div class="screen">
-        <div class="top"><b><i></i>Nova</b><div class="chips"><span>Chats</span><span>New chat</span><span>Settings</span></div></div>
-        <div class="starters">
-          <span>Explain why some chord progressions sound sad</span>
-          <span>Give me a fun fact about space</span>
-          <span>Help me plan a relaxed weekend</span>
-        </div>
-        <div class="composer"><span class="plus">+</span><span class="ph">Message Nova</span><span class="mic"></span></div>
-      </div>
+      <div class="screen"><div class="psky"></div><div class="phz" id="phz"></div><div class="top"><b>Nova</b><div class="ics"><i></i><i></i><i></i></div></div><div class="greet"><b>Good evening.</b><span>What are we making today?</span></div><div class="starters"><span>Explain why some chord progressions sound sad</span><span>Give me a fun fact about space</span></div><div class="composer"><span class="plus">+</span><span class="ph">Message Nova</span><span class="mic"></span></div></div>
     </div>
     <div class="showtext">
       <h2>Tap the mic and just say it.</h2>
@@ -234,8 +283,8 @@ footer .mark{font-family:var(--display);font-weight:300;letter-spacing:.5em;colo
         </div>
         <div class="f">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M4 12c3-2 13-2 16 0" stroke-linecap="round"/></svg>
-          <h3>Liquid glass, your wallpaper</h3>
-          <p>Frosted glass over a space wallpaper made for Nova, in light and dark. Or use any photo you like.</p>
+          <h3>The sunrise on the horizon</h3>
+          <p>Nova is the light rising over a planet’s edge. It glows when you talk and pulses when Nova speaks. Put Space, Sky, Colours or your own photo behind it.</p>
         </div>
         <div class="f">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M5 5h14v11H9l-4 3z"/></svg>
@@ -327,7 +376,7 @@ footer .mark{font-family:var(--display);font-weight:300;letter-spacing:.5em;colo
 
 <footer>
   <div class="wrap">
-    <span class="mark">NOVA</span>
+    <span class="mark">Nova</span>
     <span>Answers come from Google Gemini and can be wrong. Pictures are made by Pollinations.ai. <a href="privacy.html">Privacy policy</a> · <a href="ro/">Română</a></span>
   </div>
 </footer>
@@ -367,6 +416,34 @@ document.getElementById("shareNova").addEventListener("click",function(){
     show();Promise.resolve().then(function(){return part(0)}).catch(function(){a.textContent="Download failed – tap to try again";delete a.dataset.busy});
   });
 })();
+</script>
+<script>
+/* the sunrise on the planet's horizon, drawn the same way as in the app */
+function hzSvg(W,H,fy,fx,R,cx){
+  var cy=fy+Math.sqrt(R*R-(fx-cx)*(fx-cx)),a=(fx/W).toFixed(3),f=function(n){return n.toFixed(1)};
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><defs>'+
+  '<radialGradient id="hzPl" cx="'+fx+'" cy="'+fy+'" r="'+f(R*.9)+'" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#151a44"/><stop offset=".12" stop-color="#0b0e28"/><stop offset=".5" stop-color="#05060f"/><stop offset="1" stop-color="#030409"/></radialGradient>'+
+  '<linearGradient id="hzRim" x1="0" x2="1"><stop offset="0" stop-color="#6c78e8" stop-opacity="0"/><stop offset="'+Math.max(0,fx/W-.28).toFixed(3)+'" stop-color="#8d9bff" stop-opacity=".55"/><stop offset="'+a+'" stop-color="#fff"/><stop offset="'+Math.min(1,fx/W+.35).toFixed(3)+'" stop-color="#9aa6ff" stop-opacity=".6"/><stop offset="1" stop-color="#6c78e8" stop-opacity=".08"/></linearGradient>'+
+  '<linearGradient id="hzSh" x1="0" x2="1"><stop offset="0" stop-color="#9fb0ff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#9fb0ff" stop-opacity="0"/></linearGradient>'+
+  '<linearGradient id="hzAn" x1="0" x2="1"><stop offset="0" stop-color="#6f86ff" stop-opacity="0"/><stop offset=".5" stop-color="#8fa4ff" stop-opacity=".35"/><stop offset="1" stop-color="#6f86ff" stop-opacity="0"/></linearGradient>'+
+  '<linearGradient id="hzSv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'+
+  '<radialGradient id="hzFl"><stop offset="0" stop-color="#fff"/><stop offset=".18" stop-color="#f2f5ff"/><stop offset=".45" stop-color="#a9b8ff" stop-opacity=".45"/><stop offset="1" stop-color="#7d8fff" stop-opacity="0"/></radialGradient>'+
+  '<filter id="hzB1" x="-60%" y="-300%" width="220%" height="700%"><feGaussianBlur stdDeviation="34"/></filter><filter id="hzB2" x="-60%" y="-300%" width="220%" height="700%"><feGaussianBlur stdDeviation="12"/></filter><filter id="hzB3" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>'+
+  '<g class="atmo" style="transform-origin:'+fx+'px '+f(fy)+'px"><ellipse cx="'+f(fx+W*.12)+'" cy="'+f(fy+10)+'" rx="'+f(W*.85)+'" ry="70" fill="#3a3fb0" opacity=".55" filter="url(#hzB1)"/><ellipse cx="'+f(fx+20)+'" cy="'+f(fy+4)+'" rx="'+f(Math.min(W*.42,520))+'" ry="26" fill="#7b8cff" opacity=".75" filter="url(#hzB2)"/></g>'+
+  '<circle cx="'+f(cx)+'" cy="'+f(cy)+'" r="'+R+'" fill="url(#hzPl)"/><circle cx="'+f(cx)+'" cy="'+f(cy)+'" r="'+(R-1.5)+'" fill="none" stroke="#8c9bff" stroke-opacity=".35" stroke-width="5" filter="url(#hzB3)"/>'+
+  '<circle cx="'+f(cx)+'" cy="'+f(cy)+'" r="'+R+'" fill="none" stroke="url(#hzRim)" stroke-width="1.4"/>'+
+  '<g class="flare" style="transform-origin:'+fx+'px '+f(fy)+'px"><rect x="'+f(fx-W*.6)+'" y="'+f(fy-1.5)+'" width="'+f(W*1.2)+'" height="3" fill="url(#hzAn)"/>'+
+  '<rect x="'+f(fx-Math.min(W*.45,320))+'" y="'+f(fy-.6)+'" width="'+f(Math.min(W*.9,640))+'" height="1.2" fill="url(#hzSh)"/>'+
+  '<rect class="vs" x="'+f(fx-.6)+'" y="'+f(fy-80)+'" width="1.2" height="160" fill="url(#hzSv)" style="transform-origin:'+fx+'px '+f(fy)+'px"/>'+
+  '<circle cx="'+fx+'" cy="'+f(fy)+'" r="26" fill="url(#hzFl)" opacity=".55"/><circle cx="'+fx+'" cy="'+f(fy)+'" r="9" fill="url(#hzFl)"/></g></svg>';
+}
+
+function drawSiteHz(){
+  var h=document.getElementById("hz");if(h){var W=h.clientWidth,H=h.clientHeight,wide=W>=860;
+    h.innerHTML=hzSvg(W,H,Math.round(H*(wide?.62:.6)),Math.round(W*(wide?.3:.36)),wide?Math.max(1500,W*1.25):Math.max(560,W*1.45),W*(wide?.55:.6))}
+  var p=document.getElementById("phz");if(p){var w=p.clientWidth,hh=p.clientHeight;p.innerHTML=hzSvg(w,hh,Math.round(hh*.6),Math.round(w*.38),Math.max(420,w*1.45),w*.6).replace(/hz(Pl|Rim|Sh|An|Sv|Fl|B1|B2|B3)/g,"p$1")}
+}
+drawSiteHz();var hzT;window.addEventListener("resize",function(){clearTimeout(hzT);hzT=setTimeout(drawSiteHz,150)});
 </script>
 </body>
 </html>
