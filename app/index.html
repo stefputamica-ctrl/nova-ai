@@ -912,7 +912,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-i";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-j";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -1286,7 +1286,10 @@ function freePages(q,english){
   q=english||q.replace(/^(please\s+)?(search( the web| online| on google)?|look ?up|google|caută( pe (net|internet|google))?|cauta( pe (net|internet|google))?)\s*[:,-]?\s*/i,"").replace(/https?:\/\/\S+/g," ").trim().slice(0,160)||q.slice(0,160);
   var df=/\b(today|tonight|right now|now|current)\b|\bazi\b|astăzi|astazi|\bacum\b/i.test(when)?"d":/\b(news|latest|newest|recent|this week|yesterday|headlines?)\b|știri|stiri|ultim|\bieri\b/i.test(when)?"w":"";
   var pages=["https://html.duckduckgo.com/html/?q="+encodeURIComponent(q)+(df?"&df="+df:"")];
-  if(/\b(news|headlines?|happen(ed|ing)|world)\b|știri|stiri|întâmplat|intamplat|lume/i.test(when+" "+q))pages.push("https://en.wikipedia.org/wiki/Portal:Current_events");
+  var news=/\b(news|headlines?|happen(ed|ing)|world)\b|știri|stiri|întâmplat|intamplat|lume/i.test(when+" "+q);
+  if(news)pages.push("https://news.google.com/rss/search?q="+encodeURIComponent(q+(df==="d"?" when:1d":df==="w"?" when:7d":""))+"&hl=en-US&gl=US&ceid=US:en");
+  if(news&&/\b(tech|technology|ai|gadgets?|apple|google|microsoft|software|phones?)\b|tehnolog/i.test(when+" "+q))pages.push("https://www.techmeme.com/");
+  if(news)pages.push("https://en.wikipedia.org/wiki/Portal:Current_events");
   return pages;
 }
 function ask(parts,json,noTools,force,free,english){
