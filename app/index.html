@@ -912,7 +912,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-j";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-k";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -1292,7 +1292,21 @@ function freePages(q,english){
   if(news)pages.push("https://en.wikipedia.org/wiki/Portal:Current_events");
   return pages;
 }
-function ask(parts,json,noTools,force,free,english){
+// Windows app only: the app downloads the search and news pages itself (a web page can't) and Nova
+// gets the headlines as text, like on the phone.
+function decHtml(t){return t.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,"$1").replace(/<[^>]+>/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;|&#x27;/g,"'").replace(/&nbsp;/g," ").replace(/\s+/g," ").trim()}
+function parseFreePage(url,body){
+  if(!body)return "";
+  if(/news\.google\.com\/rss/.test(url)){var items=body.split("<item>").slice(1,16).map(function(it){function g(tag){var m=new RegExp("<"+tag+"[^>]*>([\\s\\S]*?)</"+tag+">").exec(it);return decHtml(m?m[1]:"")}return "- "+g("title")+" ("+g("pubDate").slice(0,22)+") "+g("link")});return items.length?"Google News results:\n"+items.join("\n"):""}
+  if(/duckduckgo\.com/.test(url)){var res=body.split('result__body"').slice(1,9).map(function(b){var a=/class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/.exec(b),sn=/class="result__snippet"[^>]*>([\s\S]*?)<\/a>/.exec(b);if(!a)return "";var link=a[1],u=/uddg=([^&]+)/.exec(link);if(u)link=decodeURIComponent(u[1]);return "- "+decHtml(a[2])+": "+(sn?decHtml(sn[1]):"")+" "+link}).filter(Boolean);return res.length?"Web search results:\n"+res.join("\n"):""}
+  if(/techmeme\.com/.test(url)){var hs=(body.match(/<a class="ourh"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)||[]).map(function(h){var m=/href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/.exec(h);return{t:decHtml(m[2]),u:m[1]}}).filter(function(x){return x.t.length>30}).slice(0,15).map(function(x){return "- "+x.t+" "+x.u});return hs.length?"Techmeme top tech stories right now:\n"+hs.join("\n"):""}
+  var main=decHtml(body.replace(/<(script|style|nav|footer|header)[\s\S]*?<\/\1>/gi," "));return main?"Page "+url+":\n"+main.slice(0,3500):"";
+}
+function readFreePages(urls){
+  return Promise.all(urls.map(function(u){return Promise.race([novaDesktop.readPage(u),new Promise(function(r){setTimeout(function(){r("")},10000)})]).then(function(b){return parseFreePage(u,b||"")}).catch(function(){return ""})}))
+    .then(function(a){return a.filter(Boolean).join("\n\n").slice(0,12000)});
+}
+function ask(parts,json,noTools,force,free,english,pre){
   // free search: first work out what to search for
   if(free&&english==null&&!json&&!noTools&&S.web){var stop=abortCtl=new AbortController();return searchQuery(lastUserText(parts),stop).then(function(q){if(stop.signal.aborted)throw new Error("__stopped__");return ask(parts,json,noTools,force,free,q)})}
   ask.sources=[];ask.suggest="";
@@ -1304,10 +1318,11 @@ function ask(parts,json,noTools,force,free,english){
   if(webOn&&!free&&(!webOk||webLevel===0||googleSearchOff())&&(force||NEEDS_WEB.test(userText))){free=true;if(english==null)return ask(parts,json,noTools,force,true)}
   var google=webOn&&!free&&webOk&&webLevel>0&&!googleSearchOff();
   var sys=system(json)+(google&&force?" Use the Google Search tool now to answer the user's last message.":"")+(free?FREE_RULES:"");
+  if(free&&pre==null&&window.novaDesktop&&novaDesktop.readPage){clearTimeout(t);return readFreePages(freePages(userText,english)).then(function(txt){if(ctl.signal.aborted)throw new Error("__stopped__");return ask(parts,json,noTools,force,free,english,txt||"")})}
   var sendParts=parts;
   if(free){
     sendParts=parts.slice();var last=Object.assign({},sendParts[sendParts.length-1]);
-    last.parts=(last.parts||[]).concat([{text:"\n\n[Web pages fetched for this question, today is "+new Date().toDateString()+": "+freePages(userText,english).join(" ")+" ]"}]);
+    last.parts=(last.parts||[]).concat([{text:pre?"\n\n[Web pages fetched for this question, today is "+new Date().toDateString()+". Use these results:\n"+pre+"\n]":"\n\n[Web pages fetched for this question, today is "+new Date().toDateString()+": "+freePages(userText,english).join(" ")+" ]"}]);
     sendParts[sendParts.length-1]=last;
   }
   var body={systemInstruction:{parts:[{text:sys}]},contents:sendParts};
