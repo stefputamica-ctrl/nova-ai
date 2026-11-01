@@ -469,7 +469,38 @@ html.sp #auth{background-color:#060716}
 html.sp .word{font-weight:800;letter-spacing:-.045em;font-size:40px;padding-left:0}
 html.sp .toast,html.sp .updbar{border-radius:999px}
 html.sp .updbar .btn{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20}
-@media (prefers-reduced-motion:reduce){html.sp #hzw *{animation:none!important}html.sp #hzw{transition:none}}
+
+/* polish round 2: menus, listening, login, study */
+.lvl{display:none}
+html.sp .lvl{display:flex;align-items:center;gap:3px;height:18px;flex:none}
+html.sp .lvl i{width:3px;height:18px;border-radius:2px;background:linear-gradient(180deg,#fff,#9aa8ff);animation:lvl .8s ease-in-out infinite;transform-origin:center}
+html.sp .lvl i:nth-child(2){animation-delay:.12s}html.sp .lvl i:nth-child(3){animation-delay:.24s}html.sp .lvl i:nth-child(4){animation-delay:.36s}html.sp .lvl i:nth-child(5){animation-delay:.48s}
+@keyframes lvl{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+html.sp .listen{padding:10px 10px 10px 18px;gap:12px;border-color:rgba(195,205,255,.3);box-shadow:0 0 0 1px rgba(195,205,255,.08),0 0 36px -6px rgba(120,140,255,.55)}
+html.sp .listen .rec{display:none}
+html.sp .listen span#listenText{font-weight:600;color:var(--ink)}
+html.sp #plusMenu{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:8px;border-radius:24px;max-width:420px;width:100%}
+html.sp #plusMenu[hidden]{display:none}
+html.sp #plusMenu button{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:12px;border-radius:16px;font-size:13.5px;font-weight:600;text-align:left;background:rgba(195,205,255,.05);border:1px solid rgba(195,205,255,.08);line-height:1.2}
+html.sp #plusMenu button svg{color:#b3beff}
+html.sp .tabs{background:rgba(195,205,255,.07)!important;border:0!important}
+html.sp .tabs button[aria-selected="true"]{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20;border-color:transparent}
+html.sp .authcard{border-radius:28px}
+html.sp #auth{background-image:url("sky.jpg")!important;background-position:center top!important}
+html.sp #study .card .side{text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;color:#8f96bd}
+html.sp #study .card{border-radius:28px}
+html.sp #study .head b{font-size:20px;font-weight:800;letter-spacing:-.03em}
+html.sp .toast{background:linear-gradient(180deg,rgba(30,35,78,.9),rgba(13,15,38,.92));border:1px solid var(--edge)}
+html.sp #focus{border-color:rgba(195,205,255,.2)}
+html.sp .quiz .opts button{border-radius:16px;background:rgba(195,205,255,.05)}
+html.sp .quiz .opts button.right{border-color:#7fdcae;background:rgba(127,220,174,.14)}
+html.sp .quiz .opts button.wrong{border-color:#ff8f8f;background:rgba(255,143,143,.12)}
+html.sp .quiz .q{font-size:16.5px;font-weight:700;letter-spacing:-.02em}
+html.sp .doccard button{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20}
+html.sp .openbtn{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20}
+html.sp .gen{border-radius:24px;border-color:var(--edge)}
+html.sp .spin{border-top-color:#c3cdff}
+@media (prefers-reduced-motion:reduce){html.sp #hzw *,.lvl i{animation:none!important}html.sp #hzw{transition:none}}
 </style>
 </head>
 <body>
@@ -496,7 +527,7 @@ html.sp .updbar .btn{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0
       <button class="round" id="talkMode" aria-label="Conversation mode: talk with Nova hands-free" title="Conversation mode"></button>
       <button class="round" id="act" aria-label="Talk to Nova"></button>
     </div>
-    <div id="listening" class="listen glass" role="button" tabindex="0" hidden><i class="rec"></i><span id="listenText">Listening… tap to send</span><button id="endConvo" hidden>End</button></div>
+    <div id="listening" class="listen glass" role="button" tabindex="0" hidden><i class="rec"></i><span class="lvl" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span id="listenText">Listening… tap to send</span><button id="endConvo" hidden>End</button></div>
   </div>
   <input type="file" id="file" accept="image/*,application/pdf,.pdf,text/*,.txt,.md,.csv,.json,.html,.htm,.xml,.js,.ts,.py,.java,.c,.cpp,.cs,.css,.lua,.sql,.log,.srt,.lrc" hidden>
   <input type="file" id="wallFile" accept="image/*" hidden>
@@ -651,7 +682,7 @@ html.sp .updbar .btn{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0
 <!-- log in / sign up -->
 <section id="auth" hidden aria-label="Log in to Nova">
   <form class="authcard glass" id="authForm" novalidate>
-    <h1 class="word">NOVA</h1>
+    <h1 class="word">Nova</h1>
     <p class="lead" id="authLead">Log in to talk to Nova.</p>
     <div class="tabs glass" role="tablist" id="authTabs">
       <button type="button" role="tab" data-mode="login" aria-selected="true">Log in</button>
@@ -671,7 +702,7 @@ html.sp .updbar .btn{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-a";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-b";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -775,6 +806,13 @@ function checkKey(k){
 function showKeyResult(el,res){el.textContent=res.msg;el.className="kout"+(res.ok?" ok":res.ok===false?" bad":"")}
 
 
+
+// icons for the + menu (space look)
+(function(){var ic=function(d){return'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'},
+ I={file:'<rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>',screen:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',song:'<path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
+ python:'<path d="m8.5 8-4 4 4 4M15.5 8l4 4-4 4M13.5 5.5l-3 13"/>',quiz:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 17h.01"/>',cards:'<rect x="4" y="7" width="13" height="13" rx="2.5"/><path d="M8 4h9.5A2.5 2.5 0 0 1 20 6.5V16"/>',
+ plan:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',arrange:'<path d="M4 7h7M14 7h6M4 12h4M11 12h9M4 17h10M17 17h3"/>',focus:'<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2M10 2.8h4"/>'};
+ document.querySelectorAll("#plusMenu [data-plus]").forEach(function(b){var k=b.getAttribute("data-plus");if(I[k])b.insertAdjacentHTML("afterbegin",ic(I[k]))})})();
 /* ---------- the horizon (space look): Nova is the sunrise on the planet's edge ---------- */
 function hzSvg(W,H,fy,fx,R,cx){
   var cy=fy+Math.sqrt(R*R-(fx-cx)*(fx-cx)),a=(fx/W).toFixed(3),f=function(n){return n.toFixed(1)};
@@ -1704,8 +1742,9 @@ function saveDeck(src){var dk={id:newId(),title:String(src.title||"Flashcards").
   saveDecks(decks().concat(dk));return dk}
 function deckFromJson(d){var cs=(d.cards||[]).map(function(c){return{f:c.front||c.f||c.q||"",b:c.back||c.b||c.a||""}}).filter(function(c){return c.f&&c.b});return cs.length?saveDeck({title:d.title,cards:cs}):null}
 function dueCount(dk){var n=Date.now();return dk.cards.filter(function(c){return c.due<=n}).length}
+function emo(e){return document.documentElement.classList.contains("sp")?"":e+" "}
 function deckCard(d,i){var ro=isRo(),dk=decks().filter(function(x){return x.id===d.id})[0],due=dk?dueCount(dk):0;
-  return'<div class="deck"><div class="top"><b>🃏 '+esc(d.title)+'</b><span>'+(dk?dk.cards.length:d.n)+(ro?" cartonașe":" cards")+(dk&&due?" · "+due+(ro?" de repetat":" to study"):"")+'</span></div>'+
+  return'<div class="deck"><div class="top"><b>'+emo("🃏")+esc(d.title)+'</b><span>'+(dk?dk.cards.length:d.n)+(ro?" cartonașe":" cards")+(dk&&due?" · "+due+(ro?" de repetat":" to study"):"")+'</span></div>'+
   (dk?'<div class="row"><button class="main" data-act="study" data-deck="'+esc(d.id)+'" data-i="'+i+'">'+(ro?"Învață acum":"Study now")+'</button><button data-act="decks" data-i="'+i+'">'+(ro?"Toate pachetele":"All decks")+'</button></div>':'<div class="row"><span style="color:var(--dim);font-size:13px">'+(ro?"Pachetul a fost șters.":"This deck was deleted.")+'</span></div>')+'</div>'}
 function openDecks(){var ro=isRo();$("decksTitle").textContent=ro?"Cartonașe":"Flashcards";$("decksNew").textContent=ro?"Fă cartonașe noi":"Make new flashcards";renderDecks();$("decks").hidden=false}
 function renderDecks(){var ro=isRo(),d=decks().slice().reverse();
@@ -1752,10 +1791,10 @@ function planFromJson(d){var items=(d.items||[]).map(function(x){var t=String(x.
   return{title:String(d.title||(isRo()?"Planul zilei":"Your plan")).slice(0,80),date:dt,items:items}}
 function planAt(p,x){var a=p.date.split("-"),t=x.time.split(":");return new Date(+a[0],+a[1]-1,+a[2],+t[0],+t[1]).getTime()}
 function planCard(p,i){var ro=isRo(),now=Date.now(),done=p.items.filter(function(x){return x.done}).length;
-  var h='<div class="plan"><div class="top"><b>🗓️ '+esc(p.title)+'</b><span>'+done+" / "+p.items.length+(ro?" făcute":" done")+'</span></div>';
+  var h='<div class="plan"><div class="top"><b>'+emo("🗓️")+esc(p.title)+'</b><span>'+done+" / "+p.items.length+(ro?" făcute":" done")+'</span></div>';
   p.items.forEach(function(x,k){h+='<div class="it'+(x.done?" ok":"")+'"><button data-act="planchk" data-i="'+i+'" data-k="'+k+'" aria-label="'+(ro?"Bifează":"Tick")+'">'+(x.done?"✓":"")+'</button><span class="tm">'+esc(x.time+(x.end?"–"+x.end:""))+'</span><span class="tk">'+esc(x.task)+'</span></div>'});
   var future=p.items.filter(function(x){return planAt(p,x)>now}).length;
-  h+='<div class="row">'+(p.reminded?'<span style="color:var(--dim);font-size:13px">⏰ '+(ro?"Mementouri setate":"Reminders set")+'</span>':future?'<button class="main" data-act="planremind" data-i="'+i+'">⏰ '+(ro?"Amintește-mi de fiecare":"Remind me for each")+" ("+future+")"+'</button>':"")+'</div>';
+  h+='<div class="row">'+(p.reminded?'<span style="color:var(--dim);font-size:13px">'+emo("⏰")+(ro?"Mementouri setate":"Reminders set")+'</span>':future?'<button class="main" data-act="planremind" data-i="'+i+'">'+emo("⏰")+(ro?"Amintește-mi de fiecare":"Remind me for each")+" ("+future+")"+'</button>':"")+'</div>';
   return h+'</div>'}
 function planRemind(i){var p=msgs[i].plan,now=Date.now(),n=0;
   p.items.forEach(function(x){var at=planAt(p,x);if(at>now&&!reminders.some(function(r){return r.at===at&&r.text===x.task})){reminders.push({id:newId(),at:at,text:x.task.slice(0,140)});n++}});
@@ -1779,7 +1818,7 @@ function arrCard(a,i){var ro=isRo(),bars=a.sections.reduce(function(s,x){return 
       '<button class="pbtn" data-act="arrplay" data-i="'+i+'" aria-label="'+(on?"Stop":(ro?"Ritmul din drop":"Drop beat"))+'">'+(on?I_PAUSE:I_PLAY)+'<span class="sr">'+(on?"Stop":(ro?"Ritmul din drop":"Drop beat"))+'</span></button></div>'+energySvg(a.sections)+'<div class="secs">';
     a.sections.forEach(function(x){hh+='<i style="flex:'+x.bars+'" title="'+esc(x.name+", "+x.bars)+'">'+esc(x.name)+'</i>'});
     return hh+'</div><div class="acts2"><button data-act="arrmidi" data-i="'+i+'">'+I_DL+(ro?"Descarcă MIDI complet":"Download full MIDI")+'</button></div></div>'}
-  var h='<div class="arr"><div class="top"><b>🎛️ '+esc(a.title)+'</b><span>'+esc([a.genre?a.genre.charAt(0).toUpperCase()+a.genre.slice(1):"",a.bpm+" BPM",a.key,bars+(ro?" măsuri":" bars"),Math.floor(sec/60)+":"+("0"+sec%60).slice(-2)].filter(Boolean).join(" · "))+'</span></div><div class="secs">';
+  var h='<div class="arr"><div class="top"><b>'+emo("🎛️")+esc(a.title)+'</b><span>'+esc([a.genre?a.genre.charAt(0).toUpperCase()+a.genre.slice(1):"",a.bpm+" BPM",a.key,bars+(ro?" măsuri":" bars"),Math.floor(sec/60)+":"+("0"+sec%60).slice(-2)].filter(Boolean).join(" · "))+'</span></div><div class="secs">';
   a.sections.forEach(function(x){var col=ENERGY_COL[(x.energy.match(/none|light|build|drop|full|break|outro/)||["drop"])[0]];h+='<i style="flex:'+x.bars+';background:'+col+'" title="'+esc(x.name+" · "+x.bars)+'">'+esc(x.name)+'</i>'});
   h+='</div><div class="legend">'+a.sections.map(function(x){return esc(x.name)+" "+x.bars}).join(" · ")+'</div>';
   return h+'<div class="row"><button class="main" data-act="arrmidi" data-i="'+i+'">'+(ro?"Descarcă MIDI complet":"Download full MIDI")+'</button><button data-act="arrplay" data-i="'+i+'">'+(on?"■ Stop":(ro?"▶ Ritmul din drop":"▶ Drop beat"))+'</button></div></div>'}
