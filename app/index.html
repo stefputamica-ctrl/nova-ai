@@ -629,6 +629,29 @@ html.cw .themes .t-space{background:radial-gradient(circle 150px at 60% calc(70%
 html.cw .themes .t-sky{background:radial-gradient(circle 150px at 60% calc(70% + 150px),#f7f6f8 149px,#fff 150px,transparent 153px),url("wp-twilight-day.jpg") center/cover}
 html.cw .themes .t-colours{background:radial-gradient(70% 40% at 88% 14%,rgba(240,130,195,.55),transparent 70%),radial-gradient(80% 45% at 6% 42%,rgba(110,150,255,.5),transparent 70%),radial-gradient(circle 150px at 60% calc(70% + 150px),#f7f8fc 149px,#7d8cff 150px,transparent 153px),url("wp-space-day.jpg") center/cover}
 html.cw .themes .tp::after{background:rgba(255,255,255,.75)}
+/* voice cards */
+.vcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.vcard{border-radius:16px;padding:11px 10px 12px;background:rgba(195,205,255,.07);color:var(--ink);cursor:pointer;text-align:left;min-width:0}
+.vcard .vtop{display:flex;justify-content:space-between;align-items:center}
+.vw{display:flex;gap:2px;align-items:center;height:16px}.vw b{display:block;width:2.5px;border-radius:2px;background:currentColor;opacity:.9}
+.vw b:nth-child(1){height:6px}.vw b:nth-child(2){height:11px}.vw b:nth-child(3){height:16px}.vw b:nth-child(4){height:9px}.vw b:nth-child(5){height:13px}.vw b:nth-child(6){height:7px}.vw b:nth-child(7){height:10px}
+.vcard.playing .vw b{animation:lvl .7s ease-in-out infinite}.vcard.playing .vw b:nth-child(2n){animation-delay:.15s}.vcard.playing .vw b:nth-child(3n){animation-delay:.3s}
+.vplay{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:0;padding:0;background:rgba(195,205,255,.14);color:var(--ink);flex:none}
+.vcard>b{display:block;font-size:15px;margin-top:12px;letter-spacing:-.02em}
+.vcard small{display:block;font-size:11.5px;margin-top:1px;color:var(--dim)}
+.vcard em{display:none;font-style:normal;font-size:10.5px;font-weight:600;margin-top:6px}
+.vcard[aria-checked="true"]{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0b0d20}
+.vcard[aria-checked="true"] small,.vcard[aria-checked="true"] em{color:rgba(11,13,32,.55)}.vcard[aria-checked="true"] em{display:block}
+.vcard[aria-checked="true"] .vplay{background:#0b0d20;color:#fff}
+.vbuilt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:13px 0 2px;margin-top:6px;color:var(--ink)}
+.vbuilt span{flex:1}.vbuilt b{display:block;font-size:15px;font-weight:500}.vbuilt small{display:block;font-size:12.5px;color:var(--dim);margin-top:2px}
+.vrad{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--dim);flex:none;position:relative}
+.vbuilt[aria-checked="true"] .vrad{border-color:var(--ink)}.vbuilt[aria-checked="true"] .vrad::after{content:"";position:absolute;inset:3.5px;border-radius:50%;background:var(--ink)}
+html.cw .vcard{background:#f2f2f4}
+html.cw .vcard[aria-checked="true"]{background:#2c2c31;color:#fff}html.cw .vcard[aria-checked="true"] small,html.cw .vcard[aria-checked="true"] em{color:rgba(255,255,255,.6)}
+html.cw .vplay{background:#fff;color:#2c2c31}html.cw .vcard[aria-checked="true"] .vplay{background:#fff;color:#2c2c31}
+html.cw.lg .vcard:not([aria-checked="true"]){background:rgba(44,44,49,.06)}
+html.cd .vcard:not([aria-checked="true"]){background:rgba(255,255,255,.07)}html.cd .vcard[aria-checked="true"]{background:#f2f2f5;color:#111114}html.cd .vcard[aria-checked="true"] .vplay{background:#111114}
 /* PC: chats in a sidebar on wide screens (space look) */
 #side{display:none}
 @media (min-width:1100px){
@@ -737,7 +760,8 @@ html.sp .spin{border-top-color:#c3cdff}
     <div class="card glass">
       <div class="row"><div class="grow"><div class="label">Read replies aloud</div><div class="note">Nova speaks every answer.</div></div><button class="switch" role="switch" id="sSpeak" aria-label="Read replies aloud"></button></div>
       <div class="stack"><div class="label">I speak</div><div class="note">Pick Română so Nova understands you when you talk in Romanian. Nova answers in the language you use.</div><div class="seg glass" data-key="lang"><button data-v="auto">Automatic</button><button data-v="en">English</button><button data-v="ro">Română</button></div></div>
-      <div class="stack"><div class="label">Nova’s voice</div><div class="seg glass" data-key="nvoice"><button data-v="Neno">Neno</button><button data-v="Kira">Kira</button><button data-v="Sami">Sami</button><button data-v="off">Built-in</button></div><div class="note" id="nvNote">Neno is deep and velvety, Kira is cool and confident, Sami is calm and low. They’re free Google voices on your Gemini key: 10 spoken answers a day, then Nova switches to the free voice that sounds closest (in Microsoft Edge: Christopher, Brian or Ava) until tomorrow.</div></div>
+      <div class="stack"><div class="label">Nova’s voice</div><div class="vcards" id="vcards" role="radiogroup" aria-label="Nova’s voice"><div class="vcard" data-v="Neno" role="radio" tabindex="0" aria-label="Neno, Deep, velvety"><span class="vtop"><i class="vw" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b><b></b><b></b></i><button class="vplay" type="button" data-play="Neno" aria-label="Hear Neno"><svg width="10" height="10" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.8 2.9v10.2c0 .6.6.9 1.1.6l8-5.1a.7.7 0 0 0 0-1.2l-8-5.1c-.5-.3-1.1 0-1.1.6z" fill="currentColor"/></svg></button></span><b>Neno</b><small>Deep, velvety</small><em>Selected</em></div><div class="vcard" data-v="Kira" role="radio" tabindex="0" aria-label="Kira, Cool, confident"><span class="vtop"><i class="vw" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b><b></b><b></b></i><button class="vplay" type="button" data-play="Kira" aria-label="Hear Kira"><svg width="10" height="10" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.8 2.9v10.2c0 .6.6.9 1.1.6l8-5.1a.7.7 0 0 0 0-1.2l-8-5.1c-.5-.3-1.1 0-1.1.6z" fill="currentColor"/></svg></button></span><b>Kira</b><small>Cool, confident</small><em>Selected</em></div><div class="vcard" data-v="Sami" role="radio" tabindex="0" aria-label="Sami, Calm, low"><span class="vtop"><i class="vw" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b><b></b><b></b></i><button class="vplay" type="button" data-play="Sami" aria-label="Hear Sami"><svg width="10" height="10" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.8 2.9v10.2c0 .6.6.9 1.1.6l8-5.1a.7.7 0 0 0 0-1.2l-8-5.1c-.5-.3-1.1 0-1.1.6z" fill="currentColor"/></svg></button></span><b>Sami</b><small>Calm, low</small><em>Selected</em></div></div><div class="note" id="nvNote">10 spoken answers a day, then a free voice that sounds close.</div>
+        <button class="vbuilt" id="vBuilt" type="button" role="radio"><span><b>Use the free built-in voice instead</b><small>Works offline, no daily limit.</small></span><i class="vrad"></i></button></div>
       <div class="stack"><div class="label">Built-in voice</div><select class="field" id="sVoice"></select><div class="note">Automatic picks the most natural voice for each language. Edge on PC has the best Romanian voices.</div></div>
       <div class="stack"><div class="label">Speed</div><div class="seg glass" data-key="rate"><button data-v="0.85">Slow</button><button data-v="1">Normal</button><button data-v="1.2">Fast</button></div></div>
       <div class="stack"><div class="label">Pitch</div><div class="seg glass" data-key="pitch"><button data-v="0.85">Lower</button><button data-v="1">Normal</button><button data-v="1.15">Higher</button></div></div>
@@ -888,7 +912,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-h";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-i";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -2626,6 +2650,8 @@ function syncSettings(){showTtsLeft();
   var segs=document.querySelectorAll(".seg");
   for(var i=0;i<segs.length;i++){var k=segs[i].getAttribute("data-key"),bs=segs[i].querySelectorAll("button");
     for(var j=0;j<bs.length;j++)bs[j].setAttribute("aria-pressed",String(bs[j].getAttribute("data-v")===String(S[k])))}
+  var vc=document.querySelectorAll("#vcards .vcard");for(var q=0;q<vc.length;q++)vc[q].setAttribute("aria-checked",String(S.nvoice===vc[q].getAttribute("data-v")));
+  $("vBuilt").setAttribute("aria-checked",String(S.nvoice==="off"));
   var tb=document.querySelectorAll("#themes button");
   for(var t=0;t<tb.length;t++)tb[t].setAttribute("aria-pressed",String(S.wallpaper===tb[t].getAttribute("data-wall")));
   var ph=document.querySelector("#themes .t-photo");if(ph)ph.style.backgroundImage=S.customWall?"url(\""+S.customWall+"\")":"none";
@@ -2810,6 +2836,15 @@ $("sCustom").addEventListener("input",function(){S.custom=this.value;save()});
 $("sVoice").addEventListener("change",function(){S.voice=this.value;save()});
 $("sSpeak").addEventListener("click",function(){S.speak=!S.speak;if(!S.speak)stopSpeaking();save();syncSettings()});
 $("sRemember").addEventListener("click",function(){S.remember=!S.remember;save();syncSettings();if(S.remember)persist()});
+function chooseNovaVoice(v){S.nvoice=v;save();syncSettings();vibrate()}
+document.querySelectorAll("#vcards .vcard").forEach(function(c){
+  c.addEventListener("click",function(e){if(e.target.closest(".vplay"))return;chooseNovaVoice(c.getAttribute("data-v"))});
+  c.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();chooseNovaVoice(c.getAttribute("data-v"))}})});
+document.querySelectorAll("#vcards .vplay").forEach(function(b){b.addEventListener("click",function(e){e.stopPropagation();
+  var v=b.getAttribute("data-play"),keep=S.nvoice,card=b.closest(".vcard");
+  document.querySelectorAll("#vcards .vcard.playing").forEach(function(x){x.classList.remove("playing")});card.classList.add("playing");
+  S.nvoice=v;say(S.lang==="ro"?"Bună, sunt "+v+". Așa sună vocea mea.":"Hi, I’m "+v+". This is how I sound.",function(){card.classList.remove("playing");showTtsLeft()});S.nvoice=keep;showTtsLeft()})});
+$("vBuilt").addEventListener("click",function(){chooseNovaVoice(S.nvoice==="off"?"Neno":"off")});
 $("sTest").addEventListener("click",function(){say(S.lang==="ro"?"Bună, sunt Nova. Așa sună vocea mea în română.":"Hi, I’m Nova. This is how I sound.")});
 /* ---------- updates ---------- */
 // The newest version number lives in version.json next to the app. When it's newer than this copy,
