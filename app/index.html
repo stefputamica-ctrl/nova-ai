@@ -782,7 +782,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-c";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-d";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -838,7 +838,7 @@ function vibrate(){try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}}
 function wallUrl(){
   // wide screens (PC) get a landscape cut of the same picture so the name and the planet both show
   var wide=window.innerWidth>window.innerHeight*1.1?"-wide":"";
-  if(S.theme!=="light"){if(S.wallpaper==="space"||S.wallpaper==="colours")return wide?"skywide.jpg":"sky.jpg";if(S.wallpaper==="sky")return "";}else if(S.wallpaper!=="custom")return "";
+  if(S.theme!=="light"){if(S.wallpaper==="space"||S.wallpaper==="colours")return wide?"skywide.jpg":"sky.jpg";if(S.wallpaper==="sky")return "";}
   if(S.wallpaper==="space")return (S.theme==="light"?"wp-space-light":"wp-space")+wide+".jpg";
   if(S.wallpaper==="sky")return "wp-sky"+wide+".jpg";
   if(S.wallpaper==="custom"&&S.customWall)return S.customWall;
@@ -846,7 +846,7 @@ function wallUrl(){
 }
 function applyLook(){
   document.documentElement.setAttribute("data-theme",S.theme);
-  document.documentElement.classList.add("sp");document.documentElement.classList.toggle("dawn",S.theme==="light");
+  document.documentElement.classList.toggle("sp",S.theme!=="light");document.documentElement.classList.remove("dawn");
   var u=wallUrl(), w=$("wall");
   w.className=(S.wallpaper==="colours"?"colours":"")+(S.theme!=="light"&&S.wallpaper==="sky"?" twilight":"")+(S.wallpaper==="custom"?" photo":"")+(msgs.length||busy?" talking":"");
   drawHz();
