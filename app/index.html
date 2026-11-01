@@ -329,7 +329,7 @@ html.sp body{letter-spacing:-.01em}
 html.sp .glass{background:linear-gradient(180deg,rgba(28,33,74,.62),rgba(12,14,36,.72));border:1px solid var(--edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 18px 44px -22px rgba(0,0,0,.8);-webkit-backdrop-filter:blur(20px) saturate(140%);backdrop-filter:blur(20px) saturate(140%)}
 html.sp #wall{background-color:#060716;background-position:center top;background-size:cover}
 html.sp #wall::after{background:linear-gradient(180deg,rgba(6,7,22,0) 30%,#060716 70%)}
-html.sp #wall.twilight{background-image:url("sky.jpg"),linear-gradient(180deg,#0b1238,#1f2a78 45%,#5a56b8 62%,#9a83d6 75%)!important;background-blend-mode:screen,normal;background-size:cover,cover}
+html.sp #wall.twilight{background-image:url("sky.jpg"),linear-gradient(180deg,#070b26 0%,#1a1550 28%,#4a2370 46%,#9a3d78 58%,#e0705e 66%,#f2a06a 70%)!important;background-blend-mode:screen,normal;background-size:cover,cover}
 html.sp #wall.colours{background-image:url("sky.jpg")!important}
 html.sp #wall.colours::before{background:radial-gradient(60% 34% at 85% 16%,rgba(199,84,170,.45),transparent 70%),radial-gradient(70% 40% at 8% 42%,rgba(70,120,255,.42),transparent 70%),radial-gradient(55% 30% at 70% 60%,rgba(255,170,90,.22),transparent 70%)}
 html.sp #wall.photo::after{background:linear-gradient(180deg,rgba(6,7,22,.35),rgba(6,7,22,.6))}
@@ -888,7 +888,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-g";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-h";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -1019,7 +1019,7 @@ $("sideNew").addEventListener("click",function(){$("newChat").click()});
 window.addEventListener("resize",function(){clearTimeout(renderSide.t);renderSide.t=setTimeout(renderSide,150)});
 /* ---------- the horizon (space look): Nova is the sunrise on the planet's edge ---------- */
 function hzSvg(W,H,fy,fx,R,cx){
-  var L=document.documentElement.classList.contains("dawn"),P=L?{p0:"#ffffff",p1:"#f3f4fc",p2:"#e6e9f8",p3:"#dfe3f5",rimA:"#9aa6ff",rimB:"#ffffff",glow1:"#c4b5ff",glow2:"#ffd9b8",fl2:"#fff4e6",fl3:"#ffc98f",inner:"#ffffff"}:{p0:"#151a44",p1:"#0b0e28",p2:"#05060f",p3:"#030409",rimA:"#8d9bff",rimB:"#fff",glow1:"#3a3fb0",glow2:"#7b8cff",fl2:"#f2f5ff",fl3:"#a9b8ff",inner:"#8c9bff"};
+  var TW=S.theme!=="light"&&S.wallpaper==="sky",L=document.documentElement.classList.contains("dawn"),P=TW?{p0:"#2a1640",p1:"#140a24",p2:"#07050f",p3:"#030208",rimA:"#ff9a7a",rimB:"#fff1e6",glow1:"#a3407a",glow2:"#ff9a6b",fl2:"#fff3ea",fl3:"#ffb48a",inner:"#ff9f8a"}:L?{p0:"#ffffff",p1:"#f3f4fc",p2:"#e6e9f8",p3:"#dfe3f5",rimA:"#9aa6ff",rimB:"#ffffff",glow1:"#c4b5ff",glow2:"#ffd9b8",fl2:"#fff4e6",fl3:"#ffc98f",inner:"#ffffff"}:{p0:"#151a44",p1:"#0b0e28",p2:"#05060f",p3:"#030409",rimA:"#8d9bff",rimB:"#fff",glow1:"#3a3fb0",glow2:"#7b8cff",fl2:"#f2f5ff",fl3:"#a9b8ff",inner:"#8c9bff"};
   var cy=fy+Math.sqrt(R*R-(fx-cx)*(fx-cx)),a=(fx/W).toFixed(3),f=function(n){return n.toFixed(1)};
   return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><defs>'+
   '<radialGradient id="hzPl" cx="'+fx+'" cy="'+fy+'" r="'+f(R*.9)+'" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="'+P.p0+'"/><stop offset=".12" stop-color="'+P.p1+'"/><stop offset=".5" stop-color="'+P.p2+'"/><stop offset="1" stop-color="'+P.p3+'"/></radialGradient>'+
@@ -1041,7 +1041,7 @@ function drawHz(at){
   var el=$("hzw");if(!el||!document.documentElement.classList.contains("sp"))return;
   if(at!=null)drawHz.at=at;
   var W=window.innerWidth,H=window.innerHeight,wide=W>=700,fy=Math.round(Math.max(H*.4,Math.min(H*.72,drawHz.at||H*(wide?.6:.57)))),fx=Math.round(W*(wide?.32:.38)),R=wide?Math.max(1500,W*1.25):Math.max(560,W*1.45),cx=W*(wide?.55:.6);
-  var th=document.documentElement.classList.contains("dawn")?1:0;if(drawHz.k===[W,H,fy,th].join()&&el.firstChild)return;drawHz.k=[W,H,fy,th].join();
+  var th=(document.documentElement.classList.contains("dawn")?1:0)+(S.theme!=="light"&&S.wallpaper==="sky"?2:0);if(drawHz.k===[W,H,fy,th].join()&&el.firstChild)return;drawHz.k=[W,H,fy,th].join();
   el.innerHTML=hzSvg(W,H,fy,fx,R,cx);
   var topSafe=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topPx"))||0;
   document.documentElement.style.setProperty("--hzUp",(-(fy-(wide?96:118)-topSafe))+"px");
