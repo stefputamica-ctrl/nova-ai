@@ -209,7 +209,49 @@ body{letter-spacing:-.01em}
 footer .mark{font-family:var(--display)!important;font-weight:800!important;letter-spacing:-.045em!important;font-size:20px}
 @media (max-width:860px){.hero{height:86vh}.lede{margin-top:clamp(-170px,-17vh,-100px)!important}}
 @media (prefers-reduced-motion:reduce){.hz *{animation:none!important}}
+/* ===== light look (matches the app's Space · Light): bright Milky Way, white planet with a blue edge, frosted cards ===== */
+html.light{color-scheme:light;--void:#f3f4f8;--deep:#ffffff;--glass:rgba(255,255,255,.62);--edge:rgba(20,22,40,.08);--star:#111114;--haze:#5e5e68;--rim:#5b6cf0;--sun:#5b6cf0}
+html.light body{background:#f3f4f8}
+html.light body::before{background:#f3f4f8}
+html.light .pill{background:rgba(255,255,255,.62)!important;border-color:rgba(255,255,255,.8)!important;box-shadow:0 10px 30px -18px rgba(40,40,70,.3)}
+html.light .navlinks a{color:#5e5e68}html.light .navlinks a:hover{color:#111114;background:rgba(44,44,49,.06)}
+html.light .navlinks a.get,html.light .btn.primary{background:#2c2c31!important;color:#fff!important;box-shadow:0 8px 20px -10px rgba(30,30,40,.5)}
+html.light .btn{background:rgba(255,255,255,.7);border-color:rgba(20,22,40,.1);color:#111114}
+html.light .hero{background:#f3f4f8}
+html.light .hero .sky{background-image:url("app/wp-space-day-wide.jpg")}
+html.light .hero .sky::after{background:none}
+html.light .hero .hz svg{display:none}
+html.light .hero .hz{background:radial-gradient(circle 2200px at 62% calc(60% + 2200px),#f3f4f8 2198.5px,rgba(125,140,255,.95) 2200px,rgba(150,165,255,.5) 2202px,rgba(201,210,255,.3) 2222px,rgba(201,210,255,0) 2300px)}
+html.light .hero h1{color:#111114}
+html.light .lede p{color:#5e5e68}
+html.light .phone{background:#e9eaef!important;border-color:#d5d7e0!important;box-shadow:0 40px 100px -40px rgba(60,70,150,.45),0 0 0 6px #fff!important}
+html.light .screen{background:#f2f3f7!important}
+html.light .screen .psky{background-image:url("app/wp-space-day.jpg")}
+html.light .screen .psky::after{background:none}
+html.light .screen .phz svg{display:none}
+html.light .screen .phz{background:radial-gradient(circle 420px at 60% calc(54% + 420px),#f7f8fc 419px,#7d8cff 420px,rgba(201,210,255,.4) 423px,transparent 436px)}
+html.light .screen .top b,html.light .screen .greet b{color:#111114}
+html.light .screen .greet span{color:#5e5e68}
+html.light .screen .ics i{background:rgba(255,255,255,.75);border-color:rgba(255,255,255,.9)}
+html.light .starters span{color:#111114;background:rgba(255,255,255,.7);padding:7px 9px;border-radius:10px}
+html.light .starters span::before{display:none}
+html.light .composer{background:rgba(255,255,255,.75)!important;border-color:rgba(255,255,255,.9)!important}
+html.light .composer .plus{color:#5e5e68!important}html.light .composer .ph{color:#6e6e78}
+html.light .composer .mic{background:#2c2c31!important}html.light .composer .mic::before{background:#fff}
+html.light .q.you{background:#2c2c31!important;color:#fff;box-shadow:0 10px 26px -14px rgba(30,30,40,.5)}
+html.light .q.nova::before{background:#5b6cf0!important;filter:none}
+html.light .f,html.light .card{background:rgba(255,255,255,.7)!important;border:1px solid rgba(255,255,255,.9)!important;box-shadow:0 1px 2px rgba(0,0,0,.04),0 18px 40px -26px rgba(40,40,80,.3)!important}
+html.light .f svg{color:#5b6cf0!important}
+html.light .f code{background:rgba(44,44,49,.07)}
+html.light .status{border-color:rgba(91,108,240,.35)!important;background:rgba(91,108,240,.08)!important}
+html.light .screen .ics i{border-color:rgba(20,22,40,.1)}
+.modebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0!important;border:0;border-radius:50%;background:none;color:var(--haze);cursor:pointer}
+.modebtn:hover{color:var(--star);background:var(--glass)}
+.modebtn svg{width:18px;height:18px}.modebtn .sunic{display:none}html.light .modebtn .sunic{display:block}html.light .modebtn .moonic{display:none}
+html.light .modebtn:hover{background:rgba(44,44,49,.06)}
+@media (max-width:860px){.navlinks a.modebtn,.navlinks button.modebtn{display:inline-flex!important}}
 </style>
+<script>(function(){try{var t=localStorage.getItem("nova.site.theme");if(t==="light"||(!t&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches)){document.documentElement.classList.add("light");document.querySelector('meta[name="theme-color"]').setAttribute("content","#f3f4f8")}}catch(e){}})()</script>
 </head>
 <body>
 
@@ -218,6 +260,7 @@ footer .mark{font-family:var(--display)!important;font-weight:800!important;lett
     <nav class="pill" aria-label="Main">
       <a class="brand" href="#top">Nova</a>
       <div class="navlinks">
+        <button class="modebtn" type="button" id="modeBtn" aria-label="Switch to light" data-l="Switch to light" data-d="Switch to dark"><svg class="moonic" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 12.6A7 7 0 0 1 7.4 3.5a7 7 0 1 0 9.1 9.1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><svg class="sunic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 1.8v2M10 16.2v2M1.8 10h2M16.2 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
         <a href="ro/" hreflang="ro" lang="ro">RO</a>
         <a href="#features">What it does</a>
         <a class="get" href="#download">Download</a>
@@ -445,5 +488,8 @@ function drawSiteHz(){
 }
 drawSiteHz();var hzT;window.addEventListener("resize",function(){clearTimeout(hzT);hzT=setTimeout(drawSiteHz,150)});
 </script>
+<script>(function(){var b=document.getElementById("modeBtn"),h=document.documentElement,m=document.querySelector('meta[name="theme-color"]');
+function show(){var l=h.classList.contains("light");b.setAttribute("aria-label",l?b.getAttribute("data-d"):b.getAttribute("data-l"));m.setAttribute("content",l?"#f3f4f8":"#060716")}
+b.addEventListener("click",function(){h.classList.toggle("light");try{localStorage.setItem("nova.site.theme",h.classList.contains("light")?"light":"dark")}catch(e){}show()});show()})()</script>
 </body>
 </html>
