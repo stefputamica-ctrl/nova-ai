@@ -475,7 +475,7 @@ html.sp .updbar .btn{background:linear-gradient(180deg,#fbfcff,#dfe4f7);color:#0
 /* ================= Clean white: the light theme (soft grey page, white cards, charcoal song cards) ================= */
 html.sp.cw{--bg:#f2f2f4;--ink:#111114;--dim:#86868b;--faint:#a1a1a6;--line:rgba(0,0,0,.07);--edge:rgba(0,0,0,.06);--glass:#fff;--pill:#2c2c31;--bubble:#fff;--bubbleText:#111114;--sun:#2c2c31;--rim:#2c2c31;--code:#1e1e22;--k:#2c2c31;color-scheme:light}
 html.sp.cw body{background:#f2f2f4}
-html.sp.cw #wall{background:#f2f2f4!important}html.sp.cw #wall::before,html.sp.cw #wall::after{display:none}
+html.sp.cw:not(.lg) #wall{background:#f2f2f4!important}html.sp.cw:not(.lg) #wall::before,html.sp.cw:not(.lg) #wall::after{display:none}
 html.sp.cw #hzw{display:none}
 html.sp.cw body::after{display:none}
 html.sp.cw .glass{background:#fff;border:0;box-shadow:0 1px 2px rgba(0,0,0,.04);-webkit-backdrop-filter:none;backdrop-filter:none}
@@ -567,6 +567,68 @@ html.sp.cw .themes button[aria-pressed="true"] .tp{box-shadow:0 0 0 2px #fff,0 0
 /* clearer chosen option in settings */
 html.sp .seg button[aria-pressed="true"]{border:0!important;outline:0}
 html.sp.cw .seg button[aria-pressed="true"]{background:#2c2c31;color:#fff;box-shadow:none}
+/* ================= light wallpapers (Space, Twilight, Colours in light): pictures + frosted glass ================= */
+html.sp.cw.lg body{background:#f2f3f7}
+html.sp.cw.lg #wall{background-color:#f2f3f7;background-position:center top;background-size:cover}
+html.sp.cw.lg #wall::after{display:block;background:none;transition:opacity .6s}
+html.sp.cw.lg #wall.space::after,html.sp.cw.lg #wall.colours::after{background:radial-gradient(circle 640px at 62% calc(45% + 640px),#f7f8fc 638.5px,rgba(125,140,255,.95) 640px,rgba(150,165,255,.5) 642px,rgba(201,210,255,.28) 660px,rgba(201,210,255,0) 720px)}
+@media (min-width:900px){html.sp.cw.lg #wall.space::after,html.sp.cw.lg #wall.colours::after{background:radial-gradient(circle 1400px at 60% calc(60% + 1400px),#f7f8fc 1398.5px,rgba(125,140,255,.95) 1400px,rgba(150,165,255,.5) 1402px,rgba(201,210,255,.28) 1420px,rgba(201,210,255,0) 1490px)}}
+html.sp.cw.lg #wall.sky::after{background:radial-gradient(circle 640px at 62% calc(45% + 640px),#f7f6f8 638.5px,#fff 640px,rgba(255,255,255,.6) 643px,rgba(255,255,255,0) 690px)}
+@media (min-width:900px){html.sp.cw.lg #wall.sky::after{background:radial-gradient(circle 1400px at 60% calc(60% + 1400px),#f7f6f8 1398.5px,#fff 1400px,rgba(255,255,255,.6) 1403px,rgba(255,255,255,0) 1460px)}}
+html.sp.cw.lg #wall.talking::after{opacity:0}
+html.sp.cw.lg #wall.colours{background-image:url("wp-space-day.jpg")!important}
+html.sp.cw.lg #wall.colours::before{display:block;background:radial-gradient(55% 30% at 90% 12%,rgba(240,130,195,.38),transparent 70%),radial-gradient(60% 32% at 4% 42%,rgba(110,150,255,.34),transparent 70%)}
+html.sp.cw.lg #wall.photo::after{display:block;background:rgba(246,246,250,.55)}
+html.sp.cw.lg .glass,html.sp.cw.lg .chip,html.sp.cw.lg .starter,html.sp.cw.lg .next button,html.sp.cw.lg .ub{background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.8);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);box-shadow:0 10px 30px -18px rgba(40,40,70,.35)}
+html.sp.cw.lg .chip.sun{background:#2c2c31;color:#fff}
+html.sp.cw.lg .hero .date,html.sp.cw.lg .hero .sub{color:#5e5e68}
+html.sp.cw.lg .song,html.sp.cw.lg .beatcard,html.sp.cw.lg .arr{background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.8);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);box-shadow:0 10px 30px -18px rgba(40,40,70,.35);background:rgba(255,255,255,.62)!important;color:#111114}
+html.sp.cw.lg .song small,html.sp.cw.lg .bp .t span,html.sp.cw.lg .arr.ap .r span{color:#6e6e78}
+html.sp.cw.lg .art,html.sp.cw.lg .art.v{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 52'%3E%3Crect width='52' height='52' fill='%232c2c31'/%3E%3Cg fill='%23fff'%3E%3Crect x='11' y='21' width='2.2' height='10' rx='1.1'/%3E%3Crect x='15' y='17' width='2.2' height='18' rx='1.1'/%3E%3Crect x='19' y='12' width='2.2' height='28' rx='1.1'/%3E%3Crect x='23' y='19' width='2.2' height='14' rx='1.1'/%3E%3Crect x='27' y='10' width='2.2' height='32' rx='1.1'/%3E%3Crect x='31' y='16' width='2.2' height='20' rx='1.1'/%3E%3Crect x='35' y='20' width='2.2' height='12' rx='1.1'/%3E%3Crect x='39' y='14' width='2.2' height='24' rx='1.1'/%3E%3C/g%3E%3C/svg%3E") center/100% no-repeat}
+html.sp.cw.lg .pbtn,html.sp.cw.lg .beatcard.bp .pbtn{background:#2c2c31!important;color:#fff!important}
+html.sp.cw.lg .energy path:last-of-type{stroke:#2c2c31}
+html.sp.cw.lg .scrub path{fill:rgba(44,44,49,.18)}html.sp.cw.lg .scrub path.lit{fill:#2c2c31}
+html.sp.cw.lg .scrub .head{background:#2c2c31;box-shadow:0 0 0 4px rgba(44,44,49,.12)}
+html.sp.cw.lg .beatcard .acts2 button,html.sp.cw.lg .arr .row button{background:rgba(44,44,49,.07);color:#111114}
+html.sp.cw.lg .beatcard .acts2 svg,html.sp.cw.lg .arr .acts2 svg{color:#111114}
+html.sp.cw.lg .arr .row button.main{background:#2c2c31!important;color:#fff!important}html.sp.cw.lg .arr .row button.main svg{color:#fff!important}
+html.sp.cw.lg .arr .secs i{color:#8e8e95!important;border-left-color:rgba(0,0,0,.1)!important}
+html.sp.cw.lg .composer.glass,html.sp.cw.lg .listen.glass{background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.8);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);box-shadow:0 10px 30px -18px rgba(40,40,70,.35)}
+html.sp.cw.lg #input{color:#111114}html.sp.cw.lg #input::placeholder{color:#6e6e78}
+html.sp.cw.lg #plus,html.sp.cw.lg #talkMode{color:#3a3a40}
+html.sp.cw.lg #act,html.sp.cw.lg #act.send{background:#2c2c31;color:#fff}
+html.sp.cw.lg .listen span#listenText{color:#111114}html.sp.cw.lg .lvl i{background:#2c2c31}
+html.sp.cw.lg #endConvo{background:#2c2c31;color:#fff}
+html.sp.cw.lg .sheet,html.sp.cw.lg #study{background:#f2f2f4}
+html.sp.cw.lg .sheet .glass{background:#fff;border:0;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+@media (min-width:1100px){html.sp.cw.lg #side{background:rgba(255,255,255,.7);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}}
+/* ================= Clean in dark: the space photo dimmed, neutral frosted glass ================= */
+html.sp.cd #hzw{display:none}
+html.sp.cd #wall{background-color:#0d0d10}
+html.sp.cd #wall::after{background:rgba(10,10,14,.72)}
+html.sp.cd .glass,html.sp.cd .chip,html.sp.cd .next button,html.sp.cd .composer.glass,html.sp.cd .listen.glass{background:rgba(22,23,30,.55);border:1px solid rgba(255,255,255,.12);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);box-shadow:0 18px 40px -22px rgba(0,0,0,.7)}
+html.sp.cd .starter{background:rgba(22,23,30,.55);border:1px solid rgba(255,255,255,.12);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);box-shadow:0 18px 40px -22px rgba(0,0,0,.7);border-radius:16px;padding:14px 16px;justify-content:space-between;margin-top:4px;color:#f2f2f5}
+html.sp.cd .starter::before{display:none}
+html.sp.cd .song,html.sp.cd .beatcard,html.sp.cd .quiz,html.sp.cd .plan,html.sp.cd .deck,html.sp.cd .arr,html.sp.cd .doccard,html.sp.cd .remind{background:rgba(22,23,30,.55);border:1px solid rgba(255,255,255,.12);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);box-shadow:0 18px 40px -22px rgba(0,0,0,.7)}
+html.sp.cd .hero .date,html.sp.cd .hero .sub{color:#8e8e95}
+html.sp.cd .ub{background:#f2f2f5;color:#111114;box-shadow:none}
+html.sp.cd .msg.n .dot{background:#fff;filter:none}
+html.sp.cd .art,html.sp.cd .art.v{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 52'%3E%3Cg fill='%232c2c31'%3E%3Crect x='11' y='21' width='2.2' height='10' rx='1.1'/%3E%3Crect x='15' y='17' width='2.2' height='18' rx='1.1'/%3E%3Crect x='19' y='12' width='2.2' height='28' rx='1.1'/%3E%3Crect x='23' y='19' width='2.2' height='14' rx='1.1'/%3E%3Crect x='27' y='10' width='2.2' height='32' rx='1.1'/%3E%3Crect x='31' y='16' width='2.2' height='20' rx='1.1'/%3E%3Crect x='35' y='20' width='2.2' height='12' rx='1.1'/%3E%3Crect x='39' y='14' width='2.2' height='24' rx='1.1'/%3E%3C/g%3E%3C/svg%3E") center/100% no-repeat;box-shadow:none}
+html.sp.cd .energy path:first-of-type{fill:none}html.sp.cd .energy path:last-of-type{stroke:#fff}
+html.sp.cd .scrub path{fill:rgba(255,255,255,.22)}html.sp.cd .scrub path.lit{fill:#fff}
+html.sp.cd .acts2 svg{color:#fff}
+html.sp.cd .switch[aria-checked="true"]{background:#f2f2f5;box-shadow:none}
+html.sp.cd .sheet,html.sp.cd #study{background:#0d0d10}
+html.sp.cd .lvl i{background:#fff}
+@media (min-width:1100px){html.sp.cd #side{background:rgba(16,16,20,.82)}}
+/* wallpaper previews in light mode */
+.themes .t-clean{background:linear-gradient(#fff,#fff) 14% 22%/58% 6% no-repeat,linear-gradient(#8e8e95,#8e8e95) 14% 31%/40% 3.5% no-repeat,linear-gradient(rgba(255,255,255,.14),rgba(255,255,255,.14)) 50% 58%/78% 17% no-repeat,linear-gradient(rgba(255,255,255,.1),rgba(255,255,255,.1)) 50% 74%/78% 7% no-repeat,linear-gradient(rgba(10,10,14,.75),rgba(10,10,14,.75)),url("sky.jpg") center/cover}
+html.cw .themes .t-clean{background:linear-gradient(#1b1b1f,#1b1b1f) 14% 22%/58% 6% no-repeat,linear-gradient(#c7c7cc,#c7c7cc) 14% 31%/40% 3.5% no-repeat,linear-gradient(#2c2c31,#2c2c31) 50% 58%/78% 17% no-repeat,linear-gradient(#fff,#fff) 50% 74%/78% 7% no-repeat,#f2f2f4}
+html.cw .themes .t-clean::after{background:#2c2c31}
+html.cw .themes .t-space{background:radial-gradient(circle 150px at 60% calc(70% + 150px),#f7f8fc 149px,#7d8cff 150px,rgba(201,210,255,.4) 153px,transparent 162px),url("wp-space-day.jpg") center/cover}
+html.cw .themes .t-sky{background:radial-gradient(circle 150px at 60% calc(70% + 150px),#f7f6f8 149px,#fff 150px,transparent 153px),url("wp-twilight-day.jpg") center/cover}
+html.cw .themes .t-colours{background:radial-gradient(70% 40% at 88% 14%,rgba(240,130,195,.55),transparent 70%),radial-gradient(80% 45% at 6% 42%,rgba(110,150,255,.5),transparent 70%),radial-gradient(circle 150px at 60% calc(70% + 150px),#f7f8fc 149px,#7d8cff 150px,transparent 153px),url("wp-space-day.jpg") center/cover}
+html.cw .themes .tp::after{background:rgba(255,255,255,.75)}
 /* PC: chats in a sidebar on wide screens (space look) */
 #side{display:none}
 @media (min-width:1100px){
@@ -698,13 +760,14 @@ html.sp .spin{border-top-color:#c3cdff}
 
     <div class="sec">Appearance</div>
     <div class="card glass">
-      <div class="stack"><div class="label">Theme</div><div class="note">Pick a look for Nova, or use your own photo as the background.</div>
+      <div class="stack"><div class="label">Mode</div><div class="seg glass" data-key="theme"><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+      <div class="stack"><div class="label">Wallpaper</div><div class="note">Every wallpaper has a light and a dark version. You can also use your own photo.</div>
         <div class="themes" id="themes">
-          <button data-theme="dark" data-wall="space"><i class="tp t-space"></i><span>Space</span></button>
-          <button data-theme="dark" data-wall="sky"><i class="tp t-sky"></i><span>Twilight</span></button>
-          <button data-theme="dark" data-wall="colours"><i class="tp t-colours"></i><span>Colours</span></button>
-          <button data-theme="light" data-wall="space"><i class="tp t-white"></i><span>Clean white</span></button>
-          <button data-theme="dark" data-wall="custom" id="segCustom" hidden><i class="tp t-photo"></i><span>My photo</span></button>
+          <button data-wall="space"><i class="tp t-space"></i><span>Space</span></button>
+          <button data-wall="sky"><i class="tp t-sky"></i><span>Twilight</span></button>
+          <button data-wall="colours"><i class="tp t-colours"></i><span>Colours</span></button>
+          <button data-wall="clean"><i class="tp t-clean"></i><span>Clean</span></button>
+          <button data-wall="custom" id="segCustom" hidden><i class="tp t-photo"></i><span>My photo</span></button>
         </div>
         <button class="btn" id="chooseWall">Choose your own photo</button>
       </div>
@@ -825,7 +888,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-f";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.01-g";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -881,6 +944,8 @@ function vibrate(){try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}}
 function wallUrl(){
   // wide screens (PC) get a landscape cut of the same picture so the name and the planet both show
   var wide=window.innerWidth>window.innerHeight*1.1?"-wide":"";
+  if(S.wallpaper==="clean")return S.theme==="light"?"":(wide?"skywide.jpg":"sky.jpg");
+  if(S.theme==="light"&&S.wallpaper!=="custom")return (S.wallpaper==="sky"?"wp-twilight-day":"wp-space-day")+wide+".jpg";
   if(S.theme!=="light"){if(S.wallpaper==="space"||S.wallpaper==="colours")return wide?"skywide.jpg":"sky.jpg";if(S.wallpaper==="sky")return "";}
   if(S.wallpaper==="space")return (S.theme==="light"?"wp-space-light":"wp-space")+wide+".jpg";
   if(S.wallpaper==="sky")return "wp-sky"+wide+".jpg";
@@ -889,9 +954,9 @@ function wallUrl(){
 }
 function applyLook(){
   document.documentElement.setAttribute("data-theme",S.theme);
-  document.documentElement.classList.add("sp");document.documentElement.classList.toggle("cw",S.theme==="light");document.documentElement.classList.remove("dawn");
+  var dc=document.documentElement.classList;dc.add("sp");dc.toggle("cw",S.theme==="light");dc.toggle("lg",S.theme==="light"&&S.wallpaper!=="clean");dc.toggle("cd",S.theme!=="light"&&S.wallpaper==="clean");document.documentElement.classList.remove("dawn");
   var u=wallUrl(), w=$("wall");
-  w.className=(S.wallpaper==="colours"?"colours":"")+(S.theme!=="light"&&S.wallpaper==="sky"?" twilight":"")+(S.wallpaper==="custom"?" photo":"")+(msgs.length||busy?" talking":"");
+  w.className=(S.wallpaper==="colours"?"colours":"")+(S.wallpaper==="space"?" space":"")+(S.wallpaper==="sky"?" sky":"")+(S.theme!=="light"&&S.wallpaper==="sky"?" twilight":"")+(S.wallpaper==="custom"?" photo":"")+(msgs.length||busy?" talking":"");
   drawHz();
   w.style.backgroundImage=u?"url(\""+u+"\")":"none";
   document.documentElement.style.setProperty("--veil",S.wallpaper==="space"?(S.theme==="light"?"rgba(255,255,255,.06)":"rgba(0,0,0,.1)"):(S.theme==="light"?"rgba(255,255,255,.4)":"rgba(0,0,0,.35)"));
@@ -2550,7 +2615,7 @@ function setWallFromUrl(u){
   img.onerror=function(){toast("Couldn’t use that picture as wallpaper.")};
   img.src=withKey(u);
 }
-function setCustomWall(data){S.customWall=data;S.wallpaper="custom";S.theme="dark";if(!save()){S.customWall="";S.wallpaper="space"}applyLook();syncSettings();render();toast("Wallpaper set")}
+function setCustomWall(data){S.customWall=data;S.wallpaper="custom";if(!save()){S.customWall="";S.wallpaper="space"}applyLook();syncSettings();render();toast("Wallpaper set")}
 
 /* ---------- settings ---------- */
 function syncSettings(){showTtsLeft();
@@ -2562,8 +2627,7 @@ function syncSettings(){showTtsLeft();
   for(var i=0;i<segs.length;i++){var k=segs[i].getAttribute("data-key"),bs=segs[i].querySelectorAll("button");
     for(var j=0;j<bs.length;j++)bs[j].setAttribute("aria-pressed",String(bs[j].getAttribute("data-v")===String(S[k])))}
   var tb=document.querySelectorAll("#themes button");
-  for(var t=0;t<tb.length;t++){var th=tb[t].getAttribute("data-theme"),wl=tb[t].getAttribute("data-wall");
-    tb[t].setAttribute("aria-pressed",String(th==="light"?S.theme==="light":S.theme!=="light"&&S.wallpaper===wl))}
+  for(var t=0;t<tb.length;t++)tb[t].setAttribute("aria-pressed",String(S.wallpaper===tb[t].getAttribute("data-wall")));
   var ph=document.querySelector("#themes .t-photo");if(ph)ph.style.backgroundImage=S.customWall?"url(\""+S.customWall+"\")":"none";
 }
 function renderMemory(){
@@ -2804,7 +2868,7 @@ document.querySelectorAll(".seg").forEach(function(seg){seg.addEventListener("cl
   S[seg.getAttribute("data-key")]=b.getAttribute("data-v");save();syncSettings();applyLook();vibrate()})});
 $("chooseWall").addEventListener("click",function(){$("wallFile").click()});
 document.querySelectorAll("#themes button").forEach(function(b){b.addEventListener("click",function(){
-  S.theme=b.getAttribute("data-theme");if(S.theme==="dark")S.wallpaper=b.getAttribute("data-wall");save();syncSettings();applyLook();vibrate()})});
+  S.wallpaper=b.getAttribute("data-wall");save();syncSettings();applyLook();vibrate()})});
 $("wallFile").addEventListener("change",function(){var f=this.files[0];this.value="";if(!f)return;shrink(f,1440,.85).then(setCustomWall).catch(function(e){toast(e.message)})});
 $("sClear").addEventListener("click",function(){var b=this;
   if(b.getAttribute("data-sure")!=="1"){b.setAttribute("data-sure","1");b.textContent="Tap again to delete all chats";setTimeout(function(){b.removeAttribute("data-sure");b.textContent="Delete all chats"},3000);return}
