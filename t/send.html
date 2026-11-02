@@ -2,9 +2,10 @@
 <body style="background:#060716;color:#fff;font:16px system-ui;padding:20px">Sending video to TikTok…
 <script>
 var id=(location.hash||"").slice(1);
-if(/^[0-9a-f]{12}$/.test(id)&&window.opener){
+var to=window.opener||(window.parent!==window?window.parent:null);
+if(/^[0-9a-f]{12}$/.test(id)&&to){
   fetch(id+".mp4").then(function(r){return r.blob()}).then(function(b){
-    window.opener.postMessage({nova:"video",name:"nova.mp4",blob:b},"https://www.tiktok.com");
+    to.postMessage({nova:"video",name:"nova.mp4",blob:b},"https://www.tiktok.com");
     document.body.textContent="Sent. You can close this tab.";setTimeout(function(){window.close()},800);
   });
 }
