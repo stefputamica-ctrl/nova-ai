@@ -696,7 +696,7 @@ html.sp .lvl i:nth-child(2){animation-delay:.12s}html.sp .lvl i:nth-child(3){ani
 html.sp .listen{padding:10px 10px 10px 18px;gap:12px;border-color:rgba(195,205,255,.3);box-shadow:0 0 0 1px rgba(195,205,255,.08),0 0 36px -6px rgba(120,140,255,.55)}
 html.sp .listen .rec{display:none}
 html.sp .listen span#listenText{font-weight:600;color:var(--ink)}
-html.sp #plusMenu{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:8px;border-radius:24px;max-width:420px;width:100%}
+html.sp #plusMenu{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:8px;padding:8px;border-radius:24px;width:100%;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}html.sp #plusMenu::-webkit-scrollbar{display:none}html.sp #plusMenu button{flex:0 0 92px;scroll-snap-align:start;align-items:center!important;text-align:center!important;justify-content:center;min-height:88px}
 html.sp #plusMenu[hidden]{display:none}
 html.sp #plusMenu button{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:12px;border-radius:16px;font-size:13.5px;font-weight:600;text-align:left;background:rgba(195,205,255,.05);border:1px solid rgba(195,205,255,.08);line-height:1.2}
 html.sp #plusMenu button svg{color:#b3beff}
@@ -738,7 +738,7 @@ html.sp .spin{border-top-color:#c3cdff}
   <div id="bottom">
     <div id="photoChip" class="glass" hidden><img alt=""><i class="ficon" hidden></i><span>Photo attached</span><button id="rmPhoto">Remove</button></div>
     <div id="picActs" hidden></div>
-    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo or file</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button><button data-plus="cards">Flashcards</button><button data-plus="plan">Plan my day</button><button data-plus="arrange">Arrange a song</button><button data-plus="focus">Focus timer</button><button data-plus="roast">Photo roast</button><button data-plus="battle">Voice battle</button></div>
+    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo, file or video</button><button data-plus="roast">Photo roast</button><button data-plus="battle">Voice battle</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button><button data-plus="cards">Flashcards</button><button data-plus="plan">Plan my day</button><button data-plus="arrange">Arrange a song</button><button data-plus="focus">Focus timer</button></div>
     <div id="composer" class="composer glass">
       <button class="round" id="plus" aria-label="Attach a photo or file">+</button>
       <textarea id="input" rows="1" placeholder="Message Nova" aria-label="Message Nova"></textarea>
@@ -929,7 +929,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.02-a";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.02-b";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
