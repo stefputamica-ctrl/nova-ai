@@ -123,6 +123,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .card p{margin:0;color:var(--haze);font-size:15px}
 .status{justify-self:start;font:500 12px var(--mono);letter-spacing:.04em;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,182,39,.45);color:var(--sun);background:rgba(255,182,39,.08)}
 .card .btn{justify-self:start}
+.wbtns{display:flex;flex-wrap:wrap;gap:10px;justify-self:start}
 .steps{margin:0;padding-left:1.2em;color:var(--haze);display:grid;gap:6px;font-size:15px}
 .steps b{color:var(--star);font-weight:600}
 .intro{color:var(--haze);max-width:60ch;margin:14px 0 0}
@@ -405,11 +406,12 @@ html.light .modebtn:hover{background:rgba(44,44,49,.06)}
             <h3>Windows</h3>
           </div>
           <ol class="steps">
-            <li>Click <b>Download for Windows</b>.</li>
-            <li>Open <b>Nova-Setup.exe</b>.</li>
-            <li>If Windows warns you, click <b>More info</b>, then <b>Run anyway</b>.</li>
+            <li>Click <b>Get it from Microsoft</b>.</li>
+            <li>In the Microsoft Store, click <b>Get</b>.</li>
+            <li>Open Nova from the Start menu.</li>
           </ol>
-          <a class="btn primary" href="https://stefputamica-ctrl.github.io/nova-ai/downloads/Nova-Setup.exe.part0" data-file="Nova-Setup.exe" data-parts="2" data-size="83113810" data-type="application/octet-stream">Download for Windows</a>
+          <div class="wbtns"><a class="btn primary" href="https://apps.microsoft.com/detail/9PP8Q9966RPX" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="9.5" height="9.5" fill="#f25022"/><rect x="12.5" y="2" width="9.5" height="9.5" fill="#7fba00"/><rect x="2" y="12.5" width="9.5" height="9.5" fill="#00a4ef"/><rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#ffb900"/></svg>Get it from Microsoft</a>
+          <a class="btn ghost" href="https://stefputamica-ctrl.github.io/nova-ai/downloads/Nova-Setup.exe.part0" data-file="Nova-Setup.exe" data-parts="2" data-size="83113810" data-type="application/octet-stream">Download for Windows</a></div>
         </div>
       </div>
       <p class="intro small">The first time you open Nova it asks you to log in and to paste a free Google Gemini key (from aistudio.google.com). The key is saved only on your device.</p>

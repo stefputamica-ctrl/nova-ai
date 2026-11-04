@@ -124,6 +124,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .card p{margin:0;color:var(--haze);font-size:15px}
 .status{justify-self:start;font:500 12px var(--mono);letter-spacing:.04em;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,182,39,.45);color:var(--sun);background:rgba(255,182,39,.08)}
 .card .btn{justify-self:start}
+.wbtns{display:flex;flex-wrap:wrap;gap:10px;justify-self:start}
 .steps{margin:0;padding-left:1.2em;color:var(--haze);display:grid;gap:6px;font-size:15px}
 .steps b{color:var(--star);font-weight:600}
 .intro{color:var(--haze);max-width:60ch;margin:14px 0 0}
@@ -405,11 +406,12 @@ html.light .modebtn:hover{background:rgba(44,44,49,.06)}
             <h3>Windows</h3>
           </div>
           <ol class="steps">
-            <li>Apasă <b>Descarcă pentru Windows</b>.</li>
-            <li>Deschide <b>Nova-Setup.exe</b>.</li>
-            <li>Dacă Windows te avertizează, apasă <b>More info</b>, apoi <b>Run anyway</b>.</li>
+            <li>Apasă <b>Ia-l din Microsoft Store</b>.</li>
+            <li>În Microsoft Store, apasă <b>Obține</b>.</li>
+            <li>Deschide Nova din meniul Start.</li>
           </ol>
-          <a class="btn primary" href="https://stefputamica-ctrl.github.io/nova-ai/downloads/Nova-Setup.exe.part0" data-file="Nova-Setup.exe" data-parts="2" data-size="83113810" data-type="application/octet-stream">Descarcă pentru Windows</a>
+          <div class="wbtns"><a class="btn primary" href="https://apps.microsoft.com/detail/9PP8Q9966RPX" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="9.5" height="9.5" fill="#f25022"/><rect x="12.5" y="2" width="9.5" height="9.5" fill="#7fba00"/><rect x="2" y="12.5" width="9.5" height="9.5" fill="#00a4ef"/><rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#ffb900"/></svg>Ia-l din Microsoft Store</a>
+          <a class="btn ghost" href="https://stefputamica-ctrl.github.io/nova-ai/downloads/Nova-Setup.exe.part0" data-file="Nova-Setup.exe" data-parts="2" data-size="83113810" data-type="application/octet-stream">Descarcă pentru Windows</a></div>
         </div>
       </div>
       <p class="intro small">Prima dată când deschizi Nova îți cere să te loghezi și să lipești o cheie Google Gemini gratuită (de pe aistudio.google.com). Cheia rămâne doar pe dispozitivul tău.</p>
