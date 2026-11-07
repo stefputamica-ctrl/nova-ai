@@ -677,6 +677,9 @@ html.cd .vcard:not([aria-checked="true"]){background:rgba(255,255,255,.07)}html.
 .battle .won{font-weight:700;padding:9px 4px}
 html.cw .battle .bl{background:#f2f2f4}html.cw .battle .bl.k{background:#fff1ea}html.cw .battle .bl small{color:#5b6cf0}html.cw .battle .bl.k small{color:#d9643a}
 html.cw:not(.lg) .roast,html.cw:not(.lg) .battle{background:#fff;border:0;box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px -18px rgba(0,0,0,.12)}
+#picActs .humq{align-self:center;font-size:13.5px;font-weight:600;color:var(--dim);padding:0 4px}
+#picActs .humrec{display:flex;align-items:center;gap:8px;font-weight:600;padding:8px 12px}#picActs .humrec i{width:10px;height:10px;border-radius:50%;background:#ff6b6b;animation:humblink 1s infinite}#picActs .humrec b{font-variant-numeric:tabular-nums;color:var(--dim)}
+@keyframes humblink{50%{opacity:.25}}
 .game{border-radius:24px;border:1px solid var(--edge);background:var(--glass);padding:14px;max-width:540px}
 .game .lead{margin:0 0 10px;font-size:15.5px;line-height:1.45}.game .top{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--dim)}.game .top b{color:var(--ink);font-size:15.5px}
 .game .score2{display:flex;justify-content:space-between;margin:10px 0 2px;font-size:14px;color:var(--dim)}.game .score2 b{font-size:22px;color:var(--ink);margin:0 4px}
@@ -762,7 +765,7 @@ html.sp .spin{border-top-color:#c3cdff}
   <div id="bottom">
     <div id="photoChip" class="glass" hidden><img alt=""><i class="ficon" hidden></i><span>Photo attached</span><button id="rmPhoto">Remove</button></div>
     <div id="picActs" hidden></div>
-    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo, file or video</button><button data-plus="roast">Photo roast</button><button data-plus="battle">Voice battle</button><button data-plus="games">Games</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button><button data-plus="cards">Flashcards</button><button data-plus="plan">Plan my day</button><button data-plus="arrange">Arrange a song</button><button data-plus="focus">Focus timer</button></div>
+    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo, file or video</button><button data-plus="roast">Photo roast</button><button data-plus="battle">Voice battle</button><button data-plus="games">Games</button><button data-plus="hum">Hum to beat</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button><button data-plus="cards">Flashcards</button><button data-plus="plan">Plan my day</button><button data-plus="arrange">Arrange a song</button><button data-plus="focus">Focus timer</button></div>
     <div id="composer" class="composer glass">
       <button class="round" id="plus" aria-label="Attach a photo or file">+</button>
       <textarea id="input" rows="1" placeholder="Message Nova" aria-label="Message Nova"></textarea>
@@ -953,7 +956,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.07-e";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.08";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -1064,7 +1067,7 @@ function showKeyResult(el,res){el.textContent=res.msg;el.className="kout"+(res.o
 (function(){var ic=function(d){return'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'},
  I={file:'<rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>',screen:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',song:'<path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
  python:'<path d="m8.5 8-4 4 4 4M15.5 8l4 4-4 4M13.5 5.5l-3 13"/>',quiz:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 17h.01"/>',cards:'<rect x="4" y="7" width="13" height="13" rx="2.5"/><path d="M8 4h9.5A2.5 2.5 0 0 1 20 6.5V16"/>',
- plan:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',arrange:'<path d="M4 7h7M14 7h6M4 12h4M11 12h9M4 17h10M17 17h3"/>',focus:'<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2M10 2.8h4"/>',roast:'<path d="M12 3c1 3 4 4.5 4 8.5a4 4 0 0 1-8 0c0-1.6.8-2.8 1.8-3.8.2 1.4 1 2.3 2 2.6C11 8 11 5.5 12 3z"/><path d="M12 21v-2"/>',battle:'<path d="M4 7h7l-2 4h5M20 17h-7l2-4H10"/><circle cx="5" cy="17" r="1.5"/><circle cx="19" cy="7" r="1.5"/>',games:'<rect x="2.5" y="7" width="19" height="11" rx="5.5"/><path d="M7.5 10.5v4M5.5 12.5h4"/><circle cx="15.5" cy="11.5" r=".9"/><circle cx="17.8" cy="13.8" r=".9"/>'};
+ plan:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',arrange:'<path d="M4 7h7M14 7h6M4 12h4M11 12h9M4 17h10M17 17h3"/>',focus:'<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2M10 2.8h4"/>',roast:'<path d="M12 3c1 3 4 4.5 4 8.5a4 4 0 0 1-8 0c0-1.6.8-2.8 1.8-3.8.2 1.4 1 2.3 2 2.6C11 8 11 5.5 12 3z"/><path d="M12 21v-2"/>',battle:'<path d="M4 7h7l-2 4h5M20 17h-7l2-4H10"/><circle cx="5" cy="17" r="1.5"/><circle cx="19" cy="7" r="1.5"/>',hum:'<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3"/><path d="M21 6v3M3 7v2"/>',games:'<rect x="2.5" y="7" width="19" height="11" rx="5.5"/><path d="M7.5 10.5v4M5.5 12.5h4"/><circle cx="15.5" cy="11.5" r=".9"/><circle cx="17.8" cy="13.8" r=".9"/>'};
  document.querySelectorAll("#plusMenu [data-plus]").forEach(function(b){var k=b.getAttribute("data-plus");if(I[k])b.insertAdjacentHTML("afterbegin",ic(I[k]))})})();
 
 /* ---------- PC sidebar: your chats ---------- */
@@ -1284,7 +1287,7 @@ function system(voice){
   t+=REMIND_RULES+" The user's local date and time right now: "+nowText()+".";
   if(!convo&&!voice)t+=FILE_RULES+HOMEWORK_RULES+MUSIC_RULES+PY_RULES+QUIZ_RULES+TOOLS_RULES;
   if(briefMode)t+=BRIEF_RULES;
-  var lu=msgs[msgs.length-1];if(lu&&lu.role==="user"&&lu.mode==="roast")t+=ROAST_RULES;if(lu&&lu.role==="user"&&lu.mode==="battle")t+=BATTLE_RULES;if(lu&&lu.role==="user"&&/^game:/.test(lu.mode||""))t+=GAME_RULES[lu.mode.slice(5)]||"";
+  var lu=msgs[msgs.length-1];if(lu&&lu.role==="user"&&lu.mode==="roast")t+=ROAST_RULES;if(lu&&lu.role==="user"&&lu.mode==="battle")t+=BATTLE_RULES;if(lu&&lu.role==="user"&&lu.mode==="hum")t+=HUM_RULES;if(lu&&lu.role==="user"&&/^game:/.test(lu.mode||""))t+=GAME_RULES[lu.mode.slice(5)]||"";
   if(msgs.some(function(m){return m.role==="user"&&(ytUrl(m.text)||m.file&&m.file.kind==="VIDEO")}))t+=VIDEO_RULES;
   var up=reminders.filter(function(r){return r.at>Date.now()});
   if(up.length)t+=" Reminders already set: "+up.map(function(r){return fmtWhen(r.at)+" – "+r.text}).join(" | ")+".";
@@ -1708,7 +1711,7 @@ if(IS_PC_APP&&S.wake)setTimeout(wakeStart,1500);
 window.novaWake={heard:wakeHeard,state:function(){return{on:wake.on,mic:!!wake.stream}}}; // for testing
 
 /* ---------- beats: drum loops, your own drum kit, and MIDI files for the songs Nova writes (all made on the device, free) ---------- */
-// makeBeat(genre,bpm,{kit,chords}) → {wav,seconds,style,bpm}; makeMidi(genre,bpm,chords,melody) → .mid bytes; parseWav(bytes) → samples
+// makeBeat(genre,bpm,{kit,chords,melody}) → {wav,seconds,style,bpm}; makeMidi(genre,bpm,chords,melody) → .mid bytes; parseWav(bytes) → samples
 var BEAT_SR=44100;
 function beatStyle(genre){
   var g=String(genre||"").toLowerCase();
@@ -1882,6 +1885,13 @@ function beatBell(midi){
     var x=(Math.sign(Math.sin(p1))*0.6+Math.sign(Math.sin(p2))*0.4)*Math.exp(-t/0.07);hp=0.9*(hp+x-prev);prev=x;b[i]=Math.tanh(hp*1.3)*(i>n-200?(n-i)/200:1)}
   return b;
 }
+function beatLeadNote(midi,dur,style){ // the melody on top (a hummed tune or the written hook): a soft detuned saw lead
+  var SR=BEAT_SR,f=440*Math.pow(2,(midi-69)/12),hard=/hardstyle|rawstyle|hardcore|frenchcore|uptempo/.test(style),dec=hard?1.2:0.45,n=Math.round(Math.min(dur+0.12,2.2)*SR),b=new Float32Array(n),p=0,p2=0,lp=0;
+  for(var i=0;i<n;i++){var t=i/SR;p+=f/SR;p2+=f*1.006/SR;var saw=((p%1)*2-1)+((p2%1)*2-1)*0.7;
+    var env=Math.min(1,t/0.008)*(t<dur?Math.exp(-t/dec):Math.exp(-dur/dec)*Math.max(0,1-(t-dur)/0.12));
+    lp+=(saw-lp)*(hard?0.55:0.16+0.25*Math.exp(-t/0.15));b[i]=lp*env*0.6}
+  return b;
+}
 // a small room reverb (claps, snares and open hats get a bit of space, so it sounds less dry and robotic)
 function beatReverb(x){
   var SR=BEAT_SR,out=new Float32Array(x.length),combs=[1557,1617,1491,1422].map(function(d){return{d:Math.round(d*SR/44100),b:new Float32Array(Math.round(d*SR/44100)),i:0,f:0}});
@@ -1929,6 +1939,10 @@ function makeBeat(genre,bpm,opt){
     else if(e.i==="bell")add(beatBell(e.n),at,0.32*e.v,0.25);
     else add(snd[e.i],at,gains[e.i]*e.v,sends[e.i]||0);
   });
+  if(opt.melody){var mel=parseMelody(opt.melody),tot=bars*16,pos=0,guard=0; // play the melody over the loop, repeating it to fill 4 bars
+    while(mel.length&&pos<tot&&guard++<512){for(var mi=0;mi<mel.length&&pos<tot;mi++){var nt=mel[mi];
+      if(nt.n>=0){var mt=pos*step,md=nt.d*step;if(style==="lofi")add(beatKeyNote(nt.n,md),mt,0.3,0.45);else if(style==="phonk")add(beatBell(nt.n),mt,0.34,0.25);else add(beatLeadNote(nt.n,md,style),mt,0.24,0.35)}
+      pos+=nt.d}}}
   var rv=beatReverb(wet);for(var i=0;i<len;i++)out[i]+=rv[i]*0.6;
   if(style==="lofi"){var lpf=0;for(i=0;i<len;i++){lpf+=(out[i]-lpf)*0.32;out[i]=lpf*1.15+(r()-0.5)*0.004}} // warm, a bit dusty
   var peak=0;for(i=0;i<len;i++){out[i]=Math.tanh(out[i]*0.9);var a=Math.abs(out[i]);if(a>peak)peak=a}
@@ -2020,18 +2034,18 @@ function makeArrangement(arr){
 
 var beatAudio=null,beatOn=-1,beatUrls={},beatKit={},beatKitVer=0;
 function beatKey(b){return beatStyle(b.genre)+"|"+b.bpm+"|"+(b.chords||"")+"|"+beatKitVer}
-function beatMake(b){return makeBeat(b.genre,b.bpm,{kit:beatKit,chords:b.chords})}
+function beatMake(b){return makeBeat(b.genre,b.bpm,{kit:beatKit,chords:b.chords,melody:b.melody})}
 function beatUrl(b){var k=beatKey(b);if(!beatUrls[k])beatUrls[k]=URL.createObjectURL(new Blob([beatMake(b).wav],{type:"audio/wav"}));return beatUrls[k]}
 var I_SHARE='<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11 11 5M6.5 5H11v4.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function beatCard(b,i){var ro=isRo(),on=beatOn===i&&beatAudio&&!beatAudio.paused,mine=Object.keys(beatKit).length;
   if(document.documentElement.classList.contains("sp")){var st=beatStyle(b.genre),bpm=beatBpm(st,b.bpm),loop=(8*4*60/bpm).toFixed(2)+"s",g=b.genre.charAt(0).toUpperCase()+b.genre.slice(1);
     return'<div class="beatcard bp'+(on?" on":"")+'"><div class="r"><span class="art'+(/trap|phonk|drill/i.test(b.genre)?" v":"")+'"></span><div class="t"><b>'+esc(g)+', '+b.bpm+' BPM</b><span>'+
-    esc([ro?"Ritm de tobe":"Drum loop",mine?(ro?"cu sunetele tale":"with your sounds"):"",b.chords?b.chords:""].filter(Boolean).join(", "))+'</span></div>'+
+    esc([b.melody?(ro?"Melodie + tobe":"Melody + drums"):(ro?"Ritm de tobe":"Drum loop"),mine?(ro?"cu sunetele tale":"with your sounds"):"",b.chords?b.chords:""].filter(Boolean).join(", "))+'</span></div>'+
     '<button class="pbtn" data-act="beat" data-i="'+i+'" aria-label="'+(on?"Stop":(ro?"Ascultă ritmul":"Play beat"))+'">'+(on?I_PAUSE:I_PLAY)+'<span class="sr">'+(on?"Stop":(ro?"Ascultă ritmul":"Play beat"))+'</span></button></div>'+
     '<div class="scrub" style="--loop:'+loop+'">'+waveSvg(b.genre+b.bpm+(b.chords||""))+'<span class="head" style="animation-duration:'+loop+'"></span></div>'+
     '<div class="acts2"><button data-act="beatdl" data-i="'+i+'">'+I_DL+(ro?"Salvează WAV":"Save WAV")+'</button><button data-act="beatmidi" data-i="'+i+'">'+I_KEYS+(ro?"MIDI pentru FL Studio":"MIDI for FL Studio")+'</button><button data-act="vid" data-i="'+i+'">'+I_SHARE+(ro?"Trimite ca video":"Share as video")+'</button></div></div>'}
   return'<div class="beatcard'+(on?" on":"")+'"><div class="pads">'+new Array(9).join("<i></i>")+'</div><div class="grow"><b>'+esc(b.genre.charAt(0).toUpperCase()+b.genre.slice(1))+' · '+b.bpm+' BPM</b><span>'+
-  esc([ro?"Ritm de tobe":"Drum loop",mine?(ro?"cu sunetele tale":"with your sounds"):"",b.chords?b.chords:""].filter(Boolean).join(" · "))+'</span></div>'+
+  esc([b.melody?(ro?"Melodie + tobe":"Melody + drums"):(ro?"Ritm de tobe":"Drum loop"),mine?(ro?"cu sunetele tale":"with your sounds"):"",b.chords?b.chords:""].filter(Boolean).join(" · "))+'</span></div>'+
   '<button class="main" data-act="beat" data-i="'+i+'">'+(on?"■ Stop":(ro?"▶ Ascultă ritmul":"▶ Play beat"))+'</button><button data-act="beatdl" data-i="'+i+'">.wav</button><button data-act="beatmidi" data-i="'+i+'">'+(ro?"MIDI pentru FL Studio":"MIDI for FL Studio")+'</button></div>'}
 function playBeat(b,i){
   if(beatAudio&&beatOn===i&&!beatAudio.paused){beatAudio.pause();beatOn=-1;render();return}
@@ -2765,6 +2779,29 @@ function roastStart(){roastStart.on=true;var f=$("file"),acc=f.getAttribute("acc
 function roastCard(m,i){var ro=isRo(),last=i===msgs.length-1&&!busy;
   return'<div class="roast'+(m.roast.nice?" nice":"")+'"><div class="r"><span class="fire" aria-hidden="true">'+(m.roast.nice?"💛":"🔥")+'</span><div class="t"><b>'+(m.roast.nice?(ro?"Complimente":"Compliments"):"Roast")+'</b><span>'+esc(S.nvoice==="off"?(ro?"vocea telefonului":"built-in voice"):S.nvoice)+'</span></div><button class="pbtn" data-act="listen" data-i="'+i+'" aria-label="'+(ro?"Ascultă":"Listen")+'">'+I_PLAY+'</button></div>'+
   '<p>'+esc(m.text)+'</p>'+(last?'<div class="acts2"><button data-act="roastmore" data-i="'+i+'">🔥 '+(ro?"Mai tare":"Roast harder")+'</button><button data-act="roastnice" data-i="'+i+'">'+(ro?"Fii drăguț":"Be nice now")+'</button><button data-act="vid" data-i="'+i+'">'+I_SHARE+(ro?"Trimite ca video":"Share as video")+'</button></div>':'<div class="acts2"><button data-act="vid" data-i="'+i+'">'+I_SHARE+(ro?"Trimite ca video":"Share as video")+'</button></div>')+'</div>'}
+/* ---------- hum to beat: hum a melody, Nova writes it down and builds a beat around it ---------- */
+var HUM_RULES=" Hum to beat mode: the attached audio is the user humming, singing or whistling a melody. Listen closely and write that melody down: work out the tempo and the key, then each note's pitch (with octave) and length in 16th notes, snapped to the grid, covering 2 or 4 bars. Keep their tune recognisable; tidy only obvious wobbles, and move it into octave 4 to 5 if needed. Reply with one short friendly sentence about what you heard (the key and the vibe), then the lines BEAT: <the genre they asked for> | <BPM that suits that genre>, CHORDS: 4 chords that fit their melody, and MELODY: the notes. If the recording has no melody (silence or just talking), say so in one sentence and ask them to try again, with no BEAT line.";
+var HUM_STYLES=[["phonk","Phonk"],["drill","Drill"],["lofi","Lo-fi"],["house","House"],["trap","Trap"],["hardstyle","Hardstyle"],["pop","Pop"]];
+var humRec=null;
+function humStart(){var acts=$("picActs"),ro=isRo();acts.hidden=false;
+  acts.innerHTML='<span class="humq">'+(ro?"Ce stil?":"Which style?")+"</span>"+HUM_STYLES.map(function(g){return'<button data-hum="'+g[0]+'">'+g[1]+"</button>"}).join("")}
+function humRecord(style){var ro=isRo(),acts=$("picActs");
+  if(!navigator.mediaDevices||!window.MediaRecorder){toast(ro?"Browserul ăsta nu poate înregistra.":"This browser can't record.");return}
+  navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true,channelCount:1}}).then(function(stream){
+    var type=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg"].filter(function(t){return MediaRecorder.isTypeSupported(t)})[0]||"",r=new MediaRecorder(stream,type?{mimeType:type}:{}),chunks=[],t0=Date.now();
+    humRec={r:r,stream:stream,style:style,timer:null};
+    r.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data)};
+    r.onstop=function(){stream.getTracks().forEach(function(t){t.stop()});clearInterval(humRec&&humRec.timer);var secs=(Date.now()-t0)/1000;humRec=null;acts.hidden=true;
+      if(secs<1.5){toast(ro?"Prea scurt, mai încearcă.":"Too short, try again.");return}
+      var blob=new Blob(chunks,{type:(r.mimeType||type||"audio/webm").split(";")[0]});
+      blobToB64(blob).then(function(b64){var nm=(HUM_STYLES.filter(function(g){return g[0]===style})[0]||[0,style])[1];
+        setPhoto({file:true,name:ro?"Fredonatul tău":"Your humming",kind:"AUDIO",mime:blob.type||"audio/webm",b64:b64});send.mode="hum";
+        $("input").value=ro?"Fă un beat "+nm+" din melodia mea":"Turn my humming into a "+nm+" beat";send()})};
+    r.start(250);
+    acts.innerHTML='<span class="humrec"><i></i>'+(ro?"Fredonează melodia…":"Hum your melody…")+' <b id="humT">0s</b></span><button data-humstop class="main">'+(ro?"Gata":"Done")+"</button>";
+    humRec.timer=setInterval(function(){var s2=Math.floor((Date.now()-t0)/1000),el=$("humT");if(el)el.textContent=s2+"s";if(s2>=15)humStop()},250);
+  }).catch(function(){toast(ro?"Nova nu are voie la microfon.":"Nova isn't allowed to use the microphone.")})}
+function humStop(){if(humRec&&humRec.r.state!=="inactive")humRec.r.stop()}
 /* ---------- games with Nova: 20 Questions, Would You Rather, Trivia duel ---------- */
 var gameOn="",gameSid="";
 var GAME_RULES={
@@ -2998,11 +3035,13 @@ document.addEventListener("visibilitychange",function(){if(document.visibilitySt
   try{history.replaceState(null,"",location.pathname)}catch(e){}
 })();
 $("plus").addEventListener("click",function(e){if(busy)return;e.stopPropagation();$("plusMenu").querySelector("[data-plus=screen]").hidden=!canScreen;$("plusMenu").hidden=!$("plusMenu").hidden});
-$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else if(w==="python")showLessons();else if(w==="quiz")quizStart();else if(w==="cards")openDecks();else if(w==="plan")planStart();else if(w==="arrange")arrangeStart();else if(w==="focus")focusChoose();else if(w==="roast")roastStart();else if(w==="battle")battleStart();else if(w==="games")gamesStart();else $("file").click()});
+$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else if(w==="python")showLessons();else if(w==="quiz")quizStart();else if(w==="cards")openDecks();else if(w==="plan")planStart();else if(w==="arrange")arrangeStart();else if(w==="focus")focusChoose();else if(w==="roast")roastStart();else if(w==="battle")battleStart();else if(w==="games")gamesStart();else if(w==="hum")humStart();else $("file").click()});
 document.addEventListener("click",function(e){if(!$("plusMenu").hidden&&!e.target.closest("#plusMenu"))$("plusMenu").hidden=true});
 $("picActs").addEventListener("click",function(e){var fm=e.target.closest("[data-focus]");if(fm){$("picActs").hidden=true;focusStart(+fm.getAttribute("data-focus"));return}
   var ls=e.target.closest("[data-lesson]");if(ls){startLesson(+ls.getAttribute("data-lesson"));return}
   var gm=e.target.closest("[data-game]");if(gm){gamePlay(gm.getAttribute("data-game"));return}
+  var hg=e.target.closest("[data-hum]");if(hg){humRecord(hg.getAttribute("data-hum"));return}
+  if(e.target.closest("[data-humstop]")){humStop();return}
   var g=e.target.closest("[data-genre]");if(g){var ro=isRo(),x=g.getAttribute("data-genre");$("input").value=(ro?"Scrie-mi o piesă completă "+x+" despre ":"Write me a full "+x+" song about ");$("picActs").hidden=true;autoGrow();updateAct();$("input").focus();return}
   var b=e.target.closest("[data-picq]");if(b&&!busy){$("input").value=b.getAttribute("data-picq");send()}});
 $("file").addEventListener("change",function(){var f=this.files[0];this.value="";if(f)readFile(f)});
