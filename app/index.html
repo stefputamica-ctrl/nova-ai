@@ -611,6 +611,11 @@ html.sp.ph.pd #wall.photo:not(.talking)::after{display:block;background:linear-g
 html.sp.ph.pl .hero .date{color:#55555f}html.sp.ph.pl .hero h1,html.sp.ph.pl header .brand{color:#111114}html.sp.ph.pl .hero .sub{color:#4a4a55}
 html.sp.ph.pd .hero .date{color:#c9cde6}html.sp.ph.pd .hero h1,html.sp.ph.pd header .brand{color:#fff}html.sp.ph.pd .hero .sub{color:#dfe2f2}
 html.sp.ph.pl header .chip.ico{background:rgba(255,255,255,.78);color:#111114;border-color:rgba(0,0,0,.06)}html.sp.ph.pd header .chip.ico{background:rgba(10,12,28,.55);color:#fff;border-color:rgba(255,255,255,.12)}
+/* own photo in a chat: no haze over the photo; Nova's answers sit on their own card instead */
+html.sp.ph #wall.photo.talking::after{background:none!important}
+html.sp.ph .msg.n>div{background:rgba(10,12,28,.8);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:12px 14px}
+html.sp.ph.cw .msg.n>div{background:rgba(250,250,252,.9);border-color:rgba(0,0,0,.05)}
+html.sp.ph .msg.n .dot{margin-top:16px}
 html.sp.ph:not(.cw) .hero .starter{background:rgba(10,12,28,.55);border-radius:14px;margin-top:6px}
 
 html.sp.cd #wall{background-color:#0d0d10}
@@ -938,7 +943,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.07-c";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.07-d";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
