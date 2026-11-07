@@ -605,6 +605,14 @@ html.sp.cw.lg .sheet .glass{background:#fff;border:0;-webkit-backdrop-filter:non
 /* ================= Clean in dark: the space photo dimmed, neutral frosted glass ================= */
 html.sp.cd #hzw{display:none}
 html.sp.ph #hzw{display:none}
+/* own photo: the top haze and the greeting follow the photo's brightness (bright photo: dark text, dark photo: white text) */
+html.sp.ph.pl #wall.photo:not(.talking)::after{display:block;background:linear-gradient(180deg,rgba(246,246,250,.72) 0%,rgba(246,246,250,.5) 24%,rgba(246,246,250,.08) 48%,rgba(246,246,250,0) 60%)}
+html.sp.ph.pd #wall.photo:not(.talking)::after{display:block;background:linear-gradient(180deg,rgba(6,7,22,.7) 0%,rgba(6,7,22,.48) 24%,rgba(6,7,22,.08) 48%,rgba(6,7,22,0) 60%)}
+html.sp.ph.pl .hero .date{color:#55555f}html.sp.ph.pl .hero h1,html.sp.ph.pl header .brand{color:#111114}html.sp.ph.pl .hero .sub{color:#4a4a55}
+html.sp.ph.pd .hero .date{color:#c9cde6}html.sp.ph.pd .hero h1,html.sp.ph.pd header .brand{color:#fff}html.sp.ph.pd .hero .sub{color:#dfe2f2}
+html.sp.ph.pl header .chip.ico{background:rgba(255,255,255,.78);color:#111114;border-color:rgba(0,0,0,.06)}html.sp.ph.pd header .chip.ico{background:rgba(10,12,28,.55);color:#fff;border-color:rgba(255,255,255,.12)}
+html.sp.ph:not(.cw) .hero .starter{background:rgba(10,12,28,.55);border-radius:14px;margin-top:6px}
+
 html.sp.cd #wall{background-color:#0d0d10}
 html.sp.cd #wall::after{background:rgba(10,10,14,.72)}
 html.sp.cd .glass,html.sp.cd .chip,html.sp.cd .next button,html.sp.cd .composer.glass,html.sp.cd .listen.glass{background:rgba(22,23,30,.55);border:1px solid rgba(255,255,255,.12);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);box-shadow:0 18px 40px -22px rgba(0,0,0,.7)}
@@ -930,7 +938,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.07-b";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.07-c";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -996,7 +1004,7 @@ function wallUrl(){
 }
 function applyLook(){
   document.documentElement.setAttribute("data-theme",S.theme);
-  var dc=document.documentElement.classList;dc.add("sp");dc.toggle("cw",S.theme==="light");dc.toggle("lg",S.theme==="light"&&S.wallpaper!=="clean");dc.toggle("cd",S.theme!=="light"&&S.wallpaper==="clean");dc.toggle("ph",S.wallpaper==="custom"&&!!S.customWall);document.documentElement.classList.remove("dawn");
+  var dc=document.documentElement.classList;dc.add("sp");dc.toggle("cw",S.theme==="light");dc.toggle("lg",S.theme==="light"&&S.wallpaper!=="clean");dc.toggle("cd",S.theme!=="light"&&S.wallpaper==="clean");dc.toggle("ph",S.wallpaper==="custom"&&!!S.customWall);var ph=S.wallpaper==="custom"&&!!S.customWall,tk=ph?S.customWall.length+":"+S.customWall.slice(-48):"";if(ph&&S.wallToneFor!==tk)wallTone(S.customWall,tk);dc.toggle("pl",ph&&S.wallTone!=="dark");dc.toggle("pd",ph&&S.wallTone==="dark");document.documentElement.classList.remove("dawn");
   var u=wallUrl(), w=$("wall");
   w.className=(S.wallpaper==="colours"?"colours":"")+(S.wallpaper==="space"?" space":"")+(S.wallpaper==="sky"?" sky":"")+(S.theme!=="light"&&S.wallpaper==="sky"?" twilight":"")+(S.wallpaper==="custom"?" photo":"")+(msgs.length||busy?" talking":"");
   drawHz();
@@ -2828,6 +2836,15 @@ function setWallFromUrl(u){
   img.onerror=function(){toast("Couldn’t use that picture as wallpaper.")};
   img.src=withKey(u);
 }
+// How bright is the top of the photo (where the greeting sits)? Bright photo -> dark text, dark photo -> white text.
+function wallTone(src,key){
+  if(wallTone.busy===key)return;wallTone.busy=key;
+  var img=new Image();img.onload=function(){
+    try{var c=document.createElement("canvas");c.width=24;c.height=32;var g=c.getContext("2d");g.drawImage(img,0,0,24,32);
+      var d=g.getImageData(0,0,24,15).data,sum=0,n=0;
+      for(var i=0;i<d.length;i+=4){var l=(0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2])/255;sum+=l;n++}
+      S.wallTone=sum/n>0.56?"light":"dark";S.wallToneFor=key;save();applyLook()}catch(e){}
+  };img.src=src}
 function setCustomWall(data){S.customWall=data;S.wallpaper="custom";if(!save()){S.customWall="";S.wallpaper="space"}applyLook();syncSettings();render();toast("Wallpaper set")}
 
 /* ---------- settings ---------- */
