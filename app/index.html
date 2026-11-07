@@ -680,6 +680,10 @@ html.cw:not(.lg) .roast,html.cw:not(.lg) .battle{background:#fff;border:0;box-sh
 #picActs .humq{align-self:center;font-size:13.5px;font-weight:600;color:var(--dim);padding:0 4px}
 #picActs .humrec{display:flex;align-items:center;gap:8px;font-weight:600;padding:8px 12px}#picActs .humrec i{width:10px;height:10px;border-radius:50%;background:#ff6b6b;animation:humblink 1s infinite}#picActs .humrec b{font-variant-numeric:tabular-nums;color:var(--dim)}
 @keyframes humblink{50%{opacity:.25}}
+.dailypill{margin-top:14px;display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;border:1px solid var(--edge);background:var(--glass);font-weight:600;font-size:14.5px}.dailypill b{font-weight:800}
+html.cw .dailypill{background:#fff;border-color:transparent;box-shadow:0 1px 2px rgba(0,0,0,.05),0 6px 18px -10px rgba(0,0,0,.18)}
+html.sp.ph.pl .dailypill{background:rgba(255,255,255,.82);color:#111114;border-color:transparent}html.sp.ph.pd .dailypill{background:rgba(10,12,28,.6);color:#fff}
+.game .q.emo{font-size:30px;line-height:1.3;font-weight:600}.game .dans{display:flex;gap:8px;margin-top:6px}.game .dans .field{flex:1;min-width:0}.game .dans button{padding:10px 16px;border-radius:999px;font-weight:700;background:var(--ink);color:var(--bg)}
 .game{border-radius:24px;border:1px solid var(--edge);background:var(--glass);padding:14px;max-width:540px}
 .game .lead{margin:0 0 10px;font-size:15.5px;line-height:1.45}.game .top{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--dim)}.game .top b{color:var(--ink);font-size:15.5px}
 .game .score2{display:flex;justify-content:space-between;margin:10px 0 2px;font-size:14px;color:var(--dim)}.game .score2 b{font-size:22px;color:var(--ink);margin:0 4px}
@@ -956,7 +960,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.08";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.08-b";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -1139,7 +1143,7 @@ function render(){
   if(!msgs.length&&S.key&&document.documentElement.classList.contains("sp")){
     var ro=isRo(),now=new Date(),st2=STARTERS.slice(0,3),hr2=now.getHours();if(hr2>=4&&hr2<12)st2=[briefText()].concat(STARTERS.slice(0,2));
     var song=songResume();if(song)st2=st2.slice(0,2);
-    h+='<div class="hero"><div class="top"><div class="date">'+esc(now.toLocaleDateString(ro?"ro-RO":"en-GB",{weekday:"long",day:"numeric",month:"long"}))+'</div><h1>'+esc(greeting())+'</h1><p class="sub">'+(ro?"Ce facem azi?":"What are we making today?")+'</p></div><div class="below'+(song?" has-song":"")+'">'+song;
+    h+='<div class="hero"><div class="top"><div class="date">'+esc(now.toLocaleDateString(ro?"ro-RO":"en-GB",{weekday:"long",day:"numeric",month:"long"}))+'</div><h1>'+esc(greeting())+'</h1><p class="sub">'+(ro?"Ce facem azi?":"What are we making today?")+'</p>'+dailyPill()+'</div><div class="below'+(song?" has-song":"")+'">'+song;
     st2.forEach(function(q){h+='<button class="starter" data-q="'+esc(q)+'">'+esc(q)+'</button>'});
     h+='</div></div>';
   }else if(!msgs.length&&S.key){
@@ -1156,7 +1160,7 @@ function render(){
         h+='<div class="msg u" data-i="'+i+'">'+(m.image?'<img class="uimg" src="'+esc(m.image)+'" alt="Your photo" data-view="'+esc(m.image)+'">':"")+
           (m.file?'<div class="ufile"><i class="ficon">'+esc(m.file.kind||"FILE")+'</i><span>'+esc(m.file.name)+'</span></div>':"")+'<div class="ub" data-edit="'+i+'">'+esc(m.text)+'</div>'+(m.run?'<div class="urun"><pre class="pyout'+(m.run.err?" err":"")+'"><span class="h">'+(m.run.state==="running"?"Running your code…":"Your code’s output")+'</span>'+esc(m.run.state==="running"?"":(m.run.out||"(no output)"))+'</pre></div>':"")+'</div>';
       }else{
-        h+='<div class="msg n"><span class="dot"></span><div>'+(m.roast?roastCard(m,i):m.battle?battleCard(m,i):m.trivia?triviaCard(m,i):m.wyr?wyrCard(m,i):m.q20?q20Card(m,i):formatAnswer(m.text))+
+        h+='<div class="msg n"><span class="dot"></span><div>'+(m.roast?roastCard(m,i):m.battle?battleCard(m,i):m.daily?dailyCard(m,i):m.trivia?triviaCard(m,i):m.wyr?wyrCard(m,i):m.q20?q20Card(m,i):formatAnswer(m.text))+
           (m.gen?'<div class="gen" data-gen="'+esc(m.gen)+'"><div class="state"><span class="spin"></span>Painting your picture…</div></div>':"")+
           (m.open?'<a class="openbtn" href="'+esc(m.open.u)+'" target="_blank" rel="noopener">Open '+esc(m.open.h)+' <span aria-hidden="true">↗</span></a>':"")+
           (m.suggest?'<iframe class="gsugg" sandbox="allow-popups allow-popups-to-escape-sandbox" title="Google Search suggestions" srcdoc="'+esc(m.suggest).replace(/'/g,"&#39;")+'"></iframe>':"")+
@@ -2802,6 +2806,53 @@ function humRecord(style){var ro=isRo(),acts=$("picActs");
     humRec.timer=setInterval(function(){var s2=Math.floor((Date.now()-t0)/1000),el=$("humT");if(el)el.textContent=s2+"s";if(s2>=15)humStop()},250);
   }).catch(function(){toast(ro?"Nova nu are voie la microfon.":"Nova isn't allowed to use the microphone.")})}
 function humStop(){if(humRec&&humRec.r.state!=="inactive")humRec.r.stop()}
+/* ---------- daily challenge + streak ---------- */
+function dayKey(d){d=d||new Date();return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function streakNow(){var st=load("nova.streak",{last:"",n:0,best:0}),y=new Date();y.setDate(y.getDate()-1);
+  return{n:st.last===dayKey()||st.last===dayKey(y)?st.n:0,best:st.best||0,today:st.last===dayKey()}}
+function streakDone(){var st=load("nova.streak",{last:"",n:0,best:0}),t=dayKey(),y=new Date();y.setDate(y.getDate()-1);if(st.last===t)return st;
+  st.n=st.last===dayKey(y)?st.n+1:1;st.last=t;st.best=Math.max(st.best||0,st.n);store("nova.streak",st);return st}
+function dailyPill(){var s2=streakNow(),ro=isRo();
+  return'<button class="dailypill" data-daily>'+(s2.today?"✓ "+(ro?"Provocarea de azi e gata":"Today’s challenge done"):(ro?"Provocarea zilei":"Daily challenge"))+(s2.n?' <b>🔥 '+s2.n+"</b>":"")+"</button>"}
+var DAILY_KINDS=["trivia","riddle","emoji"];
+function dailyMake(){var ro=isRo(),now=new Date(),day=Math.floor((now-new Date(now.getFullYear(),0,0))/864e5),kind=DAILY_KINDS[day%3],seen=load("nova.dailySeen",[]);
+  var prompt="Make today's daily challenge for the Nova app (date "+dayKey()+"). Type: "+kind+". "+
+    (kind==="trivia"?"A fun multiple-choice question with 4 short options and one right answer (topics: music, games, sport, science, films, animals, tech, sometimes Romania).":kind==="riddle"?"A short clever riddle with a one- or two-word answer.":"An emoji puzzle: 3 to 6 emojis that stand for a famous song, film, video game or saying; the user guesses which.")+
+    " Medium difficulty, fun, fair, fine for teenagers. Write it in "+(ro?"Romanian":"English")+". Don't repeat any of these: "+JSON.stringify(seen.slice(-12))+
+    ". Return JSON only: {\"type\":\""+kind+"\",\"q\":\"the question (for emoji: the emojis, then a short line like Which song is this?)\",\"options\":[4 options, only for trivia],\"answer\":\"for trivia the index 0-3; otherwise the answer\",\"accept\":[4 to 8 accepted answers, lowercase, short, with and without diacritics, in Romanian and English],\"hint\":\"one short hint\",\"why\":\"one short fun sentence after the answer\"}";
+  return fetch("https://generativelanguage.googleapis.com/v1beta/models/"+MODEL+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":S.key},
+    body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:1}})})
+  .then(function(r){return r.json()}).then(function(d){var t=((((d.candidates||[])[0]||{}).content||{}).parts||[]).map(function(x){return x.text||""}).join("");var c=JSON.parse(t);
+    if(!c||!c.q)throw new Error("no challenge");c.type=DAILY_KINDS.indexOf(c.type)>=0?c.type:kind;
+    if(c.type==="trivia"){if(!Array.isArray(c.options)||c.options.length<2)c.type="riddle";else c.answer=Math.max(0,Math.min(c.options.length-1,+c.answer||0))}
+    if(c.type!=="trivia"){c.accept=(Array.isArray(c.accept)?c.accept:[]).concat([String(c.answer||"")]).map(dailyNorm).filter(Boolean)}
+    seen.push(String(c.q).slice(0,80));store("nova.dailySeen",seen.slice(-20));return c})}
+function dailyNorm(x){return String(x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]+/g," ").replace(/\b(the|a|an|un|o)\b/g," ").replace(/\s+/g," ").trim()}
+function dailyOpen(){if(busy||needKey())return;var ro=isRo(),cur=load("nova.daily",null);
+  function show(c){$("picActs").hidden=true;msgs=msgs.concat({role:"model",text:c.q,daily:{date:dayKey(),c:c,tries:0,state:"",hint:false}});persist();render();
+    setTimeout(function(){var el=document.querySelector("[data-dinput]");if(el)el.focus()},60)}
+  if(cur&&cur.date===dayKey()&&cur.c){show(cur.c);return}
+  toast(ro?"Fac provocarea de azi…":"Making today’s challenge…");busy=true;render();
+  dailyMake().then(function(c){store("nova.daily",{date:dayKey(),c:c});busy=false;show(c)}).catch(function(e){busy=false;console.log("[Nova] daily",e);render.error=ro?"Nu am putut face provocarea. Mai încearcă.":"Couldn’t make today’s challenge. Try again.";render()})}
+function dailyAnswer(i,v){var m=msgs[i],d=m&&m.daily,ro=isRo();if(!d||d.state)return;var c=d.c,ok;
+  if(c.type==="trivia")ok=+v===c.answer,d.pick=+v;
+  else{var g=dailyNorm(v);if(!g)return;ok=c.accept.some(function(a){return a&&(g===a||(a.length>3&&(g.indexOf(a)>=0||a.indexOf(g)>=0&&g.length>=Math.max(4,a.length-2))))});d.last=v}
+  d.tries++;vibrate();
+  if(ok||c.type==="trivia"||d.tries>=3){d.state=ok?"won":"lost";var st=streakDone();d.streak=st.n;if(ok)chime();
+    say((ok?(ro?"Corect! ":"Correct! "):(ro?"Nu de data asta. ":"Not this time. "))+(ro?"Seria ta: ":"Your streak: ")+st.n+".")}
+  persist();render()}
+function dailyGiveUp(i){var d=msgs[i]&&msgs[i].daily;if(!d||d.state)return;d.state="lost";d.streak=streakDone().n;persist();render()}
+function dailyCard(m,i){var d=m.daily,c=d.c,ro=isRo(),label={trivia:ro?"Întrebare":"Trivia",riddle:ro?"Ghicitoare":"Riddle",emoji:ro?"Puzzle cu emoji":"Emoji puzzle"}[c.type]||"";
+  var h='<div class="game daily"><div class="top"><b>🔥 '+(ro?"Provocarea zilei":"Daily challenge")+"</b><span>"+esc(label)+'</span></div>'+(c.type==="emoji"?(function(){var ls=String(c.q).split("\n"),em=ls.shift();return'<div class="q emo">'+esc(em)+'</div>'+(ls.join(" ").trim()?'<div class="q">'+esc(ls.join(" ").trim())+"</div>":"")})():'<div class="q">'+esc(c.q)+"</div>");
+  var ans=c.type==="trivia"?String((c.options||[])[c.answer]||""):String(c.answer||"");
+  if(c.type==="trivia")h+='<div class="opts">'+c.options.map(function(x,k){var cl=!d.state?"":k===c.answer?"right":k===d.pick?"wrong":"";return'<button data-act="dpick" data-i="'+i+'" data-o="'+k+'"'+(cl?' class="'+cl+'"':"")+(d.state?" disabled":"")+">"+"ABCD"[k]+") "+esc(x)+"</button>"}).join("")+"</div>";
+  else if(!d.state){h+='<div class="dans"><input class="field" data-dinput="'+i+'" placeholder="'+(ro?"Răspunsul tău":"Your answer")+'" autocomplete="off"><button class="main" data-act="dcheck" data-i="'+i+'">'+(ro?"Verifică":"Check")+"</button></div>";
+    if(d.tries)h+='<div class="why">'+(ro?"Nu chiar, mai încearcă":"Not quite, try again")+" ("+(3-d.tries)+(ro?" încercări rămase)":" tries left)")+"</div>";
+    if(d.hint)h+='<div class="why">💡 '+esc(c.hint||"")+"</div>";
+    h+='<div class="acts2">'+(d.hint?"":'<button data-act="dhint" data-i="'+i+'">💡 '+(ro?"Indiciu":"Hint")+"</button>")+'<button data-act="dgive" data-i="'+i+'">'+(ro?"Mă dau bătut":"Give up")+"</button></div>"}
+  if(d.state){h+='<div class="why"><b>'+(d.state==="won"?(ro?"Corect! 🎉 ":"Correct! 🎉 "):(ro?"Răspunsul: ":"The answer: ")+esc(ans)+". ")+"</b>"+esc(c.why||"")+"</div>"+
+    '<div class="final">🔥 '+d.streak+" "+(d.streak===1?(ro?"zi":"day"):(ro?"zile la rând":"days in a row"))+'</div><div class="why" style="color:var(--dim)">'+(ro?"Revino mâine pentru o provocare nouă.":"Come back tomorrow for a new one.")+"</div>"}
+  return h+"</div>"}
 /* ---------- games with Nova: 20 Questions, Would You Rather, Trivia duel ---------- */
 var gameOn="",gameSid="";
 var GAME_RULES={
@@ -3056,6 +3107,7 @@ $("file").addEventListener("change",function(){var f=this.files[0];this.value=""
 })();
 $("rmPhoto").addEventListener("click",function(){setPhoto(null)});
 $("stopTalk").addEventListener("click",stopSpeaking);
+document.addEventListener("keydown",function(e){var t=e.target;if(e.key==="Enter"&&t&&t.hasAttribute&&t.hasAttribute("data-dinput")){e.preventDefault();dailyAnswer(+t.getAttribute("data-dinput"),t.value)}});
 $("newChat").addEventListener("click",function(){if(busy)return;stopSpeaking();setPhoto(null);gameOn="";msgs=[];chatId=newId();render.error="";store("nova.current",chatId);render()});
 $("openSettings").addEventListener("click",function(){syncSettings();loadVoices();$("settings").hidden=false});
 $("openChats").addEventListener("click",function(){menuFor="";renaming="";$("chatSearch").value="";renderChats();$("chats").hidden=false});
@@ -3093,12 +3145,17 @@ $("inner").addEventListener("click",function(e){
     checkKey(k).then(function(res){b.disabled=false;
       if(res.ok===false){showKeyResult(out,res);return}
       S.key=k;save();render.error="";render();toast(res.ok?"Key works ✓ saved on this device":"Key saved. Couldn’t check it right now")});return}
+  if(e.target.closest("[data-daily]")){dailyOpen();return}
   var a=e.target.closest("[data-act]");if(!a)return;var act=a.getAttribute("data-act"),i=+a.getAttribute("data-i");
   if(act==="listen"){if(msgs[i].battle)playBattle(i);else say(msgs[i].text)}
   if(act==="vid"){shareVideo(i);return}
   if(act==="roastmore"||act==="roastnice"){if(busy)return;send.mode="roast";$("input").value=act==="roastmore"?(isRo()?"Fă-mi un roast și mai tare":"Roast it harder"):(isRo()?"Acum fii drăguț":"Be nice now");send();return}
   if(act==="bplay"){playBattle(i);return}
   if(act==="bwin"){msgs[i].battle.win=a.getAttribute("data-w");persist();render();toast((isRo()?"🏆 Câștigă ":"🏆 ")+msgs[i].battle.win+(isRo()?"":" wins!"));return}
+  if(act==="dpick"){dailyAnswer(i,+a.getAttribute("data-o"));return}
+  if(act==="dcheck"){var inp=document.querySelector('[data-dinput="'+i+'"]');dailyAnswer(i,inp?inp.value:"");return}
+  if(act==="dhint"){var dm=msgs[i]&&msgs[i].daily;if(dm){dm.hint=true;persist();render()}return}
+  if(act==="dgive"){dailyGiveUp(i);return}
   if(act==="tpick"){triviaPick(i,+a.getAttribute("data-o"));return}
   if(act==="tnext"){if(busy)return;send.mode="game:trivia";send(isRo()?"Următoarea întrebare":"Next question");return}
   if(act==="wpick"){if(busy)return;var wy=msgs[i]&&msgs[i].wyr;if(!wy||wy.pick)return;wy.pick=a.getAttribute("data-w");persist();gameStat("wyr");send.mode="game:wyr";send((isRo()?"Aș alege: ":"I'd rather: ")+(wy.pick==="a"?wy.a:wy.b));return}
