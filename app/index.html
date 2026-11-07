@@ -677,6 +677,16 @@ html.cd .vcard:not([aria-checked="true"]){background:rgba(255,255,255,.07)}html.
 .battle .won{font-weight:700;padding:9px 4px}
 html.cw .battle .bl{background:#f2f2f4}html.cw .battle .bl.k{background:#fff1ea}html.cw .battle .bl small{color:#5b6cf0}html.cw .battle .bl.k small{color:#d9643a}
 html.cw:not(.lg) .roast,html.cw:not(.lg) .battle{background:#fff;border:0;box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px -18px rgba(0,0,0,.12)}
+.game{border-radius:24px;border:1px solid var(--edge);background:var(--glass);padding:14px;max-width:540px}
+.game .lead{margin:0 0 10px;font-size:15.5px;line-height:1.45}.game .top{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--dim)}.game .top b{color:var(--ink);font-size:15.5px}
+.game .score2{display:flex;justify-content:space-between;margin:10px 0 2px;font-size:14px;color:var(--dim)}.game .score2 b{font-size:22px;color:var(--ink);margin:0 4px}
+.game .q{font-weight:700;font-size:17px;margin:10px 0}.game .opts{display:grid;gap:8px}.game .opts button{text-align:left;padding:12px 14px;border-radius:14px;border:1px solid var(--edge);background:rgba(195,205,255,.06);font-size:15px}
+.game .opts button.right{border-color:#5fd18b;background:rgba(95,209,139,.16)}.game .opts button.wrong{border-color:#ff8a7a;background:rgba(255,138,122,.14)}.game .opts em{font-style:normal;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(195,205,255,.18);margin-left:6px}
+.game .why{margin-top:10px;font-size:14.5px;line-height:1.45}.game .final{margin-top:12px;font-weight:800;font-size:18px}
+.game .two{display:grid;gap:8px;margin-top:10px}.game .two button{padding:16px;border-radius:16px;border:1px solid var(--edge);background:rgba(195,205,255,.07);font-size:16px;font-weight:600;line-height:1.3}.game .two button.on{border-color:#c3cdff;background:rgba(195,205,255,.2)}.game .two .or{text-align:center;font-size:12.5px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+html.cw .game .opts button,html.cw .game .two button{background:#f4f4f6;border-color:transparent}html.cw .game .opts button.right{background:#e2f7ea;border-color:#5fd18b}html.cw .game .opts button.wrong{background:#ffe9e5;border-color:#ff8a7a}html.cw .game .two button.on{background:#e7eaff;border-color:#5b6cf0}html.cw .game .opts em{background:#e7eaff}
+html.cw:not(.lg) .game{background:#fff;border:0;box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px -18px rgba(0,0,0,.12)}
+html.sp.ph .msg.n>div>.game{background:none;border:0;padding:0}
 .vidbox{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);padding:20px}
 .vidbox[hidden]{display:none}.vidbox .vin{position:relative;border-radius:26px;padding:18px;width:min(360px,100%);display:grid;gap:12px;justify-items:center;text-align:center}
 .vidbox video{width:100%;max-height:60vh;border-radius:16px;background:#000}.vidbox .vbtns{display:flex;gap:8px}.vidbox .vbtns .btn{white-space:nowrap;padding:12px 20px}.vidbox .vx{position:absolute;top:10px;right:12px;background:none;border:0;color:var(--dim);font-size:18px}
@@ -752,7 +762,7 @@ html.sp .spin{border-top-color:#c3cdff}
   <div id="bottom">
     <div id="photoChip" class="glass" hidden><img alt=""><i class="ficon" hidden></i><span>Photo attached</span><button id="rmPhoto">Remove</button></div>
     <div id="picActs" hidden></div>
-    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo, file or video</button><button data-plus="roast">Photo roast</button><button data-plus="battle">Voice battle</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button><button data-plus="cards">Flashcards</button><button data-plus="plan">Plan my day</button><button data-plus="arrange">Arrange a song</button><button data-plus="focus">Focus timer</button></div>
+    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo, file or video</button><button data-plus="roast">Photo roast</button><button data-plus="battle">Voice battle</button><button data-plus="games">Games</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button><button data-plus="cards">Flashcards</button><button data-plus="plan">Plan my day</button><button data-plus="arrange">Arrange a song</button><button data-plus="focus">Focus timer</button></div>
     <div id="composer" class="composer glass">
       <button class="round" id="plus" aria-label="Attach a photo or file">+</button>
       <textarea id="input" rows="1" placeholder="Message Nova" aria-label="Message Nova"></textarea>
@@ -943,7 +953,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.07-d";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.07-e";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -1054,7 +1064,7 @@ function showKeyResult(el,res){el.textContent=res.msg;el.className="kout"+(res.o
 (function(){var ic=function(d){return'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'},
  I={file:'<rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>',screen:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',song:'<path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
  python:'<path d="m8.5 8-4 4 4 4M15.5 8l4 4-4 4M13.5 5.5l-3 13"/>',quiz:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 17h.01"/>',cards:'<rect x="4" y="7" width="13" height="13" rx="2.5"/><path d="M8 4h9.5A2.5 2.5 0 0 1 20 6.5V16"/>',
- plan:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',arrange:'<path d="M4 7h7M14 7h6M4 12h4M11 12h9M4 17h10M17 17h3"/>',focus:'<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2M10 2.8h4"/>',roast:'<path d="M12 3c1 3 4 4.5 4 8.5a4 4 0 0 1-8 0c0-1.6.8-2.8 1.8-3.8.2 1.4 1 2.3 2 2.6C11 8 11 5.5 12 3z"/><path d="M12 21v-2"/>',battle:'<path d="M4 7h7l-2 4h5M20 17h-7l2-4H10"/><circle cx="5" cy="17" r="1.5"/><circle cx="19" cy="7" r="1.5"/>'};
+ plan:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',arrange:'<path d="M4 7h7M14 7h6M4 12h4M11 12h9M4 17h10M17 17h3"/>',focus:'<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2M10 2.8h4"/>',roast:'<path d="M12 3c1 3 4 4.5 4 8.5a4 4 0 0 1-8 0c0-1.6.8-2.8 1.8-3.8.2 1.4 1 2.3 2 2.6C11 8 11 5.5 12 3z"/><path d="M12 21v-2"/>',battle:'<path d="M4 7h7l-2 4h5M20 17h-7l2-4H10"/><circle cx="5" cy="17" r="1.5"/><circle cx="19" cy="7" r="1.5"/>',games:'<rect x="2.5" y="7" width="19" height="11" rx="5.5"/><path d="M7.5 10.5v4M5.5 12.5h4"/><circle cx="15.5" cy="11.5" r=".9"/><circle cx="17.8" cy="13.8" r=".9"/>'};
  document.querySelectorAll("#plusMenu [data-plus]").forEach(function(b){var k=b.getAttribute("data-plus");if(I[k])b.insertAdjacentHTML("afterbegin",ic(I[k]))})})();
 
 /* ---------- PC sidebar: your chats ---------- */
@@ -1143,7 +1153,7 @@ function render(){
         h+='<div class="msg u" data-i="'+i+'">'+(m.image?'<img class="uimg" src="'+esc(m.image)+'" alt="Your photo" data-view="'+esc(m.image)+'">':"")+
           (m.file?'<div class="ufile"><i class="ficon">'+esc(m.file.kind||"FILE")+'</i><span>'+esc(m.file.name)+'</span></div>':"")+'<div class="ub" data-edit="'+i+'">'+esc(m.text)+'</div>'+(m.run?'<div class="urun"><pre class="pyout'+(m.run.err?" err":"")+'"><span class="h">'+(m.run.state==="running"?"Running your code…":"Your code’s output")+'</span>'+esc(m.run.state==="running"?"":(m.run.out||"(no output)"))+'</pre></div>':"")+'</div>';
       }else{
-        h+='<div class="msg n"><span class="dot"></span><div>'+(m.roast?roastCard(m,i):m.battle?battleCard(m,i):formatAnswer(m.text))+
+        h+='<div class="msg n"><span class="dot"></span><div>'+(m.roast?roastCard(m,i):m.battle?battleCard(m,i):m.trivia?triviaCard(m,i):m.wyr?wyrCard(m,i):m.q20?q20Card(m,i):formatAnswer(m.text))+
           (m.gen?'<div class="gen" data-gen="'+esc(m.gen)+'"><div class="state"><span class="spin"></span>Painting your picture…</div></div>':"")+
           (m.open?'<a class="openbtn" href="'+esc(m.open.u)+'" target="_blank" rel="noopener">Open '+esc(m.open.h)+' <span aria-hidden="true">↗</span></a>':"")+
           (m.suggest?'<iframe class="gsugg" sandbox="allow-popups allow-popups-to-escape-sandbox" title="Google Search suggestions" srcdoc="'+esc(m.suggest).replace(/'/g,"&#39;")+'"></iframe>':"")+
@@ -1274,7 +1284,7 @@ function system(voice){
   t+=REMIND_RULES+" The user's local date and time right now: "+nowText()+".";
   if(!convo&&!voice)t+=FILE_RULES+HOMEWORK_RULES+MUSIC_RULES+PY_RULES+QUIZ_RULES+TOOLS_RULES;
   if(briefMode)t+=BRIEF_RULES;
-  var lu=msgs[msgs.length-1];if(lu&&lu.role==="user"&&lu.mode==="roast")t+=ROAST_RULES;if(lu&&lu.role==="user"&&lu.mode==="battle")t+=BATTLE_RULES;
+  var lu=msgs[msgs.length-1];if(lu&&lu.role==="user"&&lu.mode==="roast")t+=ROAST_RULES;if(lu&&lu.role==="user"&&lu.mode==="battle")t+=BATTLE_RULES;if(lu&&lu.role==="user"&&/^game:/.test(lu.mode||""))t+=GAME_RULES[lu.mode.slice(5)]||"";
   if(msgs.some(function(m){return m.role==="user"&&(ytUrl(m.text)||m.file&&m.file.kind==="VIDEO")}))t+=VIDEO_RULES;
   var up=reminders.filter(function(r){return r.at>Date.now()});
   if(up.length)t+=" Reminders already set: "+up.map(function(r){return fmtWhen(r.at)+" – "+r.text}).join(" | ")+".";
@@ -1497,6 +1507,7 @@ function toReply(answer){
     if(lines.length>=2){var topic=lum.text.replace(/^(voice battle|bătălie de voci|batalie de voci)\s*:?\s*/i,"").trim();
       for(var bi=msgs.length-2;bi>=0&&/^(next round|runda următoare|runda urmatoare)/i.test(topic);bi--){if(msgs[bi].battle){topic=msgs[bi].battle.topic;break}}
       reply.battle={topic:topic.slice(0,120)||"Voice battle",lines:lines};reply.text=lines.map(function(l){return l.w+": "+l.t}).join("\n")}}
+  if(lum&&/^game:/.test(lum.mode||"")&&!reply.gen)gameReply(lum.mode.slice(5),answer,reply);
   if(beatOut&&!reply.gen){reply.beat=beatOut;if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Poftim ritmul.":"Here’s your beat."}
   if(setNow.length){reply.reminders=setNow.map(function(r){return{id:r.id,at:r.at,text:r.text}});if(!reply.text||reply.text==="Got it.")reply.text="Okay, I’ll remind you."}
   if(next.length&&!reply.gen&&!open)reply.next=next;
@@ -1523,7 +1534,7 @@ function send(text){
   if(/remind|alarm|timer|aminte|alarm|cronometru|notific/i.test(text))askNotify(true);
   $("input").value="";autoGrow();setPhoto(null);
   var userMsg={role:"user",text:text};
-  var md=send.mode||(/^(roast|fă-mi un roast|fa-mi un roast)/i.test(text)?"roast":/^(voice battle|bătălie de voci|batalie de voci)\b/i.test(text)?"battle":"");send.mode="";if(md)userMsg.mode=md;
+  var md=send.mode||(/^(roast|fă-mi un roast|fa-mi un roast)/i.test(text)?"roast":/^(voice battle|bătălie de voci|batalie de voci)\b/i.test(text)?"battle":"");send.mode="";if(!md&&gameOn)md="game:"+gameOn;if(md)userMsg.mode=md;
   if(pic&&pic.file){var fid=newId();ATT[fid]=pic;userMsg.file={id:fid,name:pic.name,kind:pic.kind}}
   else if(pic)userMsg.image=pic.url;
   var base=msgs.concat(userMsg);msgs=base;
@@ -2754,6 +2765,55 @@ function roastStart(){roastStart.on=true;var f=$("file"),acc=f.getAttribute("acc
 function roastCard(m,i){var ro=isRo(),last=i===msgs.length-1&&!busy;
   return'<div class="roast'+(m.roast.nice?" nice":"")+'"><div class="r"><span class="fire" aria-hidden="true">'+(m.roast.nice?"💛":"🔥")+'</span><div class="t"><b>'+(m.roast.nice?(ro?"Complimente":"Compliments"):"Roast")+'</b><span>'+esc(S.nvoice==="off"?(ro?"vocea telefonului":"built-in voice"):S.nvoice)+'</span></div><button class="pbtn" data-act="listen" data-i="'+i+'" aria-label="'+(ro?"Ascultă":"Listen")+'">'+I_PLAY+'</button></div>'+
   '<p>'+esc(m.text)+'</p>'+(last?'<div class="acts2"><button data-act="roastmore" data-i="'+i+'">🔥 '+(ro?"Mai tare":"Roast harder")+'</button><button data-act="roastnice" data-i="'+i+'">'+(ro?"Fii drăguț":"Be nice now")+'</button><button data-act="vid" data-i="'+i+'">'+I_SHARE+(ro?"Trimite ca video":"Share as video")+'</button></div>':'<div class="acts2"><button data-act="vid" data-i="'+i+'">'+I_SHARE+(ro?"Trimite ca video":"Share as video")+'</button></div>')+'</div>'}
+/* ---------- games with Nova: 20 Questions, Would You Rather, Trivia duel ---------- */
+var gameOn="",gameSid="";
+var GAME_RULES={
+ "20q":" Game mode: 20 Questions. The user thinks of something (an object, animal, food, person, place, game...). You work it out by asking ONE yes/no question per turn. Start each question with 'Question N/20:' (N counts up). Before the question you may add one short playful reaction to their last answer. Narrow down fast and cleverly. When you are fairly sure, make a guess as your question ('Question N/20: Is it a ...?'). If they confirm your guess, celebrate in one sentence and end with a line GAMEOVER: nova. If you reach question 20 without getting it, ask what it was, admit defeat with good humour and end with a line GAMEOVER: you. If the user says what it was or gives up, react and end with the right GAMEOVER line. Keep every turn under 30 words. Reply in the user's language.",
+ "wyr":" Game mode: Would You Rather. Every turn: if the user just picked an option, react to their choice in one short funny sentence (on the first turn, one short line saying let's play). Then give a brand new dilemma as the very last line, exactly like: WYR: first option || second option. Each option at most 10 words, fun, surprising and fine for teenagers, both tempting or both awful. Never repeat a dilemma from this chat. Nothing after the WYR line. Reply in the user's language.",
+ "trivia":" Game mode: Trivia duel, Nova against the user, 10 rounds, both of you answer every question. Every turn: if the user just answered, give one short sentence about it (be a fun, slightly cocky opponent). Then, unless 10 rounds are done, ask the next question as the very last line, exactly: TRIVIA: {\"round\":N,\"q\":\"question\",\"options\":[\"...\",\"...\",\"...\",\"...\"],\"answer\":0,\"nova\":0,\"why\":\"one short sentence\"} where answer is the index of the right option and nova is the option YOU pick: pick the right one about 70% of the time and a wrong one otherwise, like a real opponent. Mix topics (music, sport, video games, films, science, geography, animals, history, sometimes Romania), medium difficulty, 4 short options, vary where the right answer is. After round 10 has been answered, don't ask more: just one or two sentences about the final result. Reply in the user's language."};
+function gameStats(){return load("nova.games",{q20:{nova:0,you:0},wyr:0,trivia:{you:0,nova:0,draw:0}})}
+function gameStat(k,v){var g=gameStats();if(k==="wyr")g.wyr++;else if(k==="q20")g.q20[v]++;else if(k==="trivia")g.trivia[v]++;store("nova.games",g)}
+function gamesStart(){var acts=$("picActs"),ro=isRo(),g=gameStats();acts.hidden=false;
+  acts.innerHTML='<button data-game="20q">🤔 '+(ro?"20 de întrebări":"20 Questions")+'</button><button data-game="wyr">⚖️ '+(ro?"Ce-ai alege?":"Would You Rather")+'</button><button data-game="trivia">🏆 '+(ro?"Duel de cultură generală":"Trivia duel")+(g.trivia.you+g.trivia.nova?" · "+g.trivia.you+"–"+g.trivia.nova:"")+'</button>'}
+function gamePlay(g){if(busy)return;$("picActs").hidden=true;gameOn=g;gameSid=newId();var ro=isRo();
+  send.mode="game:"+g;
+  send(g==="20q"?(ro?"Hai să jucăm 20 de întrebări! M-am gândit la ceva. Ghicește!":"Let's play 20 Questions! I'm thinking of something. Guess it!"):g==="wyr"?(ro?"Hai să jucăm Ce-ai alege?":"Let's play Would You Rather!"):(ro?"Duel de cultură generală! Pune prima întrebare.":"Trivia duel! Ask me the first question."))}
+function gameReply(g,answer,reply){
+  var lines=String(answer).split("\n");
+  if(g==="wyr"){var k=-1,mm=null;for(var j=lines.length-1;j>=0;j--){mm=/^[\s*>-]*\**WYR\**\s*:\s*(.+?)\s*\|\|\s*(.+?)\s*$/i.exec(lines[j]);if(mm){k=j;break}}
+    if(mm){var lead=lines.slice(0,k).join("\n").trim();reply.wyr={a:mm[1].replace(/\*+/g,"").trim(),b:mm[2].replace(/\*+/g,"").trim(),lead:lead};
+      reply.text=(lead?lead+"\n":"")+(isRo()?"Ce-ai alege: ":"Would you rather: ")+reply.wyr.a+(isRo()?" sau ":" or ")+reply.wyr.b+"?"}}
+  else if(g==="trivia"){var ti=String(answer).search(/TRIVIA\s*:/i);
+    if(ti>=0){var lead2=String(answer).slice(0,ti).replace(/[*#>\s-]+$/,"").trim(),js=String(answer).slice(ti).replace(/^TRIVIA\s*:\s*/i,"");var a=js.indexOf("{"),z=js.lastIndexOf("}");
+      try{var d=JSON.parse(js.slice(a,z+1));if(d&&d.q&&Array.isArray(d.options)&&d.options.length>=2){var o=d.options.slice(0,6).map(String);
+        reply.trivia={sid:gameSid,round:+d.round||1,q:String(d.q),o:o,a:Math.max(0,Math.min(o.length-1,+d.answer||0)),nova:Math.max(0,Math.min(o.length-1,+d.nova||0)),why:String(d.why||""),pick:null,lead:lead2};
+        reply.text=(lead2?lead2+"\n":"")+reply.trivia.q}}catch(e){console.log("[Nova] trivia not readable",e)}}}
+  else if(g==="20q"){var ov=/GAMEOVER\s*:\s*(nova|you)/i.exec(answer);reply.text=String(reply.text||answer).replace(/\n?\s*\**GAMEOVER\s*:\s*\w+\**\s*$/i,"").trim();
+    reply.q20={over:ov?ov[1].toLowerCase():""};if(ov){gameStat("q20",ov[1].toLowerCase());gameOn=""}}}
+function triviaScore(sid,upto){var you=0,nova=0,n=0;for(var k=0;k<=upto&&k<msgs.length;k++){var t=msgs[k].trivia;if(!t||t.sid!==sid||t.pick==null)continue;n++;if(t.pick===t.a)you++;if(t.nova===t.a)nova++}return{you:you,nova:nova,n:n}}
+function triviaPick(i,o){var t=msgs[i]&&msgs[i].trivia;if(!t||t.pick!=null)return;t.pick=o;vibrate();
+  if(t.round>=10){var sc=triviaScore(t.sid,i);gameStat("trivia",sc.you>sc.nova?"you":sc.nova>sc.you?"nova":"draw")}
+  persist();render();
+  var ro=isRo(),ok=o===t.a,nok=t.nova===t.a;
+  say((ok?(ro?"Corect! ":"Correct! "):(ro?"Nu. ":"Nope. "))+(ro?"Eu am ales ":"I picked ")+t.o[t.nova]+(nok?(ro?", și am avut dreptate.":", and I was right."):(ro?", și am greșit.":", and I was wrong.")))}
+function triviaCard(m,i){var t=m.trivia,ro=isRo(),last=i===msgs.length-1&&!busy,sc=triviaScore(t.sid,i);
+  var h='<div class="game trivia">'+(t.lead?'<p class="lead">'+esc(t.lead)+'</p>':"")+'<div class="top"><b>🏆 '+(ro?"Duel":"Trivia duel")+'</b><span>'+(ro?"Runda ":"Round ")+t.round+"/10</span></div>"+
+    '<div class="score2"><span>'+(ro?"Tu":"You")+" <b>"+sc.you+'</b></span><span><b>'+sc.nova+"</b> Nova</span></div>"+'<div class="q">'+esc(t.q)+'</div><div class="opts">'+
+    t.o.map(function(x,k){var c=t.pick==null?"":k===t.a?"right":k===t.pick?"wrong":"";return'<button data-act="tpick" data-i="'+i+'" data-o="'+k+'"'+(c?' class="'+c+'"':"")+(t.pick!=null?" disabled":"")+'>'+"ABCDEF"[k]+") "+esc(x)+(t.pick!=null&&k===t.nova?' <em>Nova</em>':"")+'</button>'}).join("")+"</div>";
+  if(t.pick!=null){h+='<div class="why"><b>'+(t.pick===t.a?(ro?"Corect! ":"Correct! "):(ro?"Nu chiar. ":"Not quite. "))+"</b>"+esc(t.why)+"</div>";
+    if(t.round>=10){var fin=sc.you>sc.nova?(ro?"Ai câștigat duelul! 🎉":"You won the duel! 🎉"):sc.nova>sc.you?(ro?"Nova câștigă de data asta 😎":"Nova wins this time 😎"):(ro?"Egalitate!":"It's a draw!");
+      h+='<div class="final">'+fin+'</div><div class="acts2"><button data-act="gagain" data-g="trivia">'+(ro?"Încă un duel":"Play again")+"</button></div>"}
+    else if(last)h+='<div class="acts2"><button class="main" data-act="tnext" data-i="'+i+'">'+(ro?"Următoarea →":"Next question →")+'</button><button data-act="gstop">'+(ro?"Stop":"Stop")+"</button></div>"}
+  return h+"</div>"}
+function wyrCard(m,i){var w=m.wyr,ro=isRo(),last=i===msgs.length-1&&!busy;
+  var h='<div class="game wyr">'+(w.lead?'<p class="lead">'+esc(w.lead)+'</p>':"")+'<div class="top"><b>⚖️ '+(ro?"Ce-ai alege?":"Would you rather")+"</b></div>"+
+    '<div class="two"><button data-act="wpick" data-w="a" data-i="'+i+'"'+(w.pick==="a"?' class="on"':"")+(w.pick||!last?" disabled":"")+">"+esc(w.a)+'</button><span class="or">'+(ro?"sau":"or")+'</span><button data-act="wpick" data-w="b" data-i="'+i+'"'+(w.pick==="b"?' class="on"':"")+(w.pick||!last?" disabled":"")+">"+esc(w.b)+"</button></div>";
+  if(last&&!w.pick)h+='<div class="acts2"><button data-act="gstop">'+(ro?"Stop joc":"Stop game")+"</button></div>";
+  return h+"</div>"}
+function q20Card(m,i){var q=m.q20,ro=isRo(),last=i===msgs.length-1&&!busy,h='<div class="game q20">'+formatAnswer(m.text);
+  if(q.over)h+='<div class="final">'+(q.over==="nova"?(ro?"Nova a ghicit! 🎯":"Nova got it! 🎯"):(ro?"Ai câștigat! 🎉":"You win! 🎉"))+'</div><div class="acts2"><button data-act="gagain" data-g="20q">'+(ro?"Încă o dată":"Play again")+"</button></div>";
+  else if(last)h+='<div class="acts2">'+(ro?["Da","Nu","Poate","Nu știu"]:["Yes","No","Maybe","Not sure"]).map(function(a){return'<button data-act="qans" data-a="'+a+'">'+a+"</button>"}).join("")+'<button data-act="gstop">'+(ro?"Stop":"Stop")+"</button></div>";
+  return h+"</div>"}
 /* ---------- voice battle: Neno vs Kira ---------- */
 // Nova's names for Google's voices (Google only knows its own names; an unknown name falls back to one default voice)
 var GVOICE={Neno:"Charon",Kira:"Kore",Sami:"Enceladus"};function gVoice(v){return GVOICE[v]||v}
@@ -2938,10 +2998,11 @@ document.addEventListener("visibilitychange",function(){if(document.visibilitySt
   try{history.replaceState(null,"",location.pathname)}catch(e){}
 })();
 $("plus").addEventListener("click",function(e){if(busy)return;e.stopPropagation();$("plusMenu").querySelector("[data-plus=screen]").hidden=!canScreen;$("plusMenu").hidden=!$("plusMenu").hidden});
-$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else if(w==="python")showLessons();else if(w==="quiz")quizStart();else if(w==="cards")openDecks();else if(w==="plan")planStart();else if(w==="arrange")arrangeStart();else if(w==="focus")focusChoose();else if(w==="roast")roastStart();else if(w==="battle")battleStart();else $("file").click()});
+$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else if(w==="python")showLessons();else if(w==="quiz")quizStart();else if(w==="cards")openDecks();else if(w==="plan")planStart();else if(w==="arrange")arrangeStart();else if(w==="focus")focusChoose();else if(w==="roast")roastStart();else if(w==="battle")battleStart();else if(w==="games")gamesStart();else $("file").click()});
 document.addEventListener("click",function(e){if(!$("plusMenu").hidden&&!e.target.closest("#plusMenu"))$("plusMenu").hidden=true});
 $("picActs").addEventListener("click",function(e){var fm=e.target.closest("[data-focus]");if(fm){$("picActs").hidden=true;focusStart(+fm.getAttribute("data-focus"));return}
   var ls=e.target.closest("[data-lesson]");if(ls){startLesson(+ls.getAttribute("data-lesson"));return}
+  var gm=e.target.closest("[data-game]");if(gm){gamePlay(gm.getAttribute("data-game"));return}
   var g=e.target.closest("[data-genre]");if(g){var ro=isRo(),x=g.getAttribute("data-genre");$("input").value=(ro?"Scrie-mi o piesă completă "+x+" despre ":"Write me a full "+x+" song about ");$("picActs").hidden=true;autoGrow();updateAct();$("input").focus();return}
   var b=e.target.closest("[data-picq]");if(b&&!busy){$("input").value=b.getAttribute("data-picq");send()}});
 $("file").addEventListener("change",function(){var f=this.files[0];this.value="";if(f)readFile(f)});
@@ -2956,7 +3017,7 @@ $("file").addEventListener("change",function(){var f=this.files[0];this.value=""
 })();
 $("rmPhoto").addEventListener("click",function(){setPhoto(null)});
 $("stopTalk").addEventListener("click",stopSpeaking);
-$("newChat").addEventListener("click",function(){if(busy)return;stopSpeaking();setPhoto(null);msgs=[];chatId=newId();render.error="";store("nova.current",chatId);render()});
+$("newChat").addEventListener("click",function(){if(busy)return;stopSpeaking();setPhoto(null);gameOn="";msgs=[];chatId=newId();render.error="";store("nova.current",chatId);render()});
 $("openSettings").addEventListener("click",function(){syncSettings();loadVoices();$("settings").hidden=false});
 $("openChats").addEventListener("click",function(){menuFor="";renaming="";$("chatSearch").value="";renderChats();$("chats").hidden=false});
 document.addEventListener("click",function(e){var c=e.target.closest("[data-close]");if(c){$(c.getAttribute("data-close")).hidden=true;render()}});
@@ -2999,6 +3060,12 @@ $("inner").addEventListener("click",function(e){
   if(act==="roastmore"||act==="roastnice"){if(busy)return;send.mode="roast";$("input").value=act==="roastmore"?(isRo()?"Fă-mi un roast și mai tare":"Roast it harder"):(isRo()?"Acum fii drăguț":"Be nice now");send();return}
   if(act==="bplay"){playBattle(i);return}
   if(act==="bwin"){msgs[i].battle.win=a.getAttribute("data-w");persist();render();toast((isRo()?"🏆 Câștigă ":"🏆 ")+msgs[i].battle.win+(isRo()?"":" wins!"));return}
+  if(act==="tpick"){triviaPick(i,+a.getAttribute("data-o"));return}
+  if(act==="tnext"){if(busy)return;send.mode="game:trivia";send(isRo()?"Următoarea întrebare":"Next question");return}
+  if(act==="wpick"){if(busy)return;var wy=msgs[i]&&msgs[i].wyr;if(!wy||wy.pick)return;wy.pick=a.getAttribute("data-w");persist();gameStat("wyr");send.mode="game:wyr";send((isRo()?"Aș alege: ":"I'd rather: ")+(wy.pick==="a"?wy.a:wy.b));return}
+  if(act==="qans"){if(busy)return;send.mode="game:20q";send(a.getAttribute("data-a"));return}
+  if(act==="gagain"){if(busy)return;gamePlay(a.getAttribute("data-g"));return}
+  if(act==="gstop"){gameOn="";toast(isRo()?"Joc oprit.":"Game stopped.");render();return}
   if(act==="bnext"){if(busy)return;send.mode="battle";$("input").value=isRo()?"Runda următoare":"Next round";send();return}
   if(act==="runcode"){runBlock(a);return}
   if(act==="copy"||act==="copycode"){var text=act==="copy"?msgs[i].text:a.closest(".code").querySelector("code").textContent;
