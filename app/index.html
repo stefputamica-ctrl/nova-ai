@@ -930,7 +930,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.07";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.07-b";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -2613,7 +2613,7 @@ function say(text,done){
   var c=new AbortController();my.ctl=c;var to=setTimeout(function(){c.abort()},20000);
   fetch("https://generativelanguage.googleapis.com/v1beta/models/"+TTS_MODEL+":generateContent",{method:"POST",signal:c.signal,
     headers:{"Content-Type":"application/json","x-goog-api-key":S.key},
-    body:JSON.stringify({contents:[{role:"user",parts:[{text:t}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:S.nvoice}}}}})})
+    body:JSON.stringify({contents:[{role:"user",parts:[{text:t}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:gVoice(S.nvoice)}}}}})})
   .then(function(r){return r.json().catch(function(){return{}}).then(function(d){
     clearTimeout(to);
     if(!r.ok){var e=new Error("tts "+r.status);e.status=r.status;throw e}
@@ -2742,6 +2742,8 @@ function roastCard(m,i){var ro=isRo(),last=i===msgs.length-1&&!busy;
   return'<div class="roast'+(m.roast.nice?" nice":"")+'"><div class="r"><span class="fire" aria-hidden="true">'+(m.roast.nice?"💛":"🔥")+'</span><div class="t"><b>'+(m.roast.nice?(ro?"Complimente":"Compliments"):"Roast")+'</b><span>'+esc(S.nvoice==="off"?(ro?"vocea telefonului":"built-in voice"):S.nvoice)+'</span></div><button class="pbtn" data-act="listen" data-i="'+i+'" aria-label="'+(ro?"Ascultă":"Listen")+'">'+I_PLAY+'</button></div>'+
   '<p>'+esc(m.text)+'</p>'+(last?'<div class="acts2"><button data-act="roastmore" data-i="'+i+'">🔥 '+(ro?"Mai tare":"Roast harder")+'</button><button data-act="roastnice" data-i="'+i+'">'+(ro?"Fii drăguț":"Be nice now")+'</button><button data-act="vid" data-i="'+i+'">'+I_SHARE+(ro?"Trimite ca video":"Share as video")+'</button></div>':'<div class="acts2"><button data-act="vid" data-i="'+i+'">'+I_SHARE+(ro?"Trimite ca video":"Share as video")+'</button></div>')+'</div>'}
 /* ---------- voice battle: Neno vs Kira ---------- */
+// Nova's names for Google's voices (Google only knows its own names; an unknown name falls back to one default voice)
+var GVOICE={Neno:"Charon",Kira:"Kore",Sami:"Enceladus"};function gVoice(v){return GVOICE[v]||v}
 var BATTLE_RULES=" Voice battle mode: two of your voices, Neno and Kira, argue about the topic the user gives. Pick the two natural opposite sides; Neno takes one, Kira the other. Write exactly 4 lines and nothing else, alternating: NENO: ... then KIRA: ... then NENO: ... then KIRA: ... Each line is one or two punchy, funny, clever sentences (at most 30 words) that answer the other's point. Keep it friendly, no insults about people. If the user says next round, continue the same battle with 4 new lines that go further.";
 function battleStart(){send.mode="battle";var ro=isRo();$("input").value=ro?"Bătălie de voci: ":"Voice battle: ";autoGrow();$("input").focus();toast(ro?"Scrie subiectul, de ex. „pizza cu ananas?”":"Type a topic, like “pineapple on pizza?”")}
 function battleCard(m,i){var b=m.battle,ro=isRo(),last=i===msgs.length-1&&!busy;
@@ -2760,7 +2762,7 @@ function playBattle(i){var b=msgs[i]&&msgs[i].battle;if(!b)return;var keep=S.nvo
 function ttsBlob(text,voice){
   var t=ttsText(text);if(!S.key||!t||voice==="off"||ttsLeft()<=0)return Promise.resolve(null);
   return fetch("https://generativelanguage.googleapis.com/v1beta/models/"+TTS_MODEL+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":S.key},
-    body:JSON.stringify({contents:[{role:"user",parts:[{text:t}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}})})
+    body:JSON.stringify({contents:[{role:"user",parts:[{text:t}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:gVoice(voice)}}}}})})
   .then(function(r){return r.json().then(function(d){if(!r.ok){if(r.status===429)ttsMark(true);return null}
     var b64="",rate=24000;((d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[]).forEach(function(p){if(p.inlineData&&p.inlineData.data){b64+=p.inlineData.data;var m=/rate=(\d+)/.exec(p.inlineData.mimeType||"");if(m)rate=+m[1]}});
     if(!b64)return null;ttsMark(false);return pcmToWav(b64,rate)})}).catch(function(){return null})}
