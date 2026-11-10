@@ -962,7 +962,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.08-d";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.10-a";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -2831,10 +2831,12 @@ function resumePills(){if(!S.memory)return"";var ro=isRo(),h="",ls=S.story!=="of
 function dailyPill(){var s2=streakNow(),ro=isRo();
   return'<div class="pills">'+resumePills()+'<button class="dailypill" data-daily>'+(s2.today?"✓ "+(ro?"Provocarea de azi e gata":"Today’s challenge done"):(ro?"Provocarea zilei":"Daily challenge"))+(s2.n?' <b>🔥 '+s2.n+"</b>":"")+"</button></div>"}
 var DAILY_KINDS=["trivia","riddle","emoji"];
-function dailyMake(){var ro=isRo(),now=new Date(),day=Math.floor((now-new Date(now.getFullYear(),0,0))/864e5),kind=DAILY_KINDS[day%3],seen=load("nova.dailySeen",[]);
-  var prompt="Make today's daily challenge for the Nova app (date "+dayKey()+"). Type: "+kind+". "+
+var DAILY_TOPICS=["music","video games","football","space","animals","food","films","inventions","geography","the human body","oceans","dinosaurs","cars","sports","history","science","technology","weather","Romania","famous buildings","art","language and words","maths","insects","planets","the internet","cartoons","superheroes","nature","everyday objects"];
+function dailyMake(bonus,tries){var ro=isRo(),now=new Date(),day=Math.floor((now-new Date(now.getFullYear(),0,0))/864e5),kind=bonus?DAILY_KINDS[Math.floor(Math.random()*3)]:DAILY_KINDS[day%3],seen=load("nova.dailySeen",[]);
+  var topic=DAILY_TOPICS[Math.floor(Math.random()*DAILY_TOPICS.length)];
+  var prompt="Make "+(bonus?"a bonus":"today's daily")+" challenge for the Nova app (date "+dayKey()+", random seed "+Math.floor(Math.random()*1e6)+"). Type: "+kind+". Topic: "+topic+". Make it original and surprising, not a famous classic (no keys/piano, echo, footsteps, towel, map, egg, candle, shadow, secret, silence, 'what has a neck', 'what has hands' and similar well-known ones). "+
     (kind==="trivia"?"A fun multiple-choice question with 4 short options and one right answer (topics: music, games, sport, science, films, animals, tech, sometimes Romania).":kind==="riddle"?"A short clever riddle with a one- or two-word answer.":"An emoji puzzle: 3 to 6 emojis that stand for a famous song, film, video game or saying; the user guesses which.")+
-    " Medium difficulty, fun, fair, fine for teenagers. Write it in "+(ro?"Romanian":"English")+". Don't repeat any of these: "+JSON.stringify(seen.slice(-12))+
+    " Medium difficulty, fun, fair, fine for teenagers. Write it in "+(ro?"Romanian":"English")+". The user already had these, so don't reuse any of these questions or answers: "+JSON.stringify(seen.slice(-30))+
     ". Return JSON only: {\"type\":\""+kind+"\",\"q\":\"the question (for emoji: the emojis, then a short line like Which song is this?)\",\"options\":[4 options, only for trivia],\"answer\":\"for trivia the index 0-3; otherwise the answer\",\"accept\":[4 to 8 accepted answers, lowercase, short, with and without diacritics, in Romanian and English],\"hint\":\"one short hint\",\"why\":\"one short fun sentence after the answer\"}";
   return fetch("https://generativelanguage.googleapis.com/v1beta/models/"+MODEL+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":S.key},
     body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:1}})})
@@ -2842,24 +2844,29 @@ function dailyMake(){var ro=isRo(),now=new Date(),day=Math.floor((now-new Date(n
     if(!c||!c.q)throw new Error("no challenge");c.type=DAILY_KINDS.indexOf(c.type)>=0?c.type:kind;
     if(c.type==="trivia"){if(!Array.isArray(c.options)||c.options.length<2)c.type="riddle";else c.answer=Math.max(0,Math.min(c.options.length-1,+c.answer||0))}
     if(c.type!=="trivia"){c.accept=(Array.isArray(c.accept)?c.accept:[]).concat([String(c.answer||"")]).map(dailyNorm).filter(Boolean)}
-    seen.push(String(c.q).slice(0,80));store("nova.dailySeen",seen.slice(-20));return c})}
+    var ans=c.type==="trivia"?String((c.options||[])[c.answer]||""):String(c.answer||""),key=dailyNorm(c.q),ak=dailyNorm(ans);
+    var dup=seen.some(function(x){var n=dailyNorm(x);return n&&(n===key||n==="a: "+ak||n==="a "+ak||(ak&&n===ak))});
+    if(dup&&(tries||0)<2)return dailyMake(bonus,(tries||0)+1);
+    seen.push(String(c.q).slice(0,80));if(ans)seen.push("A: "+ans.slice(0,40));store("nova.dailySeen",seen.slice(-60));return c})}
 function dailyNorm(x){return String(x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]+/g," ").replace(/\b(the|a|an|un|o)\b/g," ").replace(/\s+/g," ").trim()}
 function dailyOpen(){if(busy||needKey())return;var ro=isRo(),cur=load("nova.daily",null);
   function show(c){$("picActs").hidden=true;msgs=msgs.concat({role:"model",text:c.q,daily:{date:dayKey(),c:c,tries:0,state:"",hint:false}});persist();render();
     setTimeout(function(){var el=document.querySelector("[data-dinput]");if(el)el.focus()},60)}
-  if(cur&&cur.date===dayKey()&&cur.c){show(cur.c);return}
-  toast(ro?"Fac provocarea de azi…":"Making today’s challenge…");busy=true;render();
-  dailyMake().then(function(c){store("nova.daily",{date:dayKey(),c:c});busy=false;show(c)}).catch(function(e){busy=false;console.log("[Nova] daily",e);render.error=ro?"Nu am putut face provocarea. Mai încearcă.":"Couldn’t make today’s challenge. Try again.";render()})}
+  var bonus=!!(cur&&cur.date===dayKey()&&cur.done);
+  if(!bonus&&cur&&cur.date===dayKey()&&cur.c){show(cur.c);return}
+  toast(bonus?(ro?"Ai terminat-o pe cea de azi. Uite una bonus…":"You did today’s. Here’s a bonus one…"):(ro?"Fac provocarea de azi…":"Making today’s challenge…"));busy=true;render();
+  dailyMake(bonus).then(function(c){if(bonus)c.bonus=true;else store("nova.daily",{date:dayKey(),c:c});busy=false;show(c)}).catch(function(e){busy=false;console.log("[Nova] daily",e);render.error=ro?"Nu am putut face provocarea. Mai încearcă.":"Couldn’t make today’s challenge. Try again.";render()})}
 function dailyAnswer(i,v){var m=msgs[i],d=m&&m.daily,ro=isRo();if(!d||d.state)return;var c=d.c,ok;
   if(c.type==="trivia")ok=+v===c.answer,d.pick=+v;
   else{var g=dailyNorm(v);if(!g)return;ok=c.accept.some(function(a){return a&&(g===a||(a.length>3&&(g.indexOf(a)>=0||a.indexOf(g)>=0&&g.length>=Math.max(4,a.length-2))))});d.last=v}
   d.tries++;vibrate();
-  if(ok||c.type==="trivia"||d.tries>=3){d.state=ok?"won":"lost";var st=streakDone();d.streak=st.n;if(ok)chime();
-    say((ok?(ro?"Corect! ":"Correct! "):(ro?"Nu de data asta. ":"Not this time. "))+(ro?"Seria ta: ":"Your streak: ")+st.n+".")}
+  if(ok||c.type==="trivia"||d.tries>=3){d.state=ok?"won":"lost";var st=c.bonus?streakNow():streakDone();d.streak=st.n;dailyDone(c);if(ok)chime();
+    say((ok?(ro?"Corect! ":"Correct! "):(ro?"Nu de data asta. ":"Not this time. "))+(c.bonus?"":(ro?"Seria ta: ":"Your streak: ")+st.n+"."))}
   persist();render()}
-function dailyGiveUp(i){var d=msgs[i]&&msgs[i].daily;if(!d||d.state)return;d.state="lost";d.streak=streakDone().n;persist();render()}
+function dailyDone(c){if(c.bonus)return;var cur=load("nova.daily",null);if(cur&&cur.date===dayKey()){cur.done=true;store("nova.daily",cur)}}
+function dailyGiveUp(i){var d=msgs[i]&&msgs[i].daily;if(!d||d.state)return;d.state="lost";d.streak=(d.c.bonus?streakNow():streakDone()).n;dailyDone(d.c);persist();render()}
 function dailyCard(m,i){var d=m.daily,c=d.c,ro=isRo(),label={trivia:ro?"Întrebare":"Trivia",riddle:ro?"Ghicitoare":"Riddle",emoji:ro?"Puzzle cu emoji":"Emoji puzzle"}[c.type]||"";
-  var h='<div class="game daily"><div class="top"><b>🔥 '+(ro?"Provocarea zilei":"Daily challenge")+"</b><span>"+esc(label)+'</span></div>'+(c.type==="emoji"?(function(){var ls=String(c.q).split("\n"),em=ls.shift();return'<div class="q emo">'+esc(em)+'</div>'+(ls.join(" ").trim()?'<div class="q">'+esc(ls.join(" ").trim())+"</div>":"")})():'<div class="q">'+esc(c.q)+"</div>");
+  var h='<div class="game daily"><div class="top"><b>'+(c.bonus?"⭐ "+(ro?"Provocare bonus":"Bonus challenge"):"🔥 "+(ro?"Provocarea zilei":"Daily challenge"))+"</b><span>"+esc(label)+'</span></div>'+(c.type==="emoji"?(function(){var ls=String(c.q).split("\n"),em=ls.shift();return'<div class="q emo">'+esc(em)+'</div>'+(ls.join(" ").trim()?'<div class="q">'+esc(ls.join(" ").trim())+"</div>":"")})():'<div class="q">'+esc(c.q)+"</div>");
   var ans=c.type==="trivia"?String((c.options||[])[c.answer]||""):String(c.answer||"");
   if(c.type==="trivia")h+='<div class="opts">'+c.options.map(function(x,k){var cl=!d.state?"":k===c.answer?"right":k===d.pick?"wrong":"";return'<button data-act="dpick" data-i="'+i+'" data-o="'+k+'"'+(cl?' class="'+cl+'"':"")+(d.state?" disabled":"")+">"+"ABCD"[k]+") "+esc(x)+"</button>"}).join("")+"</div>";
   else if(!d.state){h+='<div class="dans"><input class="field" data-dinput="'+i+'" placeholder="'+(ro?"Răspunsul tău":"Your answer")+'" autocomplete="off"><button class="main" data-act="dcheck" data-i="'+i+'">'+(ro?"Verifică":"Check")+"</button></div>";
@@ -2867,7 +2874,7 @@ function dailyCard(m,i){var d=m.daily,c=d.c,ro=isRo(),label={trivia:ro?"Întreba
     if(d.hint)h+='<div class="why">💡 '+esc(c.hint||"")+"</div>";
     h+='<div class="acts2">'+(d.hint?"":'<button data-act="dhint" data-i="'+i+'">💡 '+(ro?"Indiciu":"Hint")+"</button>")+'<button data-act="dgive" data-i="'+i+'">'+(ro?"Mă dau bătut":"Give up")+"</button></div>"}
   if(d.state){h+='<div class="why"><b>'+(d.state==="won"?(ro?"Corect! 🎉 ":"Correct! 🎉 "):(ro?"Răspunsul: ":"The answer: ")+esc(ans)+". ")+"</b>"+esc(c.why||"")+"</div>"+
-    '<div class="final">🔥 '+d.streak+" "+(d.streak===1?(ro?"zi":"day"):(ro?"zile la rând":"days in a row"))+'</div><div class="why" style="color:var(--dim)">'+(ro?"Revino mâine pentru o provocare nouă.":"Come back tomorrow for a new one.")+"</div>"}
+    '<div class="final">🔥 '+d.streak+" "+(d.streak===1?(ro?"zi":"day"):(ro?"zile la rând":"days in a row"))+'</div><div class="why" style="color:var(--dim)">'+(ro?"Revino mâine pentru provocarea nouă a zilei.":"Come back tomorrow for a new daily one.")+"</div>"+(i===msgs.length-1&&!busy?'<div class="acts2"><button data-act="dmore">⭐ '+(ro?"Încă una (bonus)":"Another one (bonus)")+"</button></div>":"")}
   return h+"</div>"}
 /* ---------- games with Nova: 20 Questions, Would You Rather, Trivia duel ---------- */
 var gameOn="",gameSid="";
@@ -3197,6 +3204,7 @@ $("inner").addEventListener("click",function(e){
   if(act==="dcheck"){var inp=document.querySelector('[data-dinput="'+i+'"]');dailyAnswer(i,inp?inp.value:"");return}
   if(act==="dhint"){var dm=msgs[i]&&msgs[i].daily;if(dm){dm.hint=true;persist();render()}return}
   if(act==="dgive"){dailyGiveUp(i);return}
+  if(act==="dmore"){dailyOpen();return}
   if(act==="tpick"){triviaPick(i,+a.getAttribute("data-o"));return}
   if(act==="tnext"){if(busy)return;send.mode="game:trivia";send(isRo()?"Următoarea întrebare":"Next question");return}
   if(act==="wpick"){if(busy)return;var wy=msgs[i]&&msgs[i].wyr;if(!wy||wy.pick)return;wy.pick=a.getAttribute("data-w");persist();gameStat("wyr");send.mode="game:wyr";send((isRo()?"Aș alege: ":"I'd rather: ")+(wy.pick==="a"?wy.a:wy.b));return}
