@@ -185,6 +185,19 @@ header{position:absolute;z-index:5;top:calc(var(--top) + 10px);left:12px;right:1
 #photoChip img{width:36px;height:36px;border-radius:10px;object-fit:cover}
 #photoChip button{color:var(--dim)}
 #picActs{display:flex;gap:8px;flex-wrap:wrap}
+#editFrame{position:fixed;inset:0;width:100%;height:100%;border:0;z-index:200;background:#060716}
+html.editing,html.editing body{overflow:hidden}
+#picActs button.on{background:var(--k,#eef1fb);color:#0b0d20}
+#funPill{justify-self:start;display:flex;align-items:center;gap:8px;padding:7px 12px 7px 14px;border-radius:999px;font:600 13.5px/1 inherit;color:inherit;border:0;cursor:pointer}
+#funPill i{font-style:normal;opacity:.6;font-size:12px}
+.glow .ba{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.glow figure{margin:0}
+.glow figure img,.glow .ba .gen{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:16px;overflow:hidden;margin:0;padding:0;border:0;max-width:none}
+.glow .ba .gen img{width:100%;height:100%;object-fit:cover}
+.glow figcaption{font-size:12.5px;font-weight:600;opacity:.75;margin-top:6px}
+.glowopts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.glowopts button{width:auto;padding:8px 12px;border-radius:999px;border:1px solid rgba(160,170,230,.28);background:rgba(255,255,255,.06);color:inherit;font:600 13.5px/1 inherit;cursor:pointer}
+.glowopts button:hover{background:rgba(255,255,255,.12)}
 #picActs button{padding:7px 13px;border-radius:999px;background:var(--glass);border:1px solid var(--edge);font-size:13.5px;font-weight:600;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 #picActs button::before{content:"↳ ";color:var(--sun)}
 #plusMenu{justify-self:start;display:flex;flex-wrap:wrap;gap:6px;padding:6px;border-radius:18px;max-width:min(100%,640px)}
@@ -770,7 +783,8 @@ html.sp .spin{border-top-color:#c3cdff}
   <div id="bottom">
     <div id="photoChip" class="glass" hidden><img alt=""><i class="ficon" hidden></i><span>Photo attached</span><button id="rmPhoto">Remove</button></div>
     <div id="picActs" hidden></div>
-    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo, file or video</button><button data-plus="roast">Photo roast</button><button data-plus="battle">Voice battle</button><button data-plus="games">Games</button><button data-plus="hum">Hum to beat</button><button data-plus="story">Story</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button><button data-plus="cards">Flashcards</button><button data-plus="plan">Plan my day</button><button data-plus="arrange">Arrange a song</button><button data-plus="focus">Focus timer</button></div>
+    <button id="funPill" class="glass" type="button" hidden aria-label="Turn off the fun voice"><span></span><i aria-hidden="true">✕</i></button>
+    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo, file or video</button><button data-plus="roast">Photo roast</button><button data-plus="battle">Voice battle</button><button data-plus="games">Games</button><button data-plus="hum">Hum to beat</button><button data-plus="story">Story</button><button data-plus="glow">Photo glow-up</button><button data-plus="voices">Fun voices</button><button data-plus="edit">Edit maker</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button><button data-plus="cards">Flashcards</button><button data-plus="plan">Plan my day</button><button data-plus="arrange">Arrange a song</button><button data-plus="focus">Focus timer</button></div>
     <div id="composer" class="composer glass">
       <button class="round" id="plus" aria-label="Attach a photo or file">+</button>
       <textarea id="input" rows="1" placeholder="Message Nova" aria-label="Message Nova"></textarea>
@@ -962,7 +976,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.10-a";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.11-a";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -993,7 +1007,7 @@ var VOICE_RULES=" The user's last message is a voice recording. In 'heard', writ
 var PIC={photo:", candid photograph taken on a 35mm film camera, natural daylight, soft film grain, muted true-to-life colors, slightly imperfect framing, realistic proportions, no glow, no fantasy lighting",
  art:", hand-made illustration, gouache and colored pencil on textured paper, visible brush strokes, limited muted palette, flat light, imperfect lines",free:""};
 var STARTERS=["Write me a hardstyle song about the night","Search the web: what happened in tech news today?","Give me a fun fact about space","Write a Python script that renames my photos by date","Draw a cozy cabin in the snow at sunset"];
-var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true,memory:true,web:true,lang:"auto",sync:true,next:true,brief:false,briefAt:"08:00",wake:false,nvoice:"Neno",story:"on"};
+var DEFAULTS={key:"",picKey:"",speak:true,voice:"",rate:"1",pitch:"1",length:"normal",custom:"",picStyle:"photo",theme:"dark",wallpaper:"space",customWall:"",remember:true,memory:true,web:true,lang:"auto",sync:true,next:true,brief:false,briefAt:"08:00",wake:false,nvoice:"Neno",story:"on",fun:""};
 
 var $=function(id){return document.getElementById(id)};
 function load(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
@@ -1171,7 +1185,7 @@ function render(){
         h+='<div class="msg u" data-i="'+i+'">'+(m.image?'<img class="uimg" src="'+esc(m.image)+'" alt="Your photo" data-view="'+esc(m.image)+'">':"")+
           (m.file?'<div class="ufile"><i class="ficon">'+esc(m.file.kind||"FILE")+'</i><span>'+esc(m.file.name)+'</span></div>':"")+'<div class="ub" data-edit="'+i+'">'+esc(m.text)+'</div>'+(m.run?'<div class="urun"><pre class="pyout'+(m.run.err?" err":"")+'"><span class="h">'+(m.run.state==="running"?"Running your code…":"Your code’s output")+'</span>'+esc(m.run.state==="running"?"":(m.run.out||"(no output)"))+'</pre></div>':"")+'</div>';
       }else{
-        h+='<div class="msg n"><span class="dot"></span><div>'+(m.roast?roastCard(m,i):m.battle?battleCard(m,i):m.story?storyCard(m,i):m.daily?dailyCard(m,i):m.trivia?triviaCard(m,i):m.wyr?wyrCard(m,i):m.q20?q20Card(m,i):formatAnswer(m.text))+
+        h+='<div class="msg n"><span class="dot"></span><div>'+(m.roast?roastCard(m,i):m.battle?battleCard(m,i):m.glow?glowCard(m,i):m.story?storyCard(m,i):m.daily?dailyCard(m,i):m.trivia?triviaCard(m,i):m.wyr?wyrCard(m,i):m.q20?q20Card(m,i):formatAnswer(m.text))+
           (m.gen?'<div class="gen" data-gen="'+esc(m.gen)+'"><div class="state"><span class="spin"></span>Painting your picture…</div></div>':"")+
           (m.open?'<a class="openbtn" href="'+esc(m.open.u)+'" target="_blank" rel="noopener">Open '+esc(m.open.h)+' <span aria-hidden="true">↗</span></a>':"")+
           (m.suggest?'<iframe class="gsugg" sandbox="allow-popups allow-popups-to-escape-sandbox" title="Google Search suggestions" srcdoc="'+esc(m.suggest).replace(/'/g,"&#39;")+'"></iframe>':"")+
@@ -1303,7 +1317,7 @@ function system(voice){
   t+=REMIND_RULES+" The user's local date and time right now: "+nowText()+".";
   if(!convo&&!voice)t+=FILE_RULES+HOMEWORK_RULES+MUSIC_RULES+PY_RULES+QUIZ_RULES+TOOLS_RULES;
   if(briefMode)t+=BRIEF_RULES;
-  var lu=msgs[msgs.length-1];if(lu&&lu.role==="user"&&lu.mode==="roast")t+=ROAST_RULES;if(lu&&lu.role==="user"&&lu.mode==="battle")t+=BATTLE_RULES;if(lu&&lu.role==="user"&&lu.mode==="hum")t+=HUM_RULES;if(lu&&lu.role==="user"&&/^game:/.test(lu.mode||""))t+=GAME_RULES[lu.mode.slice(5)]||"";
+  var lu=msgs[msgs.length-1];if(lu&&lu.role==="user"&&lu.mode==="roast")t+=ROAST_RULES;if(lu&&lu.role==="user"&&lu.mode==="battle")t+=BATTLE_RULES;if(lu&&lu.role==="user"&&lu.mode==="hum")t+=HUM_RULES;if(lu&&lu.role==="user"&&/^glow:/.test(lu.mode||""))t+=GLOW_RULES;if(S.fun&&FUNV[S.fun])t+=" Character voice: just for fun, the user wants you to talk like "+FUNV[S.fun].how+" Stay helpful and correct, keep the character light, and drop it for serious, sad or safety topics. Reply in the user's language.";if(lu&&lu.role==="user"&&/^game:/.test(lu.mode||""))t+=GAME_RULES[lu.mode.slice(5)]||"";
   if(msgs.some(function(m){return m.role==="user"&&(ytUrl(m.text)||m.file&&m.file.kind==="VIDEO")}))t+=VIDEO_RULES;
   var up=reminders.filter(function(r){return r.at>Date.now()});
   if(up.length)t+=" Reminders already set: "+up.map(function(r){return fmtWhen(r.at)+" – "+r.text}).join(" | ")+".";
@@ -1527,6 +1541,10 @@ function toReply(answer){
       for(var bi=msgs.length-2;bi>=0&&/^(next round|runda următoare|runda urmatoare)/i.test(topic);bi--){if(msgs[bi].battle){topic=msgs[bi].battle.topic;break}}
       reply.battle={topic:topic.slice(0,120)||"Voice battle",lines:lines};reply.text=lines.map(function(l){return l.w+": "+l.t}).join("\n")}}
   if(lum&&/^game:/.test(lum.mode||"")&&!reply.gen)gameReply(lum.mode.slice(5),answer,reply);
+  if(lum&&/^glow:/.test(lum.mode||"")&&lum.image){var gk=lum.mode.slice(5),gs=GLOW_STYLES.filter(function(x){return x[0]===gk})[0]||GLOW_STYLES[0],gp=/^[\s*>-]*\**PROMPT\**\s*:\s*(.+)$/im.exec(answer);
+    var gdesc=gp?gp[1].replace(/\*+/g,"").trim().slice(0,700):"the same scene as the photo";
+    reply.gen=null;reply.glow={style:gs[0],src:lum.image,img:picUrl(gdesc+", "+gs[4]+", high quality, no text")};
+    reply.text=String(answer).replace(/^[\s*>-]*\**PROMPT\**\s*:.*$/gim,"").trim()||(isRo()?"Gata!":"Here you go!")}
   if(beatOut&&!reply.gen){reply.beat=beatOut;moment("beat","Made a "+beatOut.genre+" beat at "+(beatOut.bpm||"")+" BPM"+(lum&&lum.mode==="hum"?" from the user's humming":""));if(!reply.text||reply.text==="Got it.")reply.text=isRo()?"Poftim ritmul.":"Here’s your beat."}
   if(setNow.length){reply.reminders=setNow.map(function(r){return{id:r.id,at:r.at,text:r.text}});if(!reply.text||reply.text==="Got it.")reply.text="Okay, I’ll remind you."}
   if(next.length&&!reply.gen&&!open)reply.next=next;
@@ -2649,12 +2667,14 @@ function ttsLeft(){var u=ttsUse();return u.out?0:Math.max(0,TTS_DAY_MAX-u.n)}
 function ttsMark(out){var u=ttsUse();if(out)u.out=true;else u.n++;store("nova.tts",u);showTtsLeft()}
 function showTtsLeft(){var el=$("nvNote");if(!el)return;var base=el.getAttribute("data-base")||el.textContent;el.setAttribute("data-base",base);
   el.textContent=base+(S.nvoice!=="off"&&S.key?" Left today: "+ttsLeft()+" of "+TTS_DAY_MAX+".":"")}
+function robotize(buf,rate){var d=new Int16Array(buf,44),n=d.length,w=2*Math.PI*48/rate;for(var i=0;i<n;i++){var x=d[i]/32768,y=.35*x+.85*x*Math.sin(w*i);d[i]=Math.max(-32768,Math.min(32767,Math.round(y*32768)))}return buf}
 function pcmToWav(b64,rate){
   var bin=atob(b64),n=bin.length,buf=new ArrayBuffer(44+n),v=new DataView(buf),u8=new Uint8Array(buf);
   function w(o,t){for(var i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))}
   w(0,"RIFF");v.setUint32(4,36+n,true);w(8,"WAVE");w(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
   v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,n,true);
   for(var i=0;i<n;i++)u8[44+i]=bin.charCodeAt(i);
+  if(pcmToWav.fx==="robot")robotize(buf,rate);
   return new Blob([buf],{type:"audio/wav"});
 }
 function ttsText(text){var t=forSpeech(text);if(t.length>1400){var cut=t.slice(0,1400),k=Math.max(cut.lastIndexOf(". "),cut.lastIndexOf("! "),cut.lastIndexOf("? "));t=k>400?cut.slice(0,k+1):cut}return t}
@@ -2667,14 +2687,14 @@ function say(text,done){
   var c=new AbortController();my.ctl=c;var to=setTimeout(function(){c.abort()},20000);
   fetch("https://generativelanguage.googleapis.com/v1beta/models/"+TTS_MODEL+":generateContent",{method:"POST",signal:c.signal,
     headers:{"Content-Type":"application/json","x-goog-api-key":S.key},
-    body:JSON.stringify({contents:[{role:"user",parts:[{text:t}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:gVoice(S.nvoice)}}}}})})
+    body:JSON.stringify({contents:[{role:"user",parts:[{text:(S.fun&&FUNV[S.fun]?FUNV[S.fun].tts+": ":"")+t}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:gVoice(S.nvoice)}}}}})})
   .then(function(r){return r.json().catch(function(){return{}}).then(function(d){
     clearTimeout(to);
     if(!r.ok){var e=new Error("tts "+r.status);e.status=r.status;throw e}
     var parts=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[],b64="",rate=24000;
     parts.forEach(function(p){if(p.inlineData&&p.inlineData.data){b64+=p.inlineData.data;var m=/rate=(\d+)/.exec(p.inlineData.mimeType||"");if(m)rate=+m[1]}});
     if(!b64)throw new Error("no audio");
-    return pcmToWav(b64,rate);
+    pcmToWav.fx=S.fun&&FUNV[S.fun]&&FUNV[S.fun].fx||"";var wv=pcmToWav(b64,rate);pcmToWav.fx="";return wv;
   })})
   .then(function(blob){
     if(say.cur!==my)return;ttsMark(false);
@@ -2695,7 +2715,7 @@ function sayLocal(text,done){
   $("stopTalk").hidden=false;
   chunks.forEach(function(c,i){
     var u=new SpeechSynthesisUtterance(c);if(v){u.voice=v;u.lang=v.lang}else u.lang=lang==="ro"?"ro-RO":"en-US";
-    u.rate=+S.rate;u.pitch=+S.pitch;
+    var fv=S.fun&&FUNV[S.fun];u.rate=Math.max(.5,Math.min(2,+S.rate*(fv?fv.r:1)));u.pitch=Math.max(0,Math.min(2,+S.pitch*(fv?fv.p:1)));
     if(i===chunks.length-1){u.onend=u.onerror=finish}
     synth.speak(u);
   });
@@ -2750,7 +2770,8 @@ function readFile(f){
     var name=f.name||"file",ext=(name.indexOf(".")>=0?name.split(".").pop():"").toLowerCase();
     if(/^image\//.test(f.type)||/^(jpe?g|png|gif|webp|heic|heif|bmp)$/.test(ext))
       return shrink(f,1280,.82).then(function(url){setPhoto({url:url,mime:"image/jpeg",b64:url.slice(url.indexOf(",")+1)});
-        if(roastStart.on){roastStart.on=false;$("input").value=isRo()?"Fă-mi un roast la poza asta 🔥":"Roast this photo 🔥";send()}});
+        if(roastStart.on){roastStart.on=false;$("input").value=isRo()?"Fă-mi un roast la poza asta 🔥":"Roast this photo 🔥";send()}
+        else if(glowStart.on){glowStart.on=false;var acts=$("picActs");acts.hidden=false;acts.innerHTML=glowChips(false)}});
     if(/^video\//.test(f.type)||/^(mp4|mov|webm|mkv|3gp|m4v|avi)$/.test(ext)){
       if(f.size>200e6)throw new Error(isRo()?"Videoclipul e prea mare (max 200 MB).":"That video is too big. Nova can watch videos up to 200 MB.");
       return uploadVideo(f).then(function(v){setPhoto({file:true,name:name,kind:"VIDEO",mime:v.mime,uri:v.uri})});
@@ -2930,6 +2951,43 @@ function wyrCard(m,i){var w=m.wyr,ro=isRo(),last=i===msgs.length-1&&!busy;
     '<div class="two"><button data-act="wpick" data-w="a" data-i="'+i+'"'+(w.pick==="a"?' class="on"':"")+(w.pick||!last?" disabled":"")+">"+esc(w.a)+'</button><span class="or">'+(ro?"sau":"or")+'</span><button data-act="wpick" data-w="b" data-i="'+i+'"'+(w.pick==="b"?' class="on"':"")+(w.pick||!last?" disabled":"")+">"+esc(w.b)+"</button></div>";
   if(last&&!w.pick)h+='<div class="acts2"><button data-act="gstop">'+(ro?"Stop joc":"Stop game")+"</button></div>";
   return h+"</div>"}
+/* ---------- photo glow-up: Nova looks at your photo and repaints it in a new style ---------- */
+var GLOW_STYLES=[["anime","🌸","Anime","Anime","anime key visual, cel shading, vibrant colours, studio quality"],
+ ["cartoon3d","🧸","3D cartoon","Desen 3D","3D animated movie style, soft studio lighting, cute stylised proportions, detailed render"],
+ ["comic","💥","Comic book","Bandă desenată","comic book art, bold ink outlines, halftone dots, dynamic colours"],
+ ["game","🎮","Game poster","Poster de joc","open-world video game cover art, bold painted illustration, saturated sunset colours"],
+ ["oil","🖼️","Oil painting","Pictură în ulei","classical oil painting, visible brush strokes, rich museum lighting"],
+ ["pixel","👾","Pixel art","Pixel art","detailed 16-bit pixel art, retro video game palette"],
+ ["cyber","🌆","Cyberpunk","Cyberpunk","cyberpunk night, neon magenta and cyan lights, rain reflections, cinematic"],
+ ["water","🎨","Watercolour","Acuarelă","soft watercolour painting, paper texture, gentle washes"]];
+var GLOW_RULES=" Glow-up mode: the user sent a photo to repaint in a new art style. Look closely at the photo. Reply with one short fun sentence in the user's language about how it'll look, then on a new line PROMPT: a detailed English description of this exact photo for an image generator, so the new picture shows the same scene: the main subject (for a person: rough age group, hair colour and style, expression, clothes and their colours, pose; for an animal: what it looks like and its fur colours; for an object or place: shapes and colours), what's around it, the background, camera angle, framing and lighting. 60 to 110 words. No names and no text in the picture. Don't name an art style in the PROMPT line.";
+function glowChips(src){var ro=isRo();return'<span class="humq">'+(ro?"Ce stil?":"Pick a style")+"</span>"+GLOW_STYLES.map(function(k){return'<button data-glow="'+k[0]+'"'+(src?' data-src="1"':"")+">"+k[1]+" "+(ro?k[3]:k[2])+"</button>"}).join("")}
+function glowStart(){glowStart.on=true;var f=$("file"),acc=f.getAttribute("accept");f.setAttribute("accept","image/*");f.click();setTimeout(function(){f.setAttribute("accept",acc)},500)}
+function glowPlay(k,again){if(busy)return;var ro=isRo(),gs=GLOW_STYLES.filter(function(x){return x[0]===k})[0]||GLOW_STYLES[0];
+  if(again){var last=null;for(var q=msgs.length-1;q>=0;q--)if(msgs[q].glow){last=msgs[q].glow.src;break}if(!last)return;setPhoto({url:last,mime:"image/jpeg",b64:last.slice(last.indexOf(",")+1)})}
+  if(!photo)return glowStart();
+  $("picActs").hidden=true;send.mode="glow:"+gs[0];$("input").value=(ro?"Glow-up: ":"Glow-up: ")+(ro?gs[3]:gs[2])+" "+gs[1];send()}
+function glowCard(m,i){var g=m.glow,ro=isRo(),gs=GLOW_STYLES.filter(function(x){return x[0]===g.style})[0]||GLOW_STYLES[0],last=i===msgs.length-1&&!busy;
+  var h='<div class="glow"><div class="ba"><figure><img src="'+esc(g.src)+'" alt="'+(ro?"Poza ta":"Your photo")+'"><figcaption>'+(ro?"Înainte":"Before")+'</figcaption></figure><figure><div class="gen" data-gen="'+esc(g.img)+'"><div class="state"><span class="spin"></span>'+(ro?"Pictez…":"Painting…")+'</div></div><figcaption>'+gs[1]+" "+esc(ro?gs[3]:gs[2])+"</figcaption></figure></div>";
+  h+=formatAnswer(m.text);
+  if(last)h+='<div class="why" style="color:var(--dim);margin-top:8px">'+(ro?"Încearcă alt stil:":"Try another style:")+'</div><div class="opts glowopts">'+GLOW_STYLES.filter(function(x){return x[0]!==g.style}).map(function(k){return'<button data-act="glowmore" data-k="'+k[0]+'">'+k[1]+" "+(ro?k[3]:k[2])+"</button>"}).join("")+"</div>";
+  return h+"</div>"}
+/* ---------- fun voices: Nova talks as a character ---------- */
+var FUNV={pirate:{e:"🏴‍☠️",en:"Pirate",ro:"Pirat",how:"a friendly pirate captain: 'arr', 'matey', 'ahoy', sea and treasure words.",tts:"Say this like a gruff, jolly pirate captain, with a rolling growl",p:.8,r:.95,hi:["Ahoy, matey! Captain Nova at yer service. What treasure be we huntin' today?","Ahoy, marinare! Căpitanul Nova la datorie. Ce comoară căutăm azi?"]},
+ robot:{e:"🤖",en:"Robot",ro:"Robot",how:"a retro sci-fi robot: short, precise sentences, 'BEEP BOOP', 'PROCESSING', 'AFFIRMATIVE', computer jokes.",tts:"Say this in a flat, monotone, robotic voice, evenly paced, like a retro computer",p:.55,r:.9,fx:"robot",hi:["BEEP BOOP. Nova unit online. Awaiting your command, human.","BIP BUP. Unitatea Nova este online. Aștept comanda ta, omule."]},
+ grandma:{e:"👵",en:"Grandma",ro:"Bunica",how:"a sweet, caring grandma: 'sweetheart', 'dear', gentle advice, asks if they've eaten, tells tiny stories from the old days.",tts:"Say this like a warm, sweet, elderly grandmother, slowly and lovingly",p:1.3,r:.85,hi:["Oh, hello sweetheart! Have you eaten today? Come, tell Grandma what you need.","Vai, bună puiule! Ai mâncat azi? Hai, spune-i bunicii ce-ți trebuie."]},
+ commentator:{e:"🎙️",en:"Sports commentator",ro:"Comentator sportiv",how:"an over-excited live sports commentator: everything is a huge play-by-play moment, 'AND HE'S DONE IT!', big build-ups.",tts:"Say this like an over-excited live sports commentator, fast, loud and building up hype",p:1.1,r:1.25,hi:["AND HERE WE GO! Nova steps onto the pitch, the crowd is on its feet! What's the play?!","ȘI AM ÎNCEPUT! Nova intră pe teren, tribunele sunt în picioare! Care e faza?!"]},
+ villain:{e:"😈",en:"Movie villain",ro:"Răufăcător",how:"a dramatic movie villain who is secretly very helpful: slow menacing build-ups, evil laughs like 'mwahaha', grand plans that are actually homework help.",tts:"Say this like a dramatic, menacing movie villain, slow and theatrical, with a sly smile",p:.7,r:.9,hi:["Ah... so you've finally come. Mwahaha. Tell me your request... and I shall help you. Brilliantly.","Ah... în sfârșit ai venit. Mwahaha. Spune-mi ce vrei... și te voi ajuta. Genial."]},
+ cowboy:{e:"🤠",en:"Cowboy",ro:"Cowboy",how:"a laid-back Wild West cowboy: 'howdy', 'partner', 'reckon', ranch and horse comparisons.",tts:"Say this like a relaxed Wild West cowboy, with a slow drawl",p:.85,r:.9,hi:["Howdy, partner! Nova's ridin' into town. What can I do ya for?","Salut, partenere! Nova a intrat în oraș. Cu ce te pot ajuta?"]}};
+/* ---------- edit maker: your clips + a song, cut on the beat (app/edit.html) ---------- */
+function editOpen(){var f=$("editFrame");if(!f){f=document.createElement("iframe");f.id="editFrame";f.title="Edit maker";f.setAttribute("allow","autoplay; fullscreen");document.body.appendChild(f)}
+  f.src="edit.html?lang="+(isRo()?"ro":"en");f.hidden=false;document.documentElement.classList.add("editing")}
+window.addEventListener("message",function(e){if(e.data&&e.data.nova==="edit-close"){var f=$("editFrame");if(f){f.hidden=true;f.src="about:blank"}document.documentElement.classList.remove("editing")}});
+function funStart(){var acts=$("picActs"),ro=isRo();acts.hidden=false;
+  acts.innerHTML='<span class="humq">'+(ro?"Cine să fiu?":"Who should I be?")+"</span>"+Object.keys(FUNV).map(function(k){var f=FUNV[k];return'<button data-fun="'+k+'"'+(S.fun===k?' class="on"':"")+">"+f.e+" "+(ro?f.ro:f.en)+"</button>"}).join("")+(S.fun?'<button data-fun="">🙂 '+(ro?"Normal":"Normal")+"</button>":"")}
+function funPick(k){var ro=isRo();S.fun=FUNV[k]?k:"";save();syncSettings();$("picActs").hidden=true;showFun();vibrate();
+  if(S.fun){var f=FUNV[S.fun];say(f.hi[ro?1:0]);toast((ro?"Nova vorbește acum ca ":"Nova now talks like a ")+(ro?f.ro:f.en).toLowerCase())}else toast(ro?"Nova vorbește normal din nou":"Nova sounds normal again")}
+function showFun(){var el=$("funPill");if(!el)return;var f=FUNV[S.fun];el.hidden=!f;if(f)el.querySelector("span").textContent=f.e+" "+(isRo()?f.ro:f.en)}
 var STORY_KINDS=[["space","🚀","Space","Spațiu"],["horror","👻","Horror","Groază"],["heist","💰","Heist","Jaf"],["fantasy","🐉","Fantasy","Fantasy"],["mystery","🔎","Mystery","Mister"],["surprise","🎲","Surprise me","Surprinde-mă"]];
 function storyStart(){var acts=$("picActs"),ro=isRo();acts.hidden=false;
   var lm=S.memory&&lastMoment("story",90);acts.innerHTML='<span class="humq">'+(ro?"Ce fel de poveste?":"What kind of story?")+"</span>"+(lm&&lm.x?'<button data-story="sequel">📖 '+(ro?"Continuarea: ":"Sequel: ")+esc(lm.x.title)+"</button>":"")+STORY_KINDS.map(function(k){return'<button data-story="'+k[0]+'">'+k[1]+" "+(ro?k[3]:k[2])+"</button>"}).join("")}
@@ -3132,12 +3190,14 @@ document.addEventListener("visibilitychange",function(){if(document.visibilitySt
   try{history.replaceState(null,"",location.pathname)}catch(e){}
 })();
 $("plus").addEventListener("click",function(e){if(busy)return;e.stopPropagation();$("plusMenu").querySelector("[data-plus=screen]").hidden=!canScreen;$("plusMenu").hidden=!$("plusMenu").hidden});
-$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else if(w==="python")showLessons();else if(w==="quiz")quizStart();else if(w==="cards")openDecks();else if(w==="plan")planStart();else if(w==="arrange")arrangeStart();else if(w==="focus")focusChoose();else if(w==="roast")roastStart();else if(w==="battle")battleStart();else if(w==="games")gamesStart();else if(w==="hum")humStart();else if(w==="story")storyStart();else $("file").click()});
+$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else if(w==="python")showLessons();else if(w==="quiz")quizStart();else if(w==="cards")openDecks();else if(w==="plan")planStart();else if(w==="arrange")arrangeStart();else if(w==="focus")focusChoose();else if(w==="roast")roastStart();else if(w==="battle")battleStart();else if(w==="games")gamesStart();else if(w==="hum")humStart();else if(w==="story")storyStart();else if(w==="glow")glowStart();else if(w==="voices")funStart();else if(w==="edit")editOpen();else $("file").click()});
 document.addEventListener("click",function(e){if(!$("plusMenu").hidden&&!e.target.closest("#plusMenu"))$("plusMenu").hidden=true});
 $("picActs").addEventListener("click",function(e){var fm=e.target.closest("[data-focus]");if(fm){$("picActs").hidden=true;focusStart(+fm.getAttribute("data-focus"));return}
   var ls=e.target.closest("[data-lesson]");if(ls){startLesson(+ls.getAttribute("data-lesson"));return}
   var gm=e.target.closest("[data-game]");if(gm){gamePlay(gm.getAttribute("data-game"));return}
   var sg=e.target.closest("[data-story]");if(sg){storyPlay(sg.getAttribute("data-story"));return}
+  var gl=e.target.closest("[data-glow]");if(gl){glowPlay(gl.getAttribute("data-glow"),gl.getAttribute("data-src"));return}
+  var fv=e.target.closest("[data-fun]");if(fv){funPick(fv.getAttribute("data-fun"));return}
   var hg=e.target.closest("[data-hum]");if(hg){humRecord(hg.getAttribute("data-hum"));return}
   if(e.target.closest("[data-humstop]")){humStop();return}
   var g=e.target.closest("[data-genre]");if(g){var ro=isRo(),x=g.getAttribute("data-genre");$("input").value=(ro?"Scrie-mi o piesă completă "+x+" despre ":"Write me a full "+x+" song about ");$("picActs").hidden=true;autoGrow();updateAct();$("input").focus();return}
@@ -3153,6 +3213,7 @@ $("file").addEventListener("change",function(){var f=this.files[0];this.value=""
   $("input").addEventListener("paste",function(e){var f=e.clipboardData&&e.clipboardData.files&&e.clipboardData.files[0];if(f){e.preventDefault();readFile(f)}});
 })();
 $("rmPhoto").addEventListener("click",function(){setPhoto(null)});
+$("funPill").addEventListener("click",function(){funPick("")});showFun();
 $("stopTalk").addEventListener("click",stopSpeaking);
 document.addEventListener("keydown",function(e){var t=e.target;if(e.key==="Enter"&&t&&t.hasAttribute&&t.hasAttribute("data-dinput")){e.preventDefault();dailyAnswer(+t.getAttribute("data-dinput"),t.value)}});
 $("newChat").addEventListener("click",function(){if(busy)return;stopSpeaking();setPhoto(null);gameOn="";msgs=[];chatId=newId();render.error="";store("nova.current",chatId);render()});
@@ -3212,6 +3273,7 @@ $("inner").addEventListener("click",function(e){
   if(act==="gagain"){if(busy)return;gamePlay(a.getAttribute("data-g"));return}
   if(act==="schoice"){if(busy)return;send.mode="game:story";send(a.getAttribute("data-c"));return}
   if(act==="snew"){storyStart();return}
+  if(act==="glowmore"){glowPlay(a.getAttribute("data-k"),true);return}
   if(act==="gstop"){gameOn="";toast(isRo()?"Joc oprit.":"Game stopped.");render();return}
   if(act==="bnext"){if(busy)return;send.mode="battle";$("input").value=isRo()?"Runda următoare":"Next round";send();return}
   if(act==="runcode"){runBlock(a);return}
