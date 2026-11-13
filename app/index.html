@@ -196,6 +196,13 @@ html.editing,html.editing body{overflow:hidden}
 .glow .ba .gen img{width:100%;height:100%;object-fit:cover}
 .glow figcaption{font-size:12.5px;font-weight:600;opacity:.75;margin-top:6px}
 .glowopts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.game.mq .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.game.mq .top span{font-size:13px;opacity:.75;font-weight:600}
+.mqplay{display:block;width:100%;margin:12px 0 4px;padding:16px;border-radius:16px;border:0;font:700 16px/1 inherit;cursor:pointer;background:var(--k,#eef1fb);color:#0b0d20}
+.mqplay.on{background:rgba(160,170,230,.22);color:inherit}
+.mqq{margin:12px 0 6px;font-weight:600}
+.game.mq .opts button.right{background:rgba(120,220,150,.28)}
+.game.mq .opts button.wrong{background:rgba(255,110,100,.25)}
 .game.hw .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .hwsub{font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(160,170,230,.16)}
 .hwq{margin:8px 0 4px;font-weight:600}
@@ -985,7 +992,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.13-a";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.13-b";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -1194,7 +1201,7 @@ function render(){
         h+='<div class="msg u" data-i="'+i+'">'+(m.image?'<img class="uimg" src="'+esc(m.image)+'" alt="Your photo" data-view="'+esc(m.image)+'">':"")+
           (m.file?'<div class="ufile"><i class="ficon">'+esc(m.file.kind||"FILE")+'</i><span>'+esc(m.file.name)+'</span></div>':"")+'<div class="ub" data-edit="'+i+'">'+esc(m.text)+'</div>'+(m.run?'<div class="urun"><pre class="pyout'+(m.run.err?" err":"")+'"><span class="h">'+(m.run.state==="running"?"Running your code…":"Your code’s output")+'</span>'+esc(m.run.state==="running"?"":(m.run.out||"(no output)"))+'</pre></div>':"")+'</div>';
       }else{
-        h+='<div class="msg n"><span class="dot"></span><div>'+(m.roast?roastCard(m,i):m.battle?battleCard(m,i):m.hw?hwCard(m,i):m.glow?glowCard(m,i):m.story?storyCard(m,i):m.daily?dailyCard(m,i):m.trivia?triviaCard(m,i):m.wyr?wyrCard(m,i):m.q20?q20Card(m,i):formatAnswer(m.text))+
+        h+='<div class="msg n"><span class="dot"></span><div>'+(m.roast?roastCard(m,i):m.battle?battleCard(m,i):m.mquiz?mqCard(m,i):m.hw?hwCard(m,i):m.glow?glowCard(m,i):m.story?storyCard(m,i):m.daily?dailyCard(m,i):m.trivia?triviaCard(m,i):m.wyr?wyrCard(m,i):m.q20?q20Card(m,i):formatAnswer(m.text))+
           (m.gen?'<div class="gen" data-gen="'+esc(m.gen)+'"><div class="state"><span class="spin"></span>Painting your picture…</div></div>':"")+
           (m.open?'<a class="openbtn" href="'+esc(m.open.u)+'" target="_blank" rel="noopener">Open '+esc(m.open.h)+' <span aria-hidden="true">↗</span></a>':"")+
           (m.suggest?'<iframe class="gsugg" sandbox="allow-popups allow-popups-to-escape-sandbox" title="Google Search suggestions" srcdoc="'+esc(m.suggest).replace(/'/g,"&#39;")+'"></iframe>':"")+
@@ -1208,9 +1215,9 @@ function render(){
           (m.quiz?quizCard(m.quiz,i):"")+
           (m.reminders?m.reminders.map(function(r){var on=reminders.some(function(x){return x.id===r.id});return'<div class="remind'+(on||r.at>Date.now()?"":" off")+'">⏰ '+esc(r.text)+' · '+esc(fmtWhen(r.at))+(on?' <button data-unremind="'+esc(r.id)+'">Cancel</button>':"")+'</div>'}).join(""):"")+
           (m.saved?m.saved.map(function(x){return'<div class="memo">'+esc(x)+'</div>'}).join(""):"")+
-          '<div class="acts"><button data-act="listen" data-i="'+i+'">Listen</button><button data-act="copy" data-i="'+i+'">Copy</button><button data-act="share" data-i="'+i+'">Share</button>'+
+          (m.mquiz?"":'<div class="acts"><button data-act="listen" data-i="'+i+'">Listen</button><button data-act="copy" data-i="'+i+'">Copy</button><button data-act="share" data-i="'+i+'">Share</button>'+
           (m.reported?'<button class="reported" disabled>'+(isRo()?"Raportat":"Reported")+'</button>':'<button data-act="report" data-i="'+i+'">'+(isRo()?"Raportează":"Report")+'</button>')+
-          (i===msgs.length-1&&!busy?'<button data-act="retry">Retry</button><button data-act="edit">Edit question</button>':"")+'</div>'+
+          (i===msgs.length-1&&!busy?'<button data-act="retry">Retry</button><button data-act="edit">Edit question</button>':"")+'</div>')+
           (i===msgs.length-1&&!busy&&m.next&&S.next?'<div class="next">'+m.next.map(function(q){return'<button data-q="'+esc(q)+'">'+esc(q)+'</button>'}).join("")+'</div>':"")+'</div></div>';
       }
     });
@@ -2915,11 +2922,49 @@ var GAME_RULES={
  "wyr":" Game mode: Would You Rather. Every turn: if the user just picked an option, react to their choice in one short funny sentence (on the first turn, one short line saying let's play). Then give a brand new dilemma as the very last line, exactly like: WYR: first option || second option. Each option at most 10 words, fun, surprising and fine for teenagers, both tempting or both awful. Never repeat a dilemma from this chat. Nothing after the WYR line. Reply in the user's language.",
  "story":" Story adventure mode: you are telling the user an interactive choose-your-own-adventure in the genre they picked. Second person ('you'), vivid and fun, a bit cinematic, PG-13 (scary is fine, no gore). Every turn: write the next scene in 60 to 110 words that reacts to what the user chose or typed (they may also write their own action - go with it). Then, on separate lines at the very end: SCENE: a short English description of this scene for an illustration (who, where, lighting, mood; no text or letters in the picture), and CHOICES: first option || second option || third option (each at most 8 words, all different and tempting). Build to a climax and end the story after 7 to 10 scenes: the last scene ends with the line THE END and has a SCENE line but no CHOICES line; after THE END add two more lines: TITLE: a short title for this story (2 to 5 words) and RECAP: one sentence about what happened and how the user's choices made it end. If the user asks for a sequel to an earlier story, continue that world and its characters. Reply in the user's language (the SCENE line always in English).",
  "trivia":" Game mode: Trivia duel, Nova against the user, 10 rounds, both of you answer every question. Every turn: if the user just answered, give one short sentence about it (be a fun, slightly cocky opponent). Then, unless 10 rounds are done, ask the next question as the very last line, exactly: TRIVIA: {\"round\":N,\"q\":\"question\",\"options\":[\"...\",\"...\",\"...\",\"...\"],\"answer\":0,\"nova\":0,\"why\":\"one short sentence\"} where answer is the index of the right option and nova is the option YOU pick: pick the right one about 70% of the time and a wrong one otherwise, like a real opponent. Mix topics (music, sport, video games, films, science, geography, animals, history, sometimes Romania), medium difficulty, 4 short options, vary where the right answer is. After round 10 has been answered, don't ask more: just one or two sentences about the final result. Reply in the user's language."};
+/* ---------- music quiz: Nova plays a beat, you guess the genre (all made on this device by the beat engine) ---------- */
+var MQ_G={hardstyle:["Hardstyle","Hardstyle","Distorted pitched kick and a big reverse bass, around 150 BPM. Born in the Netherlands around 2000.","Kick distorsionat și bas „reverse”, cam 150 BPM. Născut în Olanda, pe la 2000."],
+ rawstyle:["Rawstyle","Rawstyle","Like hardstyle but rawer: a harder, more distorted kick and a darker mood, about 155 BPM.","Ca hardstyle, dar mai dur: kick mai distorsionat și atmosferă mai întunecată, cam 155 BPM."],
+ hardcore:["Hardcore","Hardcore","Fast, pounding kicks at 170 to 190 BPM. It grew out of the Rotterdam gabber scene in the 90s.","Kick-uri rapide și grele, 170–190 BPM. A pornit din scena gabber din Rotterdam, anii '90."],
+ frenchcore:["Frenchcore","Frenchcore","Very fast, around 195 BPM, with rolling kicks and a bass on the off-beat.","Foarte rapid, cam 195 BPM, cu kick-uri rostogolite și bas pe contratimp."],
+ uptempo:["Uptempo","Uptempo","The fastest one here: 200+ BPM with hard, distorted kicks.","Cel mai rapid de aici: peste 200 BPM, cu kick-uri dure și distorsionate."],
+ trap:["Trap","Trap","Booming 808 bass and rolling hi-hats, around 140 BPM in half-time.","Bas 808 puternic și hi-hat-uri rapide, cam 140 BPM în half-time."],
+ phonk:["Phonk","Phonk","Cowbell melodies over heavy 808s, around 130 BPM. Drift-car energy.","Melodii de cowbell peste 808-uri grele, cam 130 BPM. Energie de drift."],
+ drill:["Drill","Drill","Sliding 808s and choppy, bouncing hi-hats around 142 BPM. From Chicago, then UK.","808-uri care alunecă și hi-hat-uri sacadate, cam 142 BPM. Din Chicago, apoi UK."],
+ hoodtrap:["Hoodtrap","Hoodtrap","Trap drums with hard-dance energy, around 160 BPM.","Tobe de trap cu energie hard dance, cam 160 BPM."],
+ lofi:["Lo-fi","Lo-fi","Slow, swung drums with soft jazzy keys, around 80 BPM. Study music.","Tobe lente, legănate, cu clape jazzy, cam 80 BPM. Muzică de învățat."],
+ house:["House","House","A kick on every beat and hats in between, around 125 BPM. From Chicago in the 80s.","Kick pe fiecare timp și hi-hat între ele, cam 125 BPM. Din Chicago, anii '80."],
+ pop:["Pop","Pop","A steady, simple beat around 110 BPM, made to sing over.","Un ritm simplu și constant, cam 110 BPM, făcut pentru cântat peste."]};
+var MQ_FAM=[["hardstyle","rawstyle","hardcore","frenchcore","uptempo"],["trap","phonk","drill","hoodtrap"],["lofi","house","pop"]];
+var mqAudio=null,mqUrl="";
+function mqShuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+function mqRound(n,prev){var all=Object.keys(MQ_G),g;do{g=all[Math.floor(Math.random()*all.length)]}while(g===prev);
+  var fam=MQ_FAM.filter(function(f){return f.indexOf(g)>=0})[0],pool=n<=3?all.filter(function(x){return fam.indexOf(x)<0}):fam.filter(function(x){return x!==g}).concat(all.filter(function(x){return fam.indexOf(x)<0}));
+  var opts=[g];mqShuffle(n<=3?pool:pool.slice(0,fam.length-1).concat(mqShuffle(pool.slice(fam.length-1)))).forEach(function(x){if(opts.length<4&&opts.indexOf(x)<0)opts.push(x)});
+  var st=beatStyle(g),bpm=beatBpm(st)+Math.round((Math.random()-.5)*6);return{g:g,bpm:bpm,opts:mqShuffle(opts),pick:""}}
+function mqStart(){if(busy)return;$("picActs").hidden=true;var q={sid:newId(),n:1,total:8,score:0,r:mqRound(1,""),done:false};
+  msgs=msgs.concat({role:"model",text:isRo()?"Joc: ghicește genul muzical după beat.":"Game: music quiz (guess the genre from a beat).",mquiz:q});persist();render();setTimeout(function(){mqPlay(msgs.length-1)},250)}
+function mqPlay(i){var q=msgs[i]&&msgs[i].mquiz;if(!q)return;stopSpeaking();if(beatAudio)beatAudio.pause();
+  if(!mqAudio){mqAudio=new Audio();mqAudio.addEventListener("ended",function(){render()});mqAudio.addEventListener("pause",function(){render()})}
+  if(mqUrl)URL.revokeObjectURL(mqUrl);mqUrl=URL.createObjectURL(new Blob([makeBeat(q.r.g,q.r.bpm,{kit:{}}).wav],{type:"audio/wav"}));
+  mqAudio.src=mqUrl;mqAudio.currentTime=0;mqAudio.play().then(render,function(){render()})}
+function mqPick(i,o){var q=msgs[i]&&msgs[i].mquiz;if(!q||q.r.pick)return;q.r.pick=o;if(o===q.r.g){q.score++;chime()}vibrate();
+  if(q.n>=q.total){q.done=true;var best=load("nova.mqbest",0);q.best=q.score>best;if(q.best)store("nova.mqbest",q.score);moment("musicquiz","Music quiz: the user guessed "+q.score+" of "+q.total+" genres")}
+  persist();render()}
+function mqNext(i){var q=msgs[i]&&msgs[i].mquiz;if(!q||!q.r.pick||q.done)return;q.n++;q.r=mqRound(q.n,q.r.g);persist();render();mqPlay(i)}
+function mqCard(m,i){var q=m.mquiz,ro=isRo(),r=q.r,playing=mqAudio&&!mqAudio.paused&&msgs.length-1===i,last=i===msgs.length-1;
+  var h='<div class="game mq"><div class="top"><b>🎵 '+(ro?"Ghicește genul":"Music quiz")+'</b><span>'+(ro?"Runda ":"Round ")+q.n+"/"+q.total+" · "+q.score+" "+(ro?"puncte":"pts")+"</span></div>";
+  if(last&&!q.done||!r.pick)h+='<button class="mqplay'+(playing?" on":"")+'" data-act="mqplay" data-i="'+i+'">'+(playing?"■ "+(ro?"Se aude…":"Playing…"):"▶ "+(r.pick?(ro?"Ascultă din nou":"Play again"):(ro?"Ascultă beat-ul":"Play the beat")))+'</button>';
+  h+='<p class="mqq">'+(ro?"Ce gen e?":"What genre is this?")+"</p><div class=\"opts\">"+r.opts.map(function(o){var cls=r.pick?(o===r.g?' class="right"':o===r.pick?' class="wrong"':""):"";return'<button data-act="mq" data-i="'+i+'" data-o="'+o+'"'+cls+(r.pick?" disabled":"")+">"+esc(MQ_G[o][ro?1:0])+"</button>"}).join("")+"</div>";
+  if(r.pick){var ok=r.pick===r.g;h+='<p class="why"><b>'+(ok?(ro?"Corect! ":"Correct! "):(ro?"Era ":"It was ")+esc(MQ_G[r.g][ro?1:0])+". ")+"</b>"+esc(MQ_G[r.g][ro?3:2])+"</p>";
+    if(q.done)h+='<div class="final">'+(ro?"Scor final: ":"Final score: ")+q.score+"/"+q.total+(q.best?" · "+(ro?"record nou! 🏆":"new best! 🏆"):"")+'</div>'+(last?'<div class="acts2"><button data-act="mqagain">'+(ro?"Încă o dată":"Play again")+"</button></div>":"");
+    else if(last)h+='<div class="acts2"><button data-act="mqnext" data-i="'+i+'">'+(ro?"Runda următoare":"Next round")+"</button></div>"}
+  return h+"</div>"}
 function gameStats(){return load("nova.games",{q20:{nova:0,you:0},wyr:0,trivia:{you:0,nova:0,draw:0}})}
 function gameStat(k,v){var g=gameStats();if(k==="wyr")g.wyr++;else if(k==="q20")g.q20[v]++;else if(k==="trivia")g.trivia[v]++;store("nova.games",g)}
 function gamesStart(){var acts=$("picActs"),ro=isRo(),g=gameStats();acts.hidden=false;
-  acts.innerHTML='<button data-game="20q">🤔 '+(ro?"20 de întrebări":"20 Questions")+'</button><button data-game="wyr">⚖️ '+(ro?"Ce-ai alege?":"Would You Rather")+'</button><button data-game="trivia">🏆 '+(ro?"Duel de cultură generală":"Trivia duel")+(g.trivia.you+g.trivia.nova?" · "+g.trivia.you+"–"+g.trivia.nova:"")+'</button>'}
-function gamePlay(g){if(busy)return;$("picActs").hidden=true;gameOn=g;gameSid=newId();var ro=isRo();
+  acts.innerHTML='<button data-game="20q">🤔 '+(ro?"20 de întrebări":"20 Questions")+'</button><button data-game="wyr">⚖️ '+(ro?"Ce-ai alege?":"Would You Rather")+'</button><button data-game="trivia">🏆 '+(ro?"Duel de cultură generală":"Trivia duel")+(g.trivia.you+g.trivia.nova?" · "+g.trivia.you+"–"+g.trivia.nova:"")+'</button><button data-game="music">🎵 '+(ro?"Ghicește genul":"Music quiz")+(load("nova.mqbest",0)?" · "+(ro?"record ":"best ")+load("nova.mqbest",0)+"/8":"")+'</button>'}
+function gamePlay(g){if(g==="music"){mqStart();return}if(busy)return;$("picActs").hidden=true;gameOn=g;gameSid=newId();var ro=isRo();
   send.mode="game:"+g;
   send(g==="20q"?(ro?"Hai să jucăm 20 de întrebări! M-am gândit la ceva. Ghicește!":"Let's play 20 Questions! I'm thinking of something. Guess it!"):g==="wyr"?(ro?"Hai să jucăm Ce-ai alege?":"Let's play Would You Rather!"):(ro?"Duel de cultură generală! Pune prima întrebare.":"Trivia duel! Ask me the first question."))}
 function gameReply(g,answer,reply){
@@ -3316,6 +3361,10 @@ $("inner").addEventListener("click",function(e){
   if(act==="snew"){storyStart();return}
   if(act==="glowmore"){glowPlay(a.getAttribute("data-k"),true);return}
   if(act==="hwnext"||act==="hwall"||act==="hwans"){var hm=msgs[i]&&msgs[i].hw;if(!hm)return;if(act==="hwnext")hm.shown=Math.min(hm.steps.length,(hm.shown||1)+1);else if(act==="hwall")hm.shown=hm.steps.length;else{hm.shown=hm.steps.length;hm.ans=true}persist();render();return}
+  if(act==="mqplay"){if(mqAudio&&!mqAudio.paused){mqAudio.pause();return}mqPlay(i);return}
+  if(act==="mq"){mqPick(i,a.getAttribute("data-o"));return}
+  if(act==="mqnext"){mqNext(i);return}
+  if(act==="mqagain"){mqStart();return}
   if(act==="hwsimilar"){if(busy)return;send.mode="hw:similar";send(isRo()?"Dă-mi o problemă asemănătoare ca să exersez.":"Give me a similar one to practise.");return}
   if(act==="gstop"){gameOn="";toast(isRo()?"Joc oprit.":"Game stopped.");render();return}
   if(act==="bnext"){if(busy)return;send.mode="battle";$("input").value=isRo()?"Runda următoare":"Next round";send();return}
