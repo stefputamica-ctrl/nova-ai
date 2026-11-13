@@ -196,6 +196,15 @@ html.editing,html.editing body{overflow:hidden}
 .glow .ba .gen img{width:100%;height:100%;object-fit:cover}
 .glow figcaption{font-size:12.5px;font-weight:600;opacity:.75;margin-top:6px}
 .glowopts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.game.hw .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hwsub{font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(160,170,230,.16)}
+.hwq{margin:8px 0 4px;font-weight:600}
+.hwsteps{margin:8px 0 4px;padding-left:22px}
+.hwsteps li{padding:6px 0;line-height:1.5}
+.hwsteps li+li{border-top:1px solid rgba(160,170,230,.14)}
+.hwans{display:flex;align-items:baseline;gap:10px;margin:10px 0 4px;padding:12px 14px;border-radius:14px;background:rgba(255,214,150,.14)}
+.hwans span{font-size:12.5px;opacity:.75;font-weight:600}
+.hwans b{font-size:17px}
 .glowopts button{width:auto;padding:8px 12px;border-radius:999px;border:1px solid rgba(160,170,230,.28);background:rgba(255,255,255,.06);color:inherit;font:600 13.5px/1 inherit;cursor:pointer}
 .glowopts button:hover{background:rgba(255,255,255,.12)}
 #picActs button{padding:7px 13px;border-radius:999px;background:var(--glass);border:1px solid var(--edge);font-size:13.5px;font-weight:600;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
@@ -784,7 +793,7 @@ html.sp .spin{border-top-color:#c3cdff}
     <div id="photoChip" class="glass" hidden><img alt=""><i class="ficon" hidden></i><span>Photo attached</span><button id="rmPhoto">Remove</button></div>
     <div id="picActs" hidden></div>
     <button id="funPill" class="glass" type="button" hidden aria-label="Turn off the fun voice"><span></span><i aria-hidden="true">✕</i></button>
-    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo, file or video</button><button data-plus="roast">Photo roast</button><button data-plus="battle">Voice battle</button><button data-plus="games">Games</button><button data-plus="hum">Hum to beat</button><button data-plus="story">Story</button><button data-plus="glow">Photo glow-up</button><button data-plus="voices">Fun voices</button><button data-plus="edit">Edit maker</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button><button data-plus="cards">Flashcards</button><button data-plus="plan">Plan my day</button><button data-plus="arrange">Arrange a song</button><button data-plus="focus">Focus timer</button></div>
+    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo, file or video</button><button data-plus="roast">Photo roast</button><button data-plus="battle">Voice battle</button><button data-plus="games">Games</button><button data-plus="hum">Hum to beat</button><button data-plus="story">Story</button><button data-plus="glow">Photo glow-up</button><button data-plus="voices">Fun voices</button><button data-plus="edit">Edit maker</button><button data-plus="homework">Homework help</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button><button data-plus="cards">Flashcards</button><button data-plus="plan">Plan my day</button><button data-plus="arrange">Arrange a song</button><button data-plus="focus">Focus timer</button></div>
     <div id="composer" class="composer glass">
       <button class="round" id="plus" aria-label="Attach a photo or file">+</button>
       <textarea id="input" rows="1" placeholder="Message Nova" aria-label="Message Nova"></textarea>
@@ -976,7 +985,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.11-a";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.13-a";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -1185,7 +1194,7 @@ function render(){
         h+='<div class="msg u" data-i="'+i+'">'+(m.image?'<img class="uimg" src="'+esc(m.image)+'" alt="Your photo" data-view="'+esc(m.image)+'">':"")+
           (m.file?'<div class="ufile"><i class="ficon">'+esc(m.file.kind||"FILE")+'</i><span>'+esc(m.file.name)+'</span></div>':"")+'<div class="ub" data-edit="'+i+'">'+esc(m.text)+'</div>'+(m.run?'<div class="urun"><pre class="pyout'+(m.run.err?" err":"")+'"><span class="h">'+(m.run.state==="running"?"Running your code…":"Your code’s output")+'</span>'+esc(m.run.state==="running"?"":(m.run.out||"(no output)"))+'</pre></div>':"")+'</div>';
       }else{
-        h+='<div class="msg n"><span class="dot"></span><div>'+(m.roast?roastCard(m,i):m.battle?battleCard(m,i):m.glow?glowCard(m,i):m.story?storyCard(m,i):m.daily?dailyCard(m,i):m.trivia?triviaCard(m,i):m.wyr?wyrCard(m,i):m.q20?q20Card(m,i):formatAnswer(m.text))+
+        h+='<div class="msg n"><span class="dot"></span><div>'+(m.roast?roastCard(m,i):m.battle?battleCard(m,i):m.hw?hwCard(m,i):m.glow?glowCard(m,i):m.story?storyCard(m,i):m.daily?dailyCard(m,i):m.trivia?triviaCard(m,i):m.wyr?wyrCard(m,i):m.q20?q20Card(m,i):formatAnswer(m.text))+
           (m.gen?'<div class="gen" data-gen="'+esc(m.gen)+'"><div class="state"><span class="spin"></span>Painting your picture…</div></div>':"")+
           (m.open?'<a class="openbtn" href="'+esc(m.open.u)+'" target="_blank" rel="noopener">Open '+esc(m.open.h)+' <span aria-hidden="true">↗</span></a>':"")+
           (m.suggest?'<iframe class="gsugg" sandbox="allow-popups allow-popups-to-escape-sandbox" title="Google Search suggestions" srcdoc="'+esc(m.suggest).replace(/'/g,"&#39;")+'"></iframe>':"")+
@@ -1317,7 +1326,7 @@ function system(voice){
   t+=REMIND_RULES+" The user's local date and time right now: "+nowText()+".";
   if(!convo&&!voice)t+=FILE_RULES+HOMEWORK_RULES+MUSIC_RULES+PY_RULES+QUIZ_RULES+TOOLS_RULES;
   if(briefMode)t+=BRIEF_RULES;
-  var lu=msgs[msgs.length-1];if(lu&&lu.role==="user"&&lu.mode==="roast")t+=ROAST_RULES;if(lu&&lu.role==="user"&&lu.mode==="battle")t+=BATTLE_RULES;if(lu&&lu.role==="user"&&lu.mode==="hum")t+=HUM_RULES;if(lu&&lu.role==="user"&&/^glow:/.test(lu.mode||""))t+=GLOW_RULES;if(S.fun&&FUNV[S.fun])t+=" Character voice: just for fun, the user wants you to talk like "+FUNV[S.fun].how+" Stay helpful and correct, keep the character light, and drop it for serious, sad or safety topics. Reply in the user's language.";if(lu&&lu.role==="user"&&/^game:/.test(lu.mode||""))t+=GAME_RULES[lu.mode.slice(5)]||"";
+  var lu=msgs[msgs.length-1];if(lu&&lu.role==="user"&&lu.mode==="roast")t+=ROAST_RULES;if(lu&&lu.role==="user"&&lu.mode==="battle")t+=BATTLE_RULES;if(lu&&lu.role==="user"&&lu.mode==="hum")t+=HUM_RULES;if(lu&&lu.role==="user"&&/^glow:/.test(lu.mode||""))t+=GLOW_RULES;if(lu&&lu.role==="user"&&/^hw:/.test(lu.mode||""))t+=HW_RULES[lu.mode.slice(3)]||HW_RULES.explain;if(S.fun&&FUNV[S.fun])t+=" Character voice: just for fun, the user wants you to talk like "+FUNV[S.fun].how+" Stay helpful and correct, keep the character light, and drop it for serious, sad or safety topics. Reply in the user's language.";if(lu&&lu.role==="user"&&/^game:/.test(lu.mode||""))t+=GAME_RULES[lu.mode.slice(5)]||"";
   if(msgs.some(function(m){return m.role==="user"&&(ytUrl(m.text)||m.file&&m.file.kind==="VIDEO")}))t+=VIDEO_RULES;
   var up=reminders.filter(function(r){return r.at>Date.now()});
   if(up.length)t+=" Reminders already set: "+up.map(function(r){return fmtWhen(r.at)+" – "+r.text}).join(" | ")+".";
@@ -1541,6 +1550,7 @@ function toReply(answer){
       for(var bi=msgs.length-2;bi>=0&&/^(next round|runda următoare|runda urmatoare)/i.test(topic);bi--){if(msgs[bi].battle){topic=msgs[bi].battle.topic;break}}
       reply.battle={topic:topic.slice(0,120)||"Voice battle",lines:lines};reply.text=lines.map(function(l){return l.w+": "+l.t}).join("\n")}}
   if(lum&&/^game:/.test(lum.mode||"")&&!reply.gen)gameReply(lum.mode.slice(5),answer,reply);
+  if(lum&&/^hw:/.test(lum.mode||"")&&!reply.gen)hwReply(lum.mode.slice(3),answer,reply);
   if(lum&&/^glow:/.test(lum.mode||"")&&lum.image){var gk=lum.mode.slice(5),gs=GLOW_STYLES.filter(function(x){return x[0]===gk})[0]||GLOW_STYLES[0],gp=/^[\s*>-]*\**PROMPT\**\s*:\s*(.+)$/im.exec(answer);
     var gdesc=gp?gp[1].replace(/\*+/g,"").trim().slice(0,700):"the same scene as the photo";
     reply.gen=null;reply.glow={style:gs[0],src:lum.image,img:picUrl(gdesc+", "+gs[4]+", high quality, no text")};
@@ -2771,6 +2781,7 @@ function readFile(f){
     if(/^image\//.test(f.type)||/^(jpe?g|png|gif|webp|heic|heif|bmp)$/.test(ext))
       return shrink(f,1280,.82).then(function(url){setPhoto({url:url,mime:"image/jpeg",b64:url.slice(url.indexOf(",")+1)});
         if(roastStart.on){roastStart.on=false;$("input").value=isRo()?"Fă-mi un roast la poza asta 🔥":"Roast this photo 🔥";send()}
+        else if(hwStart.on){hwStart.on=false;var ha=$("picActs");ha.hidden=false;ha.innerHTML=hwChips()}
         else if(glowStart.on){glowStart.on=false;var acts=$("picActs");acts.hidden=false;acts.innerHTML=glowChips(false)}});
     if(/^video\//.test(f.type)||/^(mp4|mov|webm|mkv|3gp|m4v|avi)$/.test(ext)){
       if(f.size>200e6)throw new Error(isRo()?"Videoclipul e prea mare (max 200 MB).":"That video is too big. Nova can watch videos up to 200 MB.");
@@ -2952,6 +2963,35 @@ function wyrCard(m,i){var w=m.wyr,ro=isRo(),last=i===msgs.length-1&&!busy;
   if(last&&!w.pick)h+='<div class="acts2"><button data-act="gstop">'+(ro?"Stop joc":"Stop game")+"</button></div>";
   return h+"</div>"}
 /* ---------- photo glow-up: Nova looks at your photo and repaints it in a new style ---------- */
+/* ---------- homework help: photo of a question -> steps you reveal one at a time ---------- */
+var HW_FORMAT=" Format your whole reply exactly like this, each item on its own line and nothing else: SUBJECT: the school subject and topic in 2 to 4 words. QUESTION: the question in one short sentence. Then 2 to 7 lines that each start with STEP: and explain one small step in plain words a student understands (use ×, ÷, ², √ and fractions like 3/4; no LaTeX, no markdown). Then ANSWER: the final answer in a few words. Then PRACTICE: one similar practice question with different numbers. Reply in the user's language (keep the labels SUBJECT, QUESTION, STEP, ANSWER, PRACTICE in English).";
+var HW_RULES={explain:" Homework help mode: the user sent a photo (or text) of a school question and wants to understand it. Read the question carefully from the photo. If there are several questions, do the first one unless the user says which. Teach it like a patient tutor, so they could solve the next one alone. Double-check every calculation before you answer."+HW_FORMAT,
+ hint:" Homework hint mode: the user wants a nudge, not the solution. Read the question from the photo. Give hints that get them started without solving it: what the question is asking, what to try first, a formula or idea that helps. Never give the final answer: write ANSWER: Try it, then tap Check my work. Use 1 to 3 STEP lines as hints."+HW_FORMAT,
+ check:" Homework check mode: the photo shows the user's own working or answer. Find the question and check their work line by line. Use STEP lines to say what they got right and exactly where a mistake is and how to fix it (be kind and specific). If it's all correct, say so. ANSWER: the correct final answer."+HW_FORMAT,
+ similar:" Homework practice mode: give the user a new practice question like the last homework question in this chat, with different numbers. Then solve it the same way so they can check themselves (the steps are hidden until they tap)."+HW_FORMAT};
+var HW_KINDS=[["explain","📘","Explain it","Explică-mi"],["hint","💡","Just a hint","Doar un indiciu"],["check","✅","Check my work","Verifică-mi rezolvarea"]];
+function hwChips(){var ro=isRo();return'<span class="humq">'+(ro?"Ce vrei?":"What do you need?")+"</span>"+HW_KINDS.map(function(k){return'<button data-hw="'+k[0]+'">'+k[1]+" "+(ro?k[3]:k[2])+"</button>"}).join("")}
+function hwStart(){hwStart.on=true;var f=$("file"),acc=f.getAttribute("accept");f.setAttribute("accept","image/*");f.click();setTimeout(function(){f.setAttribute("accept",acc)},500)}
+function hwPlay(k){if(busy)return;var ro=isRo(),hk=HW_KINDS.filter(function(x){return x[0]===k})[0]||HW_KINDS[0];
+  if(!photo&&!$("input").value.trim()){hwStart();return}
+  $("picActs").hidden=true;send.mode="hw:"+hk[0];if(photo&&!$("input").value.trim())$("input").value=hk[1]+" "+(ro?hk[3]:hk[2]);send()}
+function hwReply(k,answer,reply){var tx=String(answer),get=function(l){var m=new RegExp("^[\\s*>-]*\\**"+l+"\\**\\s*:\\s*(.+)$","im").exec(tx);return m?m[1].replace(/\*+/g,"").trim():""};
+  var steps=[];tx.replace(/^[\s*>-]*\**STEP\**\s*\d*\s*:\s*(.+)$/gim,function(_,x){steps.push(x.replace(/\*+/g,"").trim());return _});
+  if(!steps.length&&!get("ANSWER"))return;
+  reply.hw={kind:k,subject:get("SUBJECT"),q:get("QUESTION"),steps:steps,answer:get("ANSWER"),practice:get("PRACTICE"),shown:1,ans:false};
+  reply.text=reply.hw.q||(isRo()?"Hai să o luăm pas cu pas.":"Let's take it step by step.")}
+function hwCard(m,i){var h=m.hw,ro=isRo(),last=i===msgs.length-1&&!busy,n=Math.min(h.shown||1,h.steps.length),kind=h.kind;
+  var title=kind==="hint"?(ro?"Indicii":"Hints"):kind==="check"?(ro?"Verificare":"Checking your work"):kind==="similar"?(ro?"Exercițiu":"Practice"):(ro?"Pas cu pas":"Step by step");
+  var o='<div class="game hw"><div class="top"><b>'+esc(title)+"</b>"+(h.subject?'<span class="hwsub">'+esc(h.subject)+"</span>":"")+"</div>";
+  if(h.q)o+='<p class="hwq">'+esc(h.q)+"</p>";
+  o+='<ol class="hwsteps">'+h.steps.slice(0,n).map(function(st){return"<li>"+formatInline(st)+"</li>"}).join("")+"</ol>";
+  var more=n<h.steps.length;
+  if(more)o+='<div class="acts2"><button data-act="hwnext" data-i="'+i+'">'+(ro?"Pasul următor":"Next step")+" ("+(n+1)+"/"+h.steps.length+')</button><button data-act="hwall" data-i="'+i+'">'+(ro?"Arată tot":"Show all")+"</button></div>";
+  if(h.answer&&kind!=="hint"){if(h.ans)o+='<div class="hwans"><span>'+(ro?"Răspuns":"Answer")+"</span><b>"+formatInline(h.answer)+"</b></div>";else if(!more)o+='<div class="acts2"><button data-act="hwans" data-i="'+i+'">'+(ro?"Arată răspunsul":"Show the answer")+"</button></div>"}
+  if(kind==="hint"&&!more)o+='<p class="why" style="color:var(--dim)">'+(ro?"Încearcă acum. Apoi trimite o poză cu rezolvarea și alege „Verifică-mi rezolvarea”.":"Now try it. Then send a photo of your working and pick “Check my work”.")+"</p>";
+  if(last&&!more&&(h.ans||kind==="hint"||kind==="check"))o+='<div class="acts2"><button data-act="hwsimilar">'+(ro?"Încă una ca asta":"Try a similar one")+"</button></div>";
+  return o+"</div>"}
+function formatInline(t){return esc(t).replace(/\^2\b/g,"²").replace(/\^3\b/g,"³")}
 var GLOW_STYLES=[["anime","🌸","Anime","Anime","anime key visual, cel shading, vibrant colours, studio quality"],
  ["cartoon3d","🧸","3D cartoon","Desen 3D","3D animated movie style, soft studio lighting, cute stylised proportions, detailed render"],
  ["comic","💥","Comic book","Bandă desenată","comic book art, bold ink outlines, halftone dots, dynamic colours"],
@@ -3190,7 +3230,7 @@ document.addEventListener("visibilitychange",function(){if(document.visibilitySt
   try{history.replaceState(null,"",location.pathname)}catch(e){}
 })();
 $("plus").addEventListener("click",function(e){if(busy)return;e.stopPropagation();$("plusMenu").querySelector("[data-plus=screen]").hidden=!canScreen;$("plusMenu").hidden=!$("plusMenu").hidden});
-$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else if(w==="python")showLessons();else if(w==="quiz")quizStart();else if(w==="cards")openDecks();else if(w==="plan")planStart();else if(w==="arrange")arrangeStart();else if(w==="focus")focusChoose();else if(w==="roast")roastStart();else if(w==="battle")battleStart();else if(w==="games")gamesStart();else if(w==="hum")humStart();else if(w==="story")storyStart();else if(w==="glow")glowStart();else if(w==="voices")funStart();else if(w==="edit")editOpen();else $("file").click()});
+$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else if(w==="python")showLessons();else if(w==="quiz")quizStart();else if(w==="cards")openDecks();else if(w==="plan")planStart();else if(w==="arrange")arrangeStart();else if(w==="focus")focusChoose();else if(w==="roast")roastStart();else if(w==="battle")battleStart();else if(w==="games")gamesStart();else if(w==="hum")humStart();else if(w==="story")storyStart();else if(w==="glow")glowStart();else if(w==="voices")funStart();else if(w==="edit")editOpen();else if(w==="homework")hwStart();else $("file").click()});
 document.addEventListener("click",function(e){if(!$("plusMenu").hidden&&!e.target.closest("#plusMenu"))$("plusMenu").hidden=true});
 $("picActs").addEventListener("click",function(e){var fm=e.target.closest("[data-focus]");if(fm){$("picActs").hidden=true;focusStart(+fm.getAttribute("data-focus"));return}
   var ls=e.target.closest("[data-lesson]");if(ls){startLesson(+ls.getAttribute("data-lesson"));return}
@@ -3198,6 +3238,7 @@ $("picActs").addEventListener("click",function(e){var fm=e.target.closest("[data
   var sg=e.target.closest("[data-story]");if(sg){storyPlay(sg.getAttribute("data-story"));return}
   var gl=e.target.closest("[data-glow]");if(gl){glowPlay(gl.getAttribute("data-glow"),gl.getAttribute("data-src"));return}
   var fv=e.target.closest("[data-fun]");if(fv){funPick(fv.getAttribute("data-fun"));return}
+  var hwb=e.target.closest("[data-hw]");if(hwb){hwPlay(hwb.getAttribute("data-hw"));return}
   var hg=e.target.closest("[data-hum]");if(hg){humRecord(hg.getAttribute("data-hum"));return}
   if(e.target.closest("[data-humstop]")){humStop();return}
   var g=e.target.closest("[data-genre]");if(g){var ro=isRo(),x=g.getAttribute("data-genre");$("input").value=(ro?"Scrie-mi o piesă completă "+x+" despre ":"Write me a full "+x+" song about ");$("picActs").hidden=true;autoGrow();updateAct();$("input").focus();return}
@@ -3274,6 +3315,8 @@ $("inner").addEventListener("click",function(e){
   if(act==="schoice"){if(busy)return;send.mode="game:story";send(a.getAttribute("data-c"));return}
   if(act==="snew"){storyStart();return}
   if(act==="glowmore"){glowPlay(a.getAttribute("data-k"),true);return}
+  if(act==="hwnext"||act==="hwall"||act==="hwans"){var hm=msgs[i]&&msgs[i].hw;if(!hm)return;if(act==="hwnext")hm.shown=Math.min(hm.steps.length,(hm.shown||1)+1);else if(act==="hwall")hm.shown=hm.steps.length;else{hm.shown=hm.steps.length;hm.ans=true}persist();render();return}
+  if(act==="hwsimilar"){if(busy)return;send.mode="hw:similar";send(isRo()?"Dă-mi o problemă asemănătoare ca să exersez.":"Give me a similar one to practise.");return}
   if(act==="gstop"){gameOn="";toast(isRo()?"Joc oprit.":"Game stopped.");render();return}
   if(act==="bnext"){if(busy)return;send.mode="battle";$("input").value=isRo()?"Runda următoare":"Next round";send();return}
   if(act==="runcode"){runBlock(a);return}
