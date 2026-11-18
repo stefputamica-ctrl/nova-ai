@@ -800,7 +800,7 @@ html.sp .spin{border-top-color:#c3cdff}
     <div id="photoChip" class="glass" hidden><img alt=""><i class="ficon" hidden></i><span>Photo attached</span><button id="rmPhoto">Remove</button></div>
     <div id="picActs" hidden></div>
     <button id="funPill" class="glass" type="button" hidden aria-label="Turn off the fun voice"><span></span><i aria-hidden="true">✕</i></button>
-    <div id="plusMenu" class="glass" hidden><button data-plus="file">Photo, file or video</button><button data-plus="roast">Photo roast</button><button data-plus="battle">Voice battle</button><button data-plus="games">Games</button><button data-plus="hum">Hum to beat</button><button data-plus="story">Story</button><button data-plus="glow">Photo glow-up</button><button data-plus="voices">Fun voices</button><button data-plus="edit">Edit maker</button><button data-plus="homework">Homework help</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button><button data-plus="cards">Flashcards</button><button data-plus="plan">Plan my day</button><button data-plus="arrange">Arrange a song</button><button data-plus="focus">Focus timer</button></div>
+    <div id="plusMenu" class="glass" hidden><button data-plus="camera">Camera</button><button data-plus="file">Photo, file or video</button><button data-plus="roast">Photo roast</button><button data-plus="battle">Voice battle</button><button data-plus="games">Games</button><button data-plus="hum">Hum to beat</button><button data-plus="story">Story</button><button data-plus="glow">Photo glow-up</button><button data-plus="voices">Fun voices</button><button data-plus="edit">Edit maker</button><button data-plus="homework">Homework help</button><button data-plus="screen">My screen</button><button data-plus="song">Write a song</button><button data-plus="python">Learn Python</button><button data-plus="quiz">Quiz me</button><button data-plus="cards">Flashcards</button><button data-plus="plan">Plan my day</button><button data-plus="arrange">Arrange a song</button><button data-plus="focus">Focus timer</button></div>
     <div id="composer" class="composer glass">
       <button class="round" id="plus" aria-label="Attach a photo or file">+</button>
       <textarea id="input" rows="1" placeholder="Message Nova" aria-label="Message Nova"></textarea>
@@ -811,6 +811,7 @@ html.sp .spin{border-top-color:#c3cdff}
   </div>
   <input type="file" id="file" accept="image/*,video/*,.mp4,.mov,.webm,.mkv,.3gp,application/pdf,.pdf,text/*,.txt,.md,.csv,.json,.html,.htm,.xml,.js,.ts,.py,.java,.c,.cpp,.cs,.css,.lua,.sql,.log,.srt,.lrc" hidden>
   <input type="file" id="wallFile" accept="image/*" hidden>
+  <input type="file" id="camFile" accept="image/*" capture="environment" hidden>
   <div id="vidBox" class="vidbox" hidden><div class="vin glass"><button class="vx" type="button" aria-label="Close">✕</button><div class="vstate"></div><video playsinline loop controls hidden></video>
     <div class="vbtns" hidden><button class="btn" type="button" data-v="save">Save video</button><button class="btn ghost" type="button" data-v="share">Share</button></div></div></div>
 </div>
@@ -992,7 +993,7 @@ html.sp .spin{border-top-color:#c3cdff}
 <script>
 (function(){
 "use strict";
-var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.13-b";
+var MODEL="gemini-3.5-flash-lite", TIMEOUT=60000, VERSION="2026.11.18-a";
 var SYSTEM="You are Nova, a warm, clear and helpful AI assistant. Answer directly, without filler. "+
  "Reply in the language of the user's latest message (if they switch language, switch too). Use plain text: no markdown symbols like ** or #. "+
  "You are also an expert programmer: when you write code, always put it in a fenced block with the language, "+
@@ -3275,7 +3276,9 @@ document.addEventListener("visibilitychange",function(){if(document.visibilitySt
   try{history.replaceState(null,"",location.pathname)}catch(e){}
 })();
 $("plus").addEventListener("click",function(e){if(busy)return;e.stopPropagation();$("plusMenu").querySelector("[data-plus=screen]").hidden=!canScreen;$("plusMenu").hidden=!$("plusMenu").hidden});
-$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else if(w==="python")showLessons();else if(w==="quiz")quizStart();else if(w==="cards")openDecks();else if(w==="plan")planStart();else if(w==="arrange")arrangeStart();else if(w==="focus")focusChoose();else if(w==="roast")roastStart();else if(w==="battle")battleStart();else if(w==="games")gamesStart();else if(w==="hum")humStart();else if(w==="story")storyStart();else if(w==="glow")glowStart();else if(w==="voices")funStart();else if(w==="edit")editOpen();else if(w==="homework")hwStart();else $("file").click()});
+$("plusMenu").addEventListener("click",function(e){var b=e.target.closest("[data-plus]");if(!b)return;$("plusMenu").hidden=true;var w=b.getAttribute("data-plus");if(w==="screen")grabScreen();else if(w==="song")songGenres();else if(w==="python")showLessons();else if(w==="quiz")quizStart();else if(w==="cards")openDecks();else if(w==="plan")planStart();else if(w==="arrange")arrangeStart();else if(w==="focus")focusChoose();else if(w==="roast")roastStart();else if(w==="battle")battleStart();else if(w==="games")gamesStart();else if(w==="hum")humStart();else if(w==="story")storyStart();else if(w==="glow")glowStart();else if(w==="voices")funStart();else if(w==="edit")editOpen();else if(w==="homework")hwStart();else if(w==="camera")$("camFile").click();else $("file").click()});
+/* in-app camera: the photo goes straight into the chat and is never saved to the camera roll */
+$("camFile").addEventListener("change",function(){var f=this.files[0];this.value="";if(f)readFile(f)});
 document.addEventListener("click",function(e){if(!$("plusMenu").hidden&&!e.target.closest("#plusMenu"))$("plusMenu").hidden=true});
 $("picActs").addEventListener("click",function(e){var fm=e.target.closest("[data-focus]");if(fm){$("picActs").hidden=true;focusStart(+fm.getAttribute("data-focus"));return}
   var ls=e.target.closest("[data-lesson]");if(ls){startLesson(+ls.getAttribute("data-lesson"));return}
